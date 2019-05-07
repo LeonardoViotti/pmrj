@@ -6,6 +6,15 @@
 
 rm(list = ls())
 
+
+
+library(rgeos)
+library(rgdal)
+library(sp)
+library(maps)
+library(geosphere)
+library(viridis)
+
 setwd("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
 
 
@@ -30,10 +39,20 @@ aisp <- spTransform(aisp, RjProj_unp)
 # Aggregate crime data by average of the entire series. I'm not not sure if this
 # is the right thing to do, but it's the easiest to write the draft code
 
-sim_f <- aggregate(cbind(violent_death_sim, 
-                         street_robbery,
-                         vehicle_robbery,
-                         population) ~ aisp, mean, data = sim)
+sim_ano <- aggregate(cbind(violent_death_sim, 
+                           street_robbery,
+                           vehicle_robbery) ~ aisp + year, 
+                     sum, 
+                     data = sim)
+
+sim_ano$population <- aggregate(population ~ aisp + year, 
+                                mean, 
+                                data = sim)$population
+
+sim_aisp <- aggregate(cbind(violent_death_sim, 
+                            street_robbery,
+                            vehicle_robbery,
+                            population) ~ aisp, mean, data = sim_ano)
 
 
 #------------------------------------------------------------------------------#
@@ -54,7 +73,7 @@ aisp$area[match(names(aisp_areas), aisp@data$id)] <-
 #------------------------------------------------------------------------------#
 #### Merge ####
 
-aisp <- merge(aisp, sim_f, by = "aisp")
+aisp <- merge(aisp, sim_aisp, by = "aisp")
 
 
 #------------------------------------------------------------------------------#
@@ -68,13 +87,22 @@ aisp <- merge(aisp, sim_f, by = "aisp")
 #### Heat maps ####
 
 
+# Only Rio de Janeiro Cidade
+rio_aisp_codes <- c(2,3,4,5,6,9,14,16,17,18,19,22,23,27,31,40,41)
+
+# Deaths per 100 thousand
 aisp$lv_pop <- aisp$violent_death_sim/(aisp$population/100000)
 
 
+
+#### Tidy aisp shapfile
 aisp_df <- tidy(aisp)
 aisp_df <- merge(aisp_df, 
                  aisp@data, 
                  by = "id")
+
+rio_aisp_df <- aisp_df[aisp_df$aisp %in% rio_aisp_codes,]
+
 
 ggplot() +
   geom_polygon(data=aisp_df, 
@@ -82,30 +110,22 @@ ggplot() +
                    y=lat, 
                    group = group, 
                    fill = lv_pop)) + 
-  theme_void()  #+
-  # scale_fill_viridis(    
-  #   breaks = c(25,50,75,100),
-  #   labels = c("25","50","75","100+"),
-  #   
-  #   name="Number of firms per square kilometre",
-  #   guide = guide_legend(keyheight = unit(2, units = "mm"),
-  #                        keywidth=unit(11, units = "mm"), 
-  #                        label.position = "bottom", 
-  #                        title.position = 'top', nrow=1)) +
-  # theme(
-  #   text = element_text(color = "#22211d"), 
-  #   plot.background = element_rect(fill = "#f5f5f2", color = NA), 
-  #   panel.background = element_rect(fill = "#f5f5f2", color = NA), 
-  #   legend.background = element_rect(fill = "#f5f5f2", color = NA),
-  #   
-  #   plot.title = element_text(size= 22, hjust=0.01, color = "#4e4d47", margin = margin(b = -0.1, t = 0.4, l = 2, unit = "cm")),
-  #   legend.position = "bottom"
-  # ) + 
-  # geom_polygon(data=bairros_tidy4, 
-  #              aes(x=long, 
-  #                  y=lat, 
-  #                  group = group), 
-  #              fill= "yellow" )
+  coord_quickmap() +
+  theme_void()  +
+  scale_fill_viridis(
+    name="Violent death per \n100 thousand \ninhabitants")
 
+
+
+ggplot() +
+  geom_polygon(data=rio_aisp_df, 
+               aes(x=long, 
+                   y=lat, 
+                   group = group, 
+                   fill = lv_pop)) + 
+  theme_void()  +
+  coord_quickmap() +
+  scale_fill_viridis(
+    name="Violent death per \n100 thousand \ninhabitants")
 
 
