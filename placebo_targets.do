@@ -13,7 +13,7 @@ import delimited $dir/data_SIM_2019.csv, clear
 
 preserve
 	tempfile
-	import delimited  "$dir/placebo_targets.csv", clear 
+	import delimited  "$dir/placebo_targets_gis.csv", clear 
 	save placebo_targets, replace
 restore
  

@@ -1,0 +1,14 @@
+
+*.csv
+*.dbf
+*.prj
+*.shx
+*.shp
+Shiny Dashboard/.Rhistory
+*.dcf
+*.rds
+*.html
+*.pdf
+*.exe
+*.exe
+*.exe

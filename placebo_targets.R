@@ -10,6 +10,9 @@
 
 library(tidyverse)
 library(readstata13)
+library(rgeos)
+library(rgdal)
+
 
 
 
@@ -17,11 +20,31 @@ library(readstata13)
 #------------------------------------------------------------------------------#
 #### Load constructed data ####
 
-setwd("C:/Users/Leonardo/Dropbox/Work/Insper/PMRJ")
+setwd("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
 sim <- read.dta13("data_SIM_2019-01.dta")
 
 
 sim <- sim[!is.na(sim$aisp) & !is.na(sim$year) & !is.na(sim$month), ]
+
+# Load shapefiles
+
+aisp_shp <- readOGR(dsn = "GIS", layer = "lm_aisp_2019")
+
+
+#------------------------------------------------------------------------------#
+#### Centroids ####
+
+rownames(aisp_shp@data) <- aisp_shp@data$aisp
+
+a_coords <- 
+  gCentroid(aisp_shp, 
+            byid = T, 
+            id = aisp_shp@data$aisp )@coords %>% 
+  as.data.frame() %>% 
+  rename(latitude = y, longitude = x)
+
+a_coords$aisp <- rownames(a_coords)
+
 
 #------------------------------------------------------------------------------#
 #### Variaveis ####
@@ -43,6 +66,13 @@ sim <-
   dplyr::mutate(vd_l = lagFun(violent_death, 12),
                 vr_l = lagFun(vehicle_robbery, 12),
                 sr_l = lagFun(street_robbery, 12))
+
+
+#### Add GIS variables
+sim <- merge(sim, 
+             a_coords, 
+             by = "aisp", 
+             all.x = T)
 
 
 
@@ -221,7 +251,8 @@ dev.off()
 #------------------------------------------------------------------------------#
 #### Exportart a base ####
 
-
+# Exporting just the new variables to be merged with the original data. Since the
+# original data is .dta, so it won't lose meta data
 plaExport <- sim[, c("aisp",
                      "year",
                      "month",
@@ -231,7 +262,10 @@ plaExport <- sim[, c("aisp",
                      "qua_sr",
                      "plaTar_vd",
                      "plaTar_vr",
-                     "plaTar_sr")]
+                     "plaTar_sr", 
+                     "latitude",
+                     "longitude")]
+
 
 plaExport <-
   plaExport %>%
@@ -240,7 +274,7 @@ plaExport <-
          "sr_placebo_tar" = "plaTar_sr")
 
 write.csv(plaExport,
-          "placebo_targets.csv",
+          "placebo_targets_gis.csv",
           row.names = F,
           na = "")
 
