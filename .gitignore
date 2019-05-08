@@ -1,5 +1,6 @@
 
 *.csv
+*.dta
 *.dbf
 *.prj
 *.shx
@@ -10,5 +11,4 @@ Shiny Dashboard/.Rhistory
 *.html
 *.pdf
 *.exe
-*.exe
-*.exe
+
