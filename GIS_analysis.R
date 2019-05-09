@@ -16,6 +16,9 @@ library(geosphere)
 library(viridis)
 library(tmap)
 library(spdep)
+library(readstata13)
+library(tidyverse)
+library(broom)
 
 ProjFolder <- ("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
 ProjFolder_OUT_plots <- file.path(ProjFolder, "Plots")
@@ -33,7 +36,7 @@ sim <- read.dta13(file.path(ProjFolder, "data_SIM_2019-01.dta"))
 #------------------------------------------------------------------------------#
 #### Load Shape Files ####
 
-aisp <- readOGR(dsn = "GIS", layer = "lm_aisp_2019")
+aisp <- readOGR(dsn = file.path(ProjFolder,"GIS"), layer = "lm_aisp_2019")
 aisp <- spTransform(aisp, RjProj_unp)
 
 #------------------------------------------------------------------------------#

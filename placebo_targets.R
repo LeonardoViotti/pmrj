@@ -31,6 +31,7 @@ sim <- sim[!is.na(sim$aisp) & !is.na(sim$year) & !is.na(sim$month), ]
 aisp_shp <- readOGR(dsn = "GIS", layer = "lm_aisp_2019")
 
 
+
 #------------------------------------------------------------------------------#
 #### Centroids ####
 
