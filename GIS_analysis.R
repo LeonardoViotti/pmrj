@@ -4,21 +4,7 @@
 
 #------------------------------------------------------------------------------#
 
-rm(list = ls())
 
-
-
-library(rgeos)
-library(rgdal)
-library(sp)
-library(maps)
-library(geosphere)
-library(viridis)
-library(tmap)
-library(spdep)
-library(readstata13)
-library(tidyverse)
-library(broom)
 
 ProjFolder <- ("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
 ProjFolder_OUT_plots <- file.path(ProjFolder, "Plots")

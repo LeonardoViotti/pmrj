@@ -4,6 +4,29 @@
 
 #------------------------------------------------------------------------------#
 
+rm(list = ls())
+
+
+library(tidyverse)
+library(readstata13)
+library(lfe)
+library(data.table)
+library(shomR) # ConleySEs but not on CRAN
+library(spdep) # lagsarlm 
+
+
+library(rgeos)
+library(rgdal)
+library(sp)
+library(maps)
+library(geosphere)
+library(viridis)
+library(tmap)
+library(spdep)
+library(readstata13)
+library(tidyverse)
+library(broom)
+
 # Leonardo WBG laptop
 if (Sys.getenv("USERNAME") == "wb519128" | Sys.getenv("USERNAME") == "WB519128"){
 
