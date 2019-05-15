@@ -20,8 +20,9 @@ library(rgdal)
 #------------------------------------------------------------------------------#
 #### Load constructed data ####
 
-setwd("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
-#sim <- read.dta13("data_SIM_2019-01.dta")sim <- read.dta13("data_SIM_2019-04.dta")
+#setwd("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
+#sim <- read.dta13("data_SIM_2019-01.dta")
+sim <- read.dta13(file.path(DROPBOX,"data_SIM_2019-04.dta"))
 
 
 sim <- sim[!is.na(sim$aisp) & !is.na(sim$year) & !is.na(sim$month), ]
@@ -274,10 +275,10 @@ plaExport <-
          "vr_placebo_tar" = "plaTar_vr",
          "sr_placebo_tar" = "plaTar_sr")
 
-write.csv(plaExport,
-          "placebo_targets.csv",
-          row.names = F,
-          na = "")
+# write.csv(plaExport,
+#           "placebo_targets.csv",
+#           row.names = F,
+#           na = "")
 
 
 # bar <- sim[sim$year>2010 & sim$target_vd != 0,]
