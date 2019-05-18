@@ -97,16 +97,14 @@ names(FormulasIV_str) <- depVars
 
 # Add FEs
 sFormulaFE <- paste0("factor(",FEVars,")")
-sFormula1 <- paste(c(indepVars, rFormulaFE[1:2]), collapse = " + ")
-sFormula2 <- paste(c(indepVars, rFormulaFE), collapse = " + ")
+sFormula1 <- paste(c(indepVars, sFormulaFE[1:2]), collapse = " + ")
+sFormula2 <- paste(c(indepVars, sFormulaFE), collapse = " + ")
 
 Formulas01_lg <- paste(depVars, sFormula1, sep = " ~ ")
 
 
 #------------------------------------------------------------------------------#
 #### Regression models ####
-
-fooFormula <- as.formula(Formulas1[1])
 
 feRegSim <- function(form){
   form <- as.formula(form)

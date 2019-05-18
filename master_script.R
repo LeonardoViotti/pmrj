@@ -29,19 +29,22 @@ library(broom)
 
 # Leonardo WBG laptop
 if (Sys.getenv("USERNAME") == "wb519128" | Sys.getenv("USERNAME") == "WB519128"){
-
   DROPBOX <- file.path("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
   GITHUB  <- file.path("C:/Users/wb519128/Documents/GitHub/pmrj")
-
-  
 }
 
+
 # Leonardo personal laptop
+if (Sys.info()["user"] == "leonardo"){
+  DROPBOX <- file.path("/home/leonardo/Dropbox/Work/Insper/PMRJ")
+  GITHUB  <- file.path("/home/leonardo/GitHub/pmrj")
+  
+}
 
 #------------------------------------------------------------------------------#
 #### Section switches ####
 
-RUN_placebo_targets = T
+RUN_placebo_targets = F
 
 
 #------------------------------------------------------------------------------#
