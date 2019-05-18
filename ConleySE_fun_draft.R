@@ -1,22 +1,22 @@
 
-reg = reg.f
-unit = "aisp" 
-time = "month_year"
-lat = "latitude"
-lon = "longitude"
-dist_cutoff = 5
+# reg = reg.f
+# unit = "aisp" 
+# time = "month_year"
+# lat = "latitude"
+# lon = "longitude"
+# dist_cutoff = 5
+# 
+# verbose = F
+# balanced_pnl = F
+# cores = 1
+# dist_fn = "Haversine"
 
-verbose = F
-balanced_pnl = F
-cores = 1
+ConleySEs <- function(reg,
+                      unit, time, lat, lon,
+                      kernel = "bartlett", dist_fn = "Haversine",
+                      dist_cutoff = 500, lag_cutoff = 5,
+                      lat_scale = 111, verbose = FALSE, cores = 1, balanced_pnl = FALSE) {
 
-
-# ConleySEs <- function(reg,
-#                       unit, time, lat, lon,
-#                       kernel = "bartlett", dist_fn = "Haversine",
-#                       dist_cutoff = 500, lag_cutoff = 5,
-#                       lat_scale = 111, verbose = FALSE, cores = 1, balanced_pnl = FALSE) {
-#   
   Fac2Num <- function(x) {as.numeric(as.character(x))}
   #source("iterate-obs-function.R", local = TRUE)
   if(cores > 1) {invisible(library(parallel))}
@@ -129,5 +129,5 @@ cores = 1
     "OLS" = reg$vcv,
     "Spatial" = V_spatial,
     "Spatial_HAC" = V_spatial_HAC)
-  # return(return_list)
+  return(return_list)
 }
