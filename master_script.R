@@ -13,6 +13,7 @@ library(lfe)
 library(data.table)
 library(shomR) # ConleySEs but not on CRAN
 library(spdep) # lagsarlm 
+library(Rcpp)
 
 
 library(rgeos)
@@ -40,6 +41,18 @@ if (Sys.info()["user"] == "leonardo"){
   GITHUB  <- file.path("/home/leonardo/GitHub/pmrj")
   
 }
+
+
+CPP_FUNCTIONS <- file.path(dirname(GITHUB), "shomR/cpp")
+
+
+#------------------------------------------------------------------------------#
+#### Function definition ####
+
+# Run cpp functions from shomR package that are not working from package install
+# only. https://github.com/shommazumder/shomR
+
+sourceCpp(file.path(CPP_FUNCTIONS, "cpp-functions.cpp"))
 
 #------------------------------------------------------------------------------#
 #### Section switches ####
