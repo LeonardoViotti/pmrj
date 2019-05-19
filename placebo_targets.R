@@ -9,6 +9,9 @@
 #### Settings ####
 
 
+EXPORT_data = F
+EXPORT_plots = F
+
 #------------------------------------------------------------------------------#
 #### Load constructed data ####
 
@@ -21,7 +24,7 @@ sim <- sim[!is.na(sim$aisp) & !is.na(sim$year) & !is.na(sim$month), ]
 
 # Load shapefiles
 
-aisp_shp <- readOGR(dsn = "GIS", layer = "lm_aisp_2019")
+aisp_shp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
 
 
 
@@ -205,10 +208,13 @@ sim$plaTar_sr[Qbol(4, "sr")] <- round(sim$sr_l[Qbol(4, "sr")]*(1-reduQ4_sr))
 
 simp <- sim[sim$year>2010,]
 
-# Letalidade Violenta
-png("Results/lv_placebo_fit.png",
-    width = 730, height = 480)
 
+
+if (EXPORT_plots){
+  # Letalidade Violenta
+  png("Results/lv_placebo_fit.png",
+      width = 730, height = 480)
+  
   slope_vd <- 1 + (reduQ1_vd + reduQ2_vd + reduQ3_vd + reduQ4_vd)/4
   plot(simp$target_vd, 
        simp$vd_l,
@@ -216,61 +222,72 @@ png("Results/lv_placebo_fit.png",
        ylab="L.V. mesmo mês do ano anterior")
   title(main="Fit médio percentuais de redução  - Letalidade Violenta (2011-2015)")
   abline(a = 0, b= slope_vd, col = "red")
-
-dev.off()
-
-# Roubo de veiculos
-png("Results/rv_placebo_fit.png",
-    width = 730, height = 480)
+  
+  dev.off()
+  
+  # Roubo de veiculos
+  png("Results/rv_placebo_fit.png",
+      width = 730, height = 480)
   slope_vr <- 1 + (reduQ1_vr + reduQ2_vr + reduQ3_vr + reduQ4_vr)/4
   plot(simp$target_vr, simp$vr_l,
        xlab="Meta real", 
        ylab="R.V. mesmo mês do ano anterior")
   title(main="Fit médio percentuais de redução  - Roubo de Veículos (2011-2015)")
   abline(a = 0, b= slope_vr, col = "red")
-dev.off()
-
-# Roubo de rua
-png("Results/rv_placebo_fit.png",
-    width = 730, height = 480)
+  dev.off()
+  
+  # Roubo de rua
+  png("Results/rv_placebo_fit.png",
+      width = 730, height = 480)
   slope_sr <- 1 + (reduQ1_sr + reduQ2_sr + reduQ3_sr + reduQ4_sr)/4
   plot(simp$target_sr, simp$sr_l,
        xlab="Meta real", 
        ylab="R.R. mesmo mês do ano anterior")
   title(main="Fit médio percentuais de redução  - Roubo de Rua (2011-2015)")
   abline(a = 0, b= slope_sr, col = "red")
-dev.off()
+  dev.off()
+  
+}
+
+
   
 
 #------------------------------------------------------------------------------#
 #### Exportart a base ####
 
-# Exporting just the new variables to be merged with the original data. Since the
-# original data is .dta, so it won't lose meta data
-plaExport <- sim[, c("aisp",
-                     "year",
-                     "month",
-                     "semester",
-                     "qua_vd",
-                     "qua_vr",
-                     "qua_sr",
-                     "plaTar_vd",
-                     "plaTar_vr",
-                     "plaTar_sr", 
-                     "latitude",
-                     "longitude")]
 
-
-plaExport <-
-  plaExport %>%
-  rename("vd_placebo_tar" = "plaTar_vd",
-         "vr_placebo_tar" = "plaTar_vr",
-         "sr_placebo_tar" = "plaTar_sr")
-
-# write.csv(plaExport,
-#           "placebo_targets.csv",
-#           row.names = F,
-#           na = "")
+if (EXPORT_data){
+  # Exporting just the new variables to be merged with the original data. Since the
+  # original data is .dta, so it won't lose meta data
+  plaExport <- sim[, c("aisp",
+                       "year",
+                       "month",
+                       "semester",
+                       "qua_vd",
+                       "qua_vr",
+                       "qua_sr",
+                       "plaTar_vd",
+                       "plaTar_vr",
+                       "plaTar_sr", 
+                       "latitude",
+                       "longitude")]
+  
+  
+  plaExport <-
+    plaExport %>%
+    rename("vd_placebo_tar" = "plaTar_vd",
+           "vr_placebo_tar" = "plaTar_vr",
+           "sr_placebo_tar" = "plaTar_sr")
+  
+  write.csv(plaExport,
+            "placebo_targets.csv",
+            row.names = F,
+            na = "")
+  
+  
+ 
+  
+}
 
 
 # bar <- sim[sim$year>2010 & sim$target_vd != 0,]
@@ -313,7 +330,7 @@ plaExport <-
 #                   "qua_vd")])
 
 #### Estabilidade
-# Sea taxa p100mil menor do que 10 homicÃ­dios
+# Sea taxa p100mil menor do que 10 homicÃ?dios
 
 
 # #------------------------------------------------------------------------------#
