@@ -45,6 +45,8 @@ if (Sys.info()["user"] == "leonardo"){
 
 CONLEYse_FUNs <- file.path(GITHUB, "ConleySE")
 
+OUTPUTS <- file.path(DROPBOX, "Results")
+
 
 #------------------------------------------------------------------------------#
 #### Function definition ####
