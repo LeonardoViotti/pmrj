@@ -43,7 +43,7 @@ if (Sys.info()["user"] == "leonardo"){
 }
 
 
-CPP_FUNCTIONS <- file.path(dirname(GITHUB), "shomR/cpp")
+CONLEYse_FUNs <- file.path(GITHUB, "ConleySE")
 
 
 #------------------------------------------------------------------------------#
@@ -52,7 +52,13 @@ CPP_FUNCTIONS <- file.path(dirname(GITHUB), "shomR/cpp")
 # Run cpp functions from shomR package that are not working from package install
 # only. https://github.com/shommazumder/shomR
 
-sourceCpp(file.path(CPP_FUNCTIONS, "cpp-functions.cpp"))
+sourceCpp(file.path(CONLEYse_FUNs, "cpp-functions.cpp"))
+
+# Run debugged version of ConleySEs function and dependencies
+#source(file.path(CONLEYse_FUNs, "iterate-obs-function_draft.R"))
+source(file.path(CONLEYse_FUNs, "ConleySE_fun_draft.R"))
+
+
 
 #------------------------------------------------------------------------------#
 #### Section switches ####

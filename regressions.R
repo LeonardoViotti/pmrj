@@ -200,7 +200,8 @@ ConleySEs(reg = reg.f,
           unit = "aisp", 
           time = "month_year",
           dist_cutoff = 5,
-          #dist_fn = "Haversine", lag_cutoff = 5, cores = 2, verbose = FALSE,
+          #balanced_pnl = F,
+          #dist_fn = "Haversine", lag_cutoff = 5, cores = 1, verbose = FALSE,
           lat = "latitude", lon = "longitude") 
 
 
