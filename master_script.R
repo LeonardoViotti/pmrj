@@ -16,6 +16,13 @@ library(spdep) # lagsarlm
 library(Rcpp)
 
 
+library(flextable)
+#library(officer)
+#library(ReporteRs)
+library(jtools)
+
+
+
 library(rgeos)
 library(rgdal)
 library(sp)

@@ -161,7 +161,7 @@ g_vt_01 <- feRegSim(Formulas01_str["vehicle_theft"])
 g_st_01 <- feRegSim(Formulas01_str["street_theft"])
 
 
-# Table $ - Spillovers
+# Table 4 - Spillovers
 s_or_01 <- feRegSim(Formulas01_str["other_robberies"])
 s_cr_01 <- feRegSim(Formulas01_str["cargo_robbery"])
 s_bu_01 <- feRegSim(Formulas01_str["burglary"])
@@ -184,7 +184,7 @@ g_vt_02 <- feRegSim(Formulas02_str["vehicle_theft"])
 g_st_02 <- feRegSim(Formulas02_str["street_theft"])
 
 
-# Table $ - Spillovers
+# Table 4 - Spillovers
 s_or_02 <- feRegSim(Formulas02_str["other_robberies"])
 s_cr_02 <- feRegSim(Formulas02_str["cargo_robbery"])
 s_bu_02 <- feRegSim(Formulas02_str["burglary"])
@@ -205,7 +205,7 @@ g_vt_IV <- feRegSim(FormulasIV_str["vehicle_theft"])
 g_st_IV <- feRegSim(FormulasIV_str["street_theft"])
 
 
-# Table $ - Spillovers
+# Table 4 - Spillovers
 s_or_IV <- feRegSim(FormulasIV_str["other_robberies"])
 s_cr_IV <- feRegSim(FormulasIV_str["cargo_robbery"])
 s_bu_IV <- feRegSim(FormulasIV_str["burglary"])
@@ -216,7 +216,76 @@ s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
 #------------------------------------------------------------------------------#
 ##### Export ####
 
+indepVar_label <- c("On target" = "on_target")
+stats_labels <- c("Observations" = "nobs",  
+                  "R2 adjusted" = "adj.r.squared")
 
+models_labels <- c("Violent Death", "Violent Death", "Carjacking", "Carjacking")
+
+
+models_labels <- c("Model 1" = "OLS", 
+                   "Model 2" = "OLS", 
+                   "Model 3" = "OLS", 
+                   "Model 4" = "OLS",
+                   "Model 5" = "OLS", 
+                   "Model 6" = "OLS")
+
+
+# Table 2
+export_summs(r_vd_01, 
+             r_vd_02, 
+             r_vr_01, 
+             r_vr_02,
+             r_rr_01, 
+             r_rr_02,
+             digits = 3,
+             scale = TRUE,
+             coefs = indepVar_label,
+             statistics = stats_labels,
+             model.names = models_labels,
+             to.file ="xlsx",
+             file.name = file.path(OUTPUTS,"tab2.xlsx"))
+
+
+
+
+# Table 3
+export_summs(g_cf_01, 
+             g_cf_02, 
+             g_vt_01, 
+             g_vt_02,
+             g_st_01, 
+             g_st_02,
+             digits = 3,
+             scale = TRUE,
+             transform.response = T,
+             coefs = indepVar_label,
+             statistics = stats_labels,
+             to.file ="xlsx",
+             file.name = file.path(OUTPUTS,"tab3.xlsx"))
+
+s_or_01 <- feRegSim(Formulas01_str["other_robberies"])
+s_cr_01 <- feRegSim(Formulas01_str["cargo_robbery"])
+s_bu_01 <- feRegSim(Formulas01_str["burglary"])
+s_sr_01 <- feRegSim(Formulas01_str["store_robbery"])
+
+
+# Table 4
+export_summs(s_or_01, 
+             s_or_02, 
+             s_cr_01, 
+             s_cr_02,
+             s_bu_01, 
+             s_bu_02,
+             s_sr_01,
+             s_sr_02,
+             digits = 3,
+             scale = TRUE,
+             transform.response = T,
+             coefs = indepVar_label,
+             statistics = stats_labels,
+             to.file ="xlsx",
+             file.name = file.path(OUTPUTS,"tab4.xlsx"))
 
 
 #------------------------------------------------------------------------------#
