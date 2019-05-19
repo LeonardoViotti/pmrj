@@ -2,7 +2,9 @@
 
 # reg = reg.f
 # unit = "aisp"
-# time = "month_year"
+# time = c("year","month")
+# #time = "year"
+# 
 # lat = "latitude"
 # lon = "longitude"
 # dist_cutoff = 5
@@ -30,12 +32,14 @@ ConleySEs <- function(reg,
     dt = data.table(reg$cY, reg$cX,
                     fe1 = Fac2Num(reg$fe[[1]]),
                     fe2 = Fac2Num(reg$fe[[2]]),
-                    #fe3 = Fac2Num(reg$fe[[3]]),
+                    fe3 = Fac2Num(reg$fe[[3]]),
                     coord1 = Fac2Num(reg$clustervar[[1]]),
                     coord2 = Fac2Num(reg$clustervar[[2]]))
     setnames(dt,
-             c("fe1", "fe2", "coord1", "coord2"),
-             c(names(reg$fe), names(reg$clustervar)))
+             c("fe1", "fe2", "fe3", "coord1", "coord2"),
+             c(names(reg$fe)[1:3], names(reg$clustervar))  # GAMBIARRA WARNING
+             #c(names(reg$fe)[1:2], names(reg$clustervar))
+             )
     dt = dt[, e := as.numeric(reg$residuals)]
     
     
@@ -44,19 +48,22 @@ ConleySEs <- function(reg,
     break
   }
   
+  
   n <- nrow(dt)
   k <- length(Xvars)
   
-  # Renaming variables:
-  orig_names <- c(unit, time, lat, lon)
-  #orig_names <- c("fe1", "fe2", "coord1", "coord2")
-  new_names <- c("unit", "time", "lat", "lon")
-  setnames(dt, orig_names, new_names)
-  # df <- dt %>% rename("unit" = unit,
-  #                     "time" = time,
-  #                     "lat" = lat,
-  #                     "lon" = lon)
+  # GAMBIARRA WARNING: Dado que eu to usando 2 FE de tempo to combinando os 2
+  dt$time <- dt$year *100 + dt$month
   
+  # Renaming variables:
+  # orig_names <- c(unit, time, lat, lon)
+  # new_names <- c("unit", "time", "lat", "lon")
+  
+  orig_names <- c(unit, lat, lon)
+  new_names <- c("unit", "lat", "lon")
+  
+  setnames(dt, orig_names, new_names)
+
   
   # Empty Matrix:
   XeeX <- matrix(nrow = k, ncol = k, 0)
