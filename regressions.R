@@ -6,13 +6,31 @@
 #------------------------------------------------------------------------------#
 
 
+# TO DOS:
+
+#               ARRUMAR CONSLEY SE PARA IV
+#               EXPORTAR TABLEAS PARA O WORD
+#               RODAR MODELO DE SPATIAL LAG
+#               RODAR TESTE DE ENDOGENEIDADE DO INSTRUMENTO
+#               EXPLICAR QUE EU NAO CONSIGO FAZER EXATAMENTE A MESMA COISA NO IV PORQUE A BASE E MENOR
+
+
+
+
+
+#------------------------------------------------------------------------------#
+#### Load data ####
+
+
 sr <-  read.dta13(file.path(DROPBOX, "data_SIM_2019-01.dta")) 
 placebo_gis <- read.csv(file.path(DROPBOX, "placebo_targets.csv"), header = T)
 
 # Add placebos and coordinates
 sr <- merge(sr, placebo_gis, by = c("aisp", "year", "month" , "semester"), all.x = T)
 
-#### List variables
+
+#------------------------------------------------------------------------------#
+#### List regression variables ####
 
 depVars <- c("violent_death_sim",
              "vehicle_robbery",
@@ -63,7 +81,7 @@ FeForumala1 <- paste(FEVars[1:3], collapse = " + ")
 config1 <- paste("|", FeForumala1, "| 0 | ", clusterVars_form )
 
 FeForumala2 <- paste(FEVars, collapse = " + ") # with cmd FE
-config2 <- paste("|", FeForumala2, "| 0 | 0 ")
+config2 <- paste("|", FeForumala2, "| 0 |  ", clusterVars_form)
 
 
 # IV formula
@@ -71,7 +89,7 @@ first_stage_left <- "on_target"
 first_stage_right <- paste(ZVars, collapse = " + ")
 formula_1st <-  paste("(", first_stage_left, " ~ ", first_stage_right, " )")
 
-config_iv <- paste("|", FeForumala2, "|" ,  formula_1st,  "| 0 ")
+config_iv <- paste("|", FeForumala2, "|" ,  formula_1st,  "| ", clusterVars_form)
 
 
 # Final formulas
@@ -106,9 +124,25 @@ Formulas01_lg <- paste(depVars, sFormula1, sep = " ~ ")
 #------------------------------------------------------------------------------#
 #### Regression models ####
 
+
+clse <- function(reg){
+  vcv <- ConleySEs(reg = reg,
+                   unit = "aisp", 
+                   time = c("year","month"),
+                   lat = "latitude", lon = "longitude")$Spatial_HAC
+  ses <- diag(vcv)
+  return(ses)
+}
+
+
+# Original regressions and Consley SEs
 feRegSim <- function(form){
   form <- as.formula(form)
-  felm(form, data = sr[sr$sem_year >100,])
+  model <- felm(form, data = sr[sr$sem_year >100,], keepCX = T)
+  
+  # Replace clust. SEs with Conley SEs
+  # model$cse <- clse(model)
+  
 }
 
 
@@ -180,6 +214,12 @@ s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
 
 
 #------------------------------------------------------------------------------#
+##### Export ####
+
+
+
+
+#------------------------------------------------------------------------------#
 #### Spatial lag ####
 
 # #foo <- as.formula(Formulas01_lg)
@@ -188,21 +228,30 @@ s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
 # lagsarlm(foo, 
 #          listw = lw, 
 #          data = sr, 
-#          method="Matrix")
+# #          method="Matrix")
+# 
+# 
+# sr$year_month <- sr$year*100+ sr$month
+# 
+# #formula.f <-  "violent_death_sim ~ on_target | year_month + aisp  | 0 |  latitude + longitude"
+# formula.f <- Formulas01_str[1]
+# formula.f <- as.formula(formula.f) 
+# 
+# reg.f <- felm(formula.f, data = sr, keepCX = T)
+# 
+# foo <- ConleySEs(reg = reg.f,
+#           unit = "aisp", 
+#           time = c("year","month"),
+#           #time = "year",
+#           dist_cutoff = 5,
+#           #balanced_pnl = F,
+#           #dist_fn = "Haversine", lag_cutoff = 5, cores = 1, verbose = FALSE,
+#           lat = "latitude", lon = "longitude") 
+# 
+# 
+# 
+# #r_vd_01
 
-
-forumla.f <-  "violent_death_sim ~ on_target | month_year + aisp  | 0 |  latitude + longitude" 
-forumla.f <- as.formula(forumla.f) 
-
-reg.f <- felm(forumla.f, data = sr, keepCX = T)
-
-ConleySEs(reg = reg.f,
-          unit = "aisp", 
-          time = "month_year",
-          dist_cutoff = 5,
-          #balanced_pnl = F,
-          #dist_fn = "Haversine", lag_cutoff = 5, cores = 1, verbose = FALSE,
-          lat = "latitude", lon = "longitude") 
 
 
 #------------------------------------------------------------------------------#
