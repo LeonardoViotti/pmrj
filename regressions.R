@@ -16,7 +16,7 @@
 
 
 
-
+EXPORT_tables = F
 
 #------------------------------------------------------------------------------#
 #### Load data ####
@@ -140,8 +140,19 @@ feRegSim <- function(form){
   form <- as.formula(form)
   model <- felm(form, data = sr[sr$sem_year >100,], keepCX = T)
   
+  
+  # Rename Dep var for IV just for exporting
+  if (!is.null(model$endovars)){
+    rownames(model$coefficients)[grep("`on_", rownames(model$coefficients))] <- "on_target"
+    rownames(model$beta)[grep("`on_", rownames(model$beta))] <- "on_target"
+    colnames(model$cX)[grep("`on_", colnames(model$cX))] <- "on_target"
+    
+  }
+  
   # Replace clust. SEs with Conley SEs
-  # model$cse <- clse(model)
+  model$cse <- clse(model)
+  
+  return(model)
   
 }
 
@@ -217,6 +228,7 @@ s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
 ##### Export ####
 
 indepVar_label <- c("On target" = "on_target")
+
 stats_labels <- c("Observations" = "nobs",  
                   "R2 adjusted" = "adj.r.squared")
 
@@ -225,67 +237,151 @@ models_labels <- c("Violent Death", "Violent Death", "Carjacking", "Carjacking")
 
 models_labels <- c("Model 1" = "OLS", 
                    "Model 2" = "OLS", 
-                   "Model 3" = "OLS", 
+                   "Model 3" = "IV", 
                    "Model 4" = "OLS",
                    "Model 5" = "OLS", 
-                   "Model 6" = "OLS")
+                   "Model 6" = "IV",
+                   "Model 7" = "OLS", 
+                   "Model 8" = "OLS", 
+                   "Model 9" = "IV",
+                   "Model 10" = "OLS", 
+                   "Model 11" = "OLS", 
+                   "Model 12" = "IV")
 
 
 # Table 2
-export_summs(r_vd_01, 
-             r_vd_02, 
-             r_vr_01, 
-             r_vr_02,
-             r_rr_01, 
-             r_rr_02,
-             digits = 3,
-             scale = TRUE,
-             coefs = indepVar_label,
-             statistics = stats_labels,
-             model.names = models_labels,
-             to.file ="xlsx",
-             file.name = file.path(OUTPUTS,"tab2.xlsx"))
+tab2 <- 
+  export_summs(r_vd_01, 
+               r_vd_02, 
+               r_vd_IV,
+               r_vr_01, 
+               r_vr_02,
+               r_vr_IV,
+               r_rr_01, 
+               r_rr_02,
+               r_rr_IV,
+               digits = 3,
+               scale = TRUE,
+               coefs = indepVar_label,
+               statistics = stats_labels,
+               model.names = models_labels[1:9] #,
+               # to.file ="xlsx",
+               # file.name = file.path(OUTPUTS,"tab2.xlsx")
+               )
 
 
 
 
 # Table 3
-export_summs(g_cf_01, 
-             g_cf_02, 
-             g_vt_01, 
-             g_vt_02,
-             g_st_01, 
-             g_st_02,
-             digits = 3,
-             scale = TRUE,
-             transform.response = T,
-             coefs = indepVar_label,
-             statistics = stats_labels,
-             to.file ="xlsx",
-             file.name = file.path(OUTPUTS,"tab3.xlsx"))
+tab3 <- 
+  export_summs(g_cf_01, 
+               g_cf_02, 
+               g_cf_IV, 
+               g_vt_01, 
+               g_vt_02,
+               g_vt_IV,
+               g_st_01, 
+               g_st_02,
+               g_st_IV,
+               digits = 3,
+               scale = TRUE,
+               transform.response = T,
+               coefs = indepVar_label,
+               model.names = models_labels[1:9],
+               statistics = stats_labels #,
+               # to.file ="xlsx",
+               # file.name = file.path(OUTPUTS,"tab3.xlsx")
+               )
 
-s_or_01 <- feRegSim(Formulas01_str["other_robberies"])
-s_cr_01 <- feRegSim(Formulas01_str["cargo_robbery"])
-s_bu_01 <- feRegSim(Formulas01_str["burglary"])
-s_sr_01 <- feRegSim(Formulas01_str["store_robbery"])
 
 
 # Table 4
-export_summs(s_or_01, 
-             s_or_02, 
-             s_cr_01, 
-             s_cr_02,
-             s_bu_01, 
-             s_bu_02,
-             s_sr_01,
-             s_sr_02,
-             digits = 3,
-             scale = TRUE,
-             transform.response = T,
-             coefs = indepVar_label,
-             statistics = stats_labels,
-             to.file ="xlsx",
-             file.name = file.path(OUTPUTS,"tab4.xlsx"))
+tab4 <- 
+  export_summs(s_or_01, 
+               s_or_02, 
+               s_or_IV, 
+               s_cr_01, 
+               s_cr_02,
+               s_cr_IV,
+               s_bu_01, 
+               s_bu_02,
+               s_bu_IV,
+               s_sr_01,
+               s_sr_02,
+               s_sr_IV,
+               digits = 3,
+               scale = TRUE,
+               transform.response = T,
+               coefs = indepVar_label,
+               model.names = models_labels,
+               statistics = stats_labels #,
+               # to.file ="xlsx",
+               # file.name = file.path(OUTPUTS,"tab4.xlsx")
+               )
+  
+
+#### Table edits
+
+editTables <- function(regTab, depVarLabel = "Number of occurrences", colTitles, nDepVars = 3) {
+  
+  # Dependent variables labels
+  add_vec <- ""
+  for (ndp in 1:length(colTitles)){
+    add_vec <- c(add_vec, c("", colTitles[ndp], ""))
+  }
+  
+  add_header <- hux(rbind(add_vec))
+  
+  # Additional lines in the bottom
+  add_lines <- 
+    hux(
+      rbind(
+        c("Chief FE" , rep(c("No", "Yes", "Yes"), length(colTitles)))
+      ) )
+  
+  # Make this more stable
+  regTab <- rbind(add_header, regTab[1:4,], add_lines, regTab[5:6,])
+  
+  # Cell merges
+  #regTab  <- regTab %>% merge_cells(1:1, 1:ncol(regTab)) 
+
+  
+  # Formating
+  align(regTab) <- "center"
+  align(regTab[1:nrow(regTab)-1,1]) <- "left"
+  
+  font_size(regTab) <- 10
+  
+  return(regTab)
+  
+}
+
+
+tab2_formated <- editTables(tab2, colTitles = c("Violent Death", "Vehicle robbery", "Street robbery"))
+tab3_formated <- editTables(tab3, colTitles = c("Cadavers Found (dummy)", "Car theft", "Street theft"))
+tab4_formated <- editTables(tab4, 
+                            colTitles = c("Robberies not included in the target", 
+                                          "Cargo robbery",
+                                          "Burglary",
+                                          "Robbery of commercial stores"))
+
+
+# Export
+
+if(EXPORT_tables){
+  huxtable::quick_docx(tab2_formated, file = file.path(OUTPUTS, "tab2_formated_draft.docx"))
+  huxtable::quick_docx(tab3_formated, file = file.path(OUTPUTS, "tab3_formated_draft.docx"))
+  huxtable::quick_docx(tab4_formated, file = file.path(OUTPUTS, "tab4_formated_draft.docx"))
+}
+
+
+colTitles = c("Violent Death", "Vehicle robbery", "Street robbery")
+
+add_vec <- ""
+for (ndp in 1:length(colTitles)){
+  add_vec <- c(add_vec, c("", colTitles[ndp], ""))
+}
+
 
 
 #------------------------------------------------------------------------------#

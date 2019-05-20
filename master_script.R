@@ -15,7 +15,7 @@ library(shomR) # ConleySEs but not on CRAN
 library(spdep) # lagsarlm 
 library(Rcpp)
 
-
+library(huxtable)
 library(flextable)
 #library(officer)
 #library(ReporteRs)
@@ -67,6 +67,91 @@ sourceCpp(file.path(CONLEYse_FUNs, "cpp-functions.cpp"))
 #source(file.path(CONLEYse_FUNs, "iterate-obs-function_draft.R"))
 source(file.path(CONLEYse_FUNs, "ConleySE_fun_draft.R"))
 
+
+
+#### My own functions
+
+# Clean model names of formula functions, e.g. log() and factor()
+cleanFormulaName <- function(x){
+  if(any(grepl("(|)", x))){
+    x <- gsub(".*\\(", "", x)
+    x <- gsub("\\).*", "", x)
+    return(x)
+  }else{
+    return(x)
+  }
+}
+
+
+# Grab variable names from regressions
+regIndepVars <- function(x){
+  
+  # Work with felm and lm
+  if(class(x) == "felm"){
+    indepV <- rownames(x$coefficients)
+  }else if (class(x) == "lm"){
+    indepV <- names(x$model)[-1]
+  }else{
+    warning("Not sure what that regression is")
+  }
+  
+  indepV <- cleanFormulaName(indepV)
+  
+  return(indepV)
+}
+
+regDepVars <- function(x){
+  
+  # Work with felm and lm
+  if(class(x) == "felm"){
+    depV <- colnames(x$coefficients)
+  }else if (class(x) == "lm"){
+    depV <- names(x$model)[1]
+  }else{
+    warning("Not sure what that regression is")
+  }
+  
+  # Removes log() or simmilar
+  depV <- cleanFormulaName(depV)
+  
+  return(depV)
+  
+}
+
+
+# Get variable mean from the same data as regression
+
+regData <- function(reg, regdf){
+  if(class(reg) == "felm"){ # get FEs in case it is an felm model
+    feVars <- names(reg$fe)
+    #clusterVars <- names(reg$clustervar)
+    
+    if(!is.null(reg$stage1)){
+      instrumentVars <- reg$stage1$instruments
+    } else{
+      instrumentVars <- NULL
+    }
+    
+  } else{ # Already in regIndepVars()
+    feVars <- NULL
+    #clusterVars <- NULL
+    instrumentVars <- NULL
+  }
+  
+  # Regression variables
+  regVarsAll <- c(regDepVars(reg), 
+                  regIndepVars(reg),
+                  feVars,
+                  clusterVars,
+                  instrumentVars)
+  
+  # Make sure all observarions are the same
+  completeBol <- complete.cases(regdf[,regVarsAll])
+  completeData <- regdf[completeBol,]
+  
+  return(completeData)
+  
+}
 
 
 #------------------------------------------------------------------------------#
