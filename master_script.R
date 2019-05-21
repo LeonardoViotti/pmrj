@@ -163,7 +163,7 @@ RUN_placebo_targets = F
 #------------------------------------------------------------------------------#
 #### Create placebo targets ####
 
-if(RUN_placebo_targets){
+if(RUN_placebo_targets_construction){
   source(file.path(GITHUB, "placebo_targets.R"))
   
 }
