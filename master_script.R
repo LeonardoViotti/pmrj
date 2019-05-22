@@ -6,6 +6,13 @@
 
 rm(list = ls())
 
+#------------------------------------------------------------------------------#
+#### Section switches ####
+
+RUN_placebo_targets_construction = F
+
+#------------------------------------------------------------------------------#
+#### Packages ####
 
 library(tidyverse)
 library(readstata13)
@@ -21,8 +28,6 @@ library(flextable)
 #library(ReporteRs)
 library(jtools)
 
-
-
 library(rgeos)
 library(rgdal)
 library(sp)
@@ -34,6 +39,10 @@ library(spdep)
 library(readstata13)
 library(tidyverse)
 library(broom)
+
+#------------------------------------------------------------------------------#
+#### File paths ####
+
 
 # Leonardo WBG laptop
 if (Sys.getenv("USERNAME") == "wb519128" | Sys.getenv("USERNAME") == "WB519128"){

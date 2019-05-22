@@ -77,6 +77,7 @@ sim <- merge(sim,
 #### Condstrucao do Dataset por semestre ####
 
 
+
 # Base semestral
 simSem <- sim %>%
   dplyr::arrange(aisp, year,  semester) %>%
@@ -202,6 +203,23 @@ sim$plaTar_sr[Qbol(2, "sr")] <- round(sim$sr_l[Qbol(2, "sr")]*(1-reduQ2_sr))
 sim$plaTar_sr[Qbol(3, "sr")] <- round(sim$sr_l[Qbol(3, "sr")]*(1-reduQ3_sr))
 sim$plaTar_sr[Qbol(4, "sr")] <- round(sim$sr_l[Qbol(4, "sr")]*(1-reduQ4_sr))
 
+
+#------------------------------------------------------------------------------#
+#### Regression variables placebo ####
+
+placebo_PRE_bol <- sim$year <2009 | (sim$year == 2009 & sim$semester == 1)
+
+sim$target_vd[placebo_PRE_bol] <- sim$plaTar_vd[placebo_PRE_bol]
+sim$target_vr[placebo_PRE_bol] <- sim$plaTar_vr[placebo_PRE_bol]
+sim$target_sr[placebo_PRE_bol] <- sim$plaTar_vs[placebo_PRE_bol]
+
+# foreach x of varlist violent_death_sim target_vd street_robbery target_sr vehicle_robbery target_vr {
+#   bysort aisp (sem_year month): gen `x'_cum= `x'[_n-1] if month==2 | month==8
+#   bysort  aisp (sem_year): replace `x'_cum=  `x'[_n-1] +  `x'_cum[_n-1] if month==3 | month==9
+#   bysort  aisp (sem_year): replace `x'_cum=  `x'[_n-1] +  `x'_cum[_n-1] if month==4 | month==10
+#   bysort  aisp (sem_year): replace `x'_cum=  `x'[_n-1] +  `x'_cum[_n-1] if month==5 | month==11
+#   bysort  aisp (sem_year): replace `x'_cum=  `x'[_n-1] +  `x'_cum[_n-1] if month==6 | month==12
+# }
 
 #------------------------------------------------------------------------------#
 #### Plots do fit  ####
