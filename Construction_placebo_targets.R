@@ -177,16 +177,19 @@ reduQ3_sr = 0.05
 reduQ4_sr = 0.07
 
 
-#### Criar a variavel de quartil
+#### Criar a booleano de quartil
+Qbol<- function(q, var){
+  return(sim[,paste0("qua_", var)] == q & !is.na(sim[,paste0("qua_", var)]))
+}
+
+
+#### Placebo targets
 
 # Define empty variable
 sim$plaTar_vd <- NA
 sim$plaTar_vr <- NA
 sim$plaTar_sr <- NA
 
-Qbol<- function(q, var){
-  return(sim[,paste0("qua_", var)] == q & !is.na(sim[,paste0("qua_", var)]))
-}
 
 sim$plaTar_vd[Qbol(1, "vd")] <- round(sim$vd_l[Qbol(1, "vd")]*(1-reduQ1_vd))
 sim$plaTar_vd[Qbol(2, "vd")] <- round(sim$vd_l[Qbol(2, "vd")]*(1-reduQ2_vd))
@@ -204,22 +207,67 @@ sim$plaTar_sr[Qbol(3, "sr")] <- round(sim$sr_l[Qbol(3, "sr")]*(1-reduQ3_sr))
 sim$plaTar_sr[Qbol(4, "sr")] <- round(sim$sr_l[Qbol(4, "sr")]*(1-reduQ4_sr))
 
 
+# Semester target for placebo
+sim <- sim %>% 
+  group_by(aisp, year, semester) %>% 
+  mutate(plaTar_vd_sem = sum(plaTar_vd),
+         plaTar_vr_sem = sum(plaTar_vr),
+         plaTar_sr_sem = sum(plaTar_sr))
+
+
 #------------------------------------------------------------------------------#
 #### Regression variables placebo ####
 
-placebo_PRE_bol <- sim$year <2009 | (sim$year == 2009 & sim$semester == 1)
+#placebo_PRE_bol <- sim$year <2009 | (sim$year == 2009 & sim$semester == 1)
 
-sim$target_vd[placebo_PRE_bol] <- sim$plaTar_vd[placebo_PRE_bol]
-sim$target_vr[placebo_PRE_bol] <- sim$plaTar_vr[placebo_PRE_bol]
-sim$target_sr[placebo_PRE_bol] <- sim$plaTar_vs[placebo_PRE_bol]
 
-# foreach x of varlist violent_death_sim target_vd street_robbery target_sr vehicle_robbery target_vr {
-#   bysort aisp (sem_year month): gen `x'_cum= `x'[_n-1] if month==2 | month==8
-#   bysort  aisp (sem_year): replace `x'_cum=  `x'[_n-1] +  `x'_cum[_n-1] if month==3 | month==9
-#   bysort  aisp (sem_year): replace `x'_cum=  `x'[_n-1] +  `x'_cum[_n-1] if month==4 | month==10
-#   bysort  aisp (sem_year): replace `x'_cum=  `x'[_n-1] +  `x'_cum[_n-1] if month==5 | month==11
-#   bysort  aisp (sem_year): replace `x'_cum=  `x'[_n-1] +  `x'_cum[_n-1] if month==6 | month==12
-# }
+#### Create cummulative targets
+sim <- sim %>%
+  group_by(aisp, year, semester) %>%
+  mutate(plaTar_vd_l = Lag(plaTar_vd, +1),
+         plaTar_vd_cum = cumsum(replace_na(plaTar_vd_l,0)),
+         plaTar_vr_l = Lag(plaTar_vr, +1),
+         plaTar_vr_cum = cumsum(replace_na(plaTar_vr_l,0)),
+         plaTar_sr_l = Lag(plaTar_sr, +1),
+         plaTar_sr_cum = cumsum(replace_na(plaTar_sr_l,0))) %>% 
+  select(-c(plaTar_vd_l, plaTar_vr_l, plaTar_sr_l)) # remove lagged variables
+
+
+# Create target per crime
+# First month of semester on target is always NA
+sim$on_target_vd_plapre <- (sim$violent_death_sim_cum <=  sim$plaTar_vd) %>% as.numeric()
+sim$on_target_vr_plapre <- (sim$vehicle_robbery_cum <=  sim$plaTar_vr) %>% as.numeric()
+sim$on_target_sr_plapre <- (sim$street_robbery_cum <=  sim$plaTar_sr) %>% as.numeric()
+
+# Create overall target
+sim$on_target_plapre <-  (sim$on_target_vd_plapre==1 &
+                          sim$on_target_vr_plapre==1 & 
+                          sim$on_target_sr_plapre==1)
+
+#### Create IV vars
+
+# Distance variable
+sim$dist_target_vd_plapre <- (sim$violent_death_sim_cum /sim$plaTar_vd_sem) -1 
+sim$dist_target_vr_plapre <- (sim$vehicle_robbery_cum /sim$plaTar_vr_sem) -1 
+sim$dist_target_sr_plapre <- (sim$street_robbery_cum /sim$plaTar_sr_sem) -1 
+
+# Instrumental variable, one year lagged
+sim <- sim %>% 
+  group_by(aisp) %>%
+  arrange(aisp, year, month) %>% 
+  mutate(lag12_dist_target_vd_plapre=Lag(dist_target_vd_plapre, +12),
+         lag12_dist_target_vr_plapre=Lag(dist_target_vr_plapre, +12),
+         lag12_dist_target_sr_plapre=Lag(dist_target_sr_plapre, +12))
+
+
+# utils::View(foo %>% select(aisp,
+#                            year,
+#                            month,
+#                            semester,
+#                            lag12_dist_target_vd_plapre,
+#                            dist_target_vd_plapre)
+#             )
+
 
 #------------------------------------------------------------------------------#
 #### Plots do fit  ####

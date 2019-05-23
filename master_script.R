@@ -21,6 +21,7 @@ library(data.table)
 library(shomR) # ConleySEs but not on CRAN
 library(spdep) # lagsarlm 
 library(Rcpp)
+library(Hmisc)
 
 library(huxtable)
 library(flextable)
