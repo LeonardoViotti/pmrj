@@ -9,7 +9,7 @@
 #### Settings ####
 
 
-EXPORT_data = F
+EXPORT_data = T
 EXPORT_plots = F
 
 #------------------------------------------------------------------------------#
@@ -230,7 +230,7 @@ sim <- sim %>%
          plaTar_vr_cum = cumsum(replace_na(plaTar_vr_l,0)),
          plaTar_sr_l = Lag(plaTar_sr, +1),
          plaTar_sr_cum = cumsum(replace_na(plaTar_sr_l,0))) %>% 
-  select(-c(plaTar_vd_l, plaTar_vr_l, plaTar_sr_l)) # remove lagged variables
+  dplyr::select(-c(plaTar_vd_l, plaTar_vr_l, plaTar_sr_l)) # remove lagged variables
 
 
 # Create target per crime
@@ -285,8 +285,8 @@ if (EXPORT_plots){
   plot(simp$target_vd, 
        simp$vd_l,
        xlab="Meta real", 
-       ylab="L.V. mesmo mês do ano anterior")
-  title(main="Fit médio percentuais de redução  - Letalidade Violenta (2011-2015)")
+       ylab="L.V. mesmo mes do ano anterior")
+  title(main="Fit medio percentuais de reducao  - Letalidade Violenta (2011-2015)")
   abline(a = 0, b= slope_vd, col = "red")
   
   dev.off()
@@ -297,8 +297,8 @@ if (EXPORT_plots){
   slope_vr <- 1 + (reduQ1_vr + reduQ2_vr + reduQ3_vr + reduQ4_vr)/4
   plot(simp$target_vr, simp$vr_l,
        xlab="Meta real", 
-       ylab="R.V. mesmo mês do ano anterior")
-  title(main="Fit médio percentuais de redução  - Roubo de Veículos (2011-2015)")
+       ylab="R.V. mesmo mes do ano anterior")
+  title(main="Fit medio percentuais de reducao  - Roubo de Veiculos (2011-2015)")
   abline(a = 0, b= slope_vr, col = "red")
   dev.off()
   
@@ -308,8 +308,8 @@ if (EXPORT_plots){
   slope_sr <- 1 + (reduQ1_sr + reduQ2_sr + reduQ3_sr + reduQ4_sr)/4
   plot(simp$target_sr, simp$sr_l,
        xlab="Meta real", 
-       ylab="R.R. mesmo mês do ano anterior")
-  title(main="Fit médio percentuais de redução  - Roubo de Rua (2011-2015)")
+       ylab="R.R. mesmo mes do ano anterior")
+  title(main="Fit medio percentuais de reducao  - Roubo de Rua (2011-2015)")
   abline(a = 0, b= slope_sr, col = "red")
   dev.off()
   
@@ -320,6 +320,18 @@ if (EXPORT_plots){
 
 #------------------------------------------------------------------------------#
 #### Exportart a base ####
+
+#### Cosmetic changes
+sim <-
+  sim %>%
+  rename("vd_placebo_tar" = "plaTar_vd",
+         "vr_placebo_tar" = "plaTar_vr",
+         "sr_placebo_tar" = "plaTar_sr")
+
+
+
+
+
 
 
 if (EXPORT_data){
@@ -332,26 +344,23 @@ if (EXPORT_data){
                        "qua_vd",
                        "qua_vr",
                        "qua_sr",
-                       "plaTar_vd",
-                       "plaTar_vr",
-                       "plaTar_sr", 
+                       "vd_placebo_tar",
+                       "vr_placebo_tar",
+                       "sr_placebo_tar", 
                        "latitude",
                        "longitude")]
   
   
-  plaExport <-
-    plaExport %>%
-    rename("vd_placebo_tar" = "plaTar_vd",
-           "vr_placebo_tar" = "plaTar_vr",
-           "sr_placebo_tar" = "plaTar_sr")
-  
   write.csv(plaExport,
-            "placebo_targets.csv",
+            file.path(DATA, "placebo_targets.csv"),
             row.names = F,
             na = "")
   
-  
- 
+  # Exporting the entire data to run in R
+  write.csv(sim,
+            file.path(DATA, "sim2019.csv"),
+            row.names = F,
+            na = "")
   
 }
 
