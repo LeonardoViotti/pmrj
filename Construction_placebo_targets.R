@@ -9,7 +9,7 @@
 #### Settings ####
 
 
-EXPORT_data = T
+EXPORT_data = F
 EXPORT_plots = F
 
 #------------------------------------------------------------------------------#
@@ -235,9 +235,9 @@ sim <- sim %>%
 
 # Create target per crime
 # First month of semester on target is always NA
-sim$on_target_vd_plapre <- (sim$violent_death_sim_cum <=  sim$plaTar_vd) %>% as.numeric()
-sim$on_target_vr_plapre <- (sim$vehicle_robbery_cum <=  sim$plaTar_vr) %>% as.numeric()
-sim$on_target_sr_plapre <- (sim$street_robbery_cum <=  sim$plaTar_sr) %>% as.numeric()
+sim$on_target_vd_plapre <- (sim$violent_death_sim_cum <=  sim$plaTar_vd_cum) %>% as.numeric()
+sim$on_target_vr_plapre <- (sim$vehicle_robbery_cum <=  sim$plaTar_vr_cum) %>% as.numeric()
+sim$on_target_sr_plapre <- (sim$street_robbery_cum <=  sim$plaTar_sr_cum) %>% as.numeric()
 
 # Create overall target
 sim$on_target_plapre <-  (sim$on_target_vd_plapre==1 &
