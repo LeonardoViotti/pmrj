@@ -405,7 +405,7 @@ if (EXPORT_data){
 #                   "qua_vd")])
 
 #### Estabilidade
-# Sea taxa p100mil menor do que 10 homic√?dios
+# Sea taxa p100mil menor do que 10 homic??dios
 
 
 # #------------------------------------------------------------------------------#
