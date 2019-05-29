@@ -74,6 +74,7 @@ lagFun <- function(x, n){
 }
 
 
+#### Laged crimes to construct placebos
 sim <- 
   sim %>%
   dplyr::arrange(aisp, year,  semester) %>%
@@ -250,6 +251,13 @@ sim <- sim %>%
          plaTar_sr_cum = cumsum(replace_na(plaTar_sr_l,0))) %>% 
   dplyr::select(-c(plaTar_vd_l, plaTar_vr_l, plaTar_sr_l)) # remove lagged variables
 
+# Change zeros to NA if year is 2004
+bol04 <- sim$year ==2004
+
+sim$plaTar_vd_cum[bol04] <- NA
+sim$plaTar_vr_cum[bol04] <- NA
+sim$plaTar_sr_cum[bol04] <- NA
+
 
 # Fix this so dist is not divided by zero
 sim$plaTar_vr_sem <- ifelse(sim$plaTar_vr_sem == 0, NA, sim$plaTar_vr_sem)
@@ -289,6 +297,8 @@ sim <- sim %>%
 #                            year,
 #                            month,
 #                            semester,
+#                            violent_death_sim_cum,
+#                            plaTar_vd_sem,
 #                            lag12_dist_target_vd_plapre,
 #                            dist_target_vd_plapre)
 #             )
