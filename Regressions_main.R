@@ -66,6 +66,11 @@ FEVars <- c("aisp",
             "month", 
             "id_cmt")
 
+FEVars_pla <- c("aisp",
+                "year", 
+                "month", 
+                "cmd_name")
+
 ZVars <- c("lag12_dist_target_vr",
            "lag12_dist_target_sr",
            "lag12_dist_target_vd")
@@ -97,6 +102,9 @@ config1 <- paste("|", FeForumala1, "| 0 | ", clusterVars_form )
 FeForumala2 <- paste(FEVars, collapse = " + ") # with cmd FE
 config2 <- paste("|", FeForumala2, "| 0 |  ", clusterVars_form)
 
+FeForumala2_pla <- paste(FEVars_pla, collapse = " + ") # with cmd FE
+config2_pla <- paste("|", FeForumala2_pla, "| 0 |  ", clusterVars_form)
+
 
 # IV formula
 first_stage_left <- "on_target"
@@ -110,10 +118,10 @@ formula_1st <-  paste("(", first_stage_left, " ~ ", first_stage_right, " )")
 formula_1st_pla <-  paste("(", first_stage_left_pla, " ~ ", first_stage_right_pla, " )")
 
 config_iv <- paste("|", FeForumala2, "|" ,  formula_1st,  "| ", clusterVars_form)
-config_iv_pla <- paste("|", FeForumala1, "|" ,  formula_1st_pla,  "| ", clusterVars_form)
+config_iv_pla <- paste("|", FeForumala2_pla, "|" ,  formula_1st_pla,  "| ", clusterVars_form)
 
 
-#### Final formulas ####
+#### Final formulas
 
 Formulas01_str <- paste(depVars, paste(rFormula, config1), sep = " ~ ")
 Formulas02_str <- paste(depVars, paste(rFormula, config2), sep = " ~ ")
@@ -121,7 +129,7 @@ FormulasIV_str <- paste(depVars, paste(rFormula_iv, config_iv), sep = " ~ ")
 
 # Placebo
 Formulas01_pla_str <- paste(depVars, paste(rFormula_pla, config1), sep = " ~ ")
-Formulas02_pla_str <- paste(depVars, paste(rFormula_pla, config2), sep = " ~ ")
+Formulas02_pla_str <- paste(depVars, paste(rFormula_pla, config2_pla), sep = " ~ ")
 FormulasIV_pla_str <- paste(depVars, paste(rFormula_iv_pla, config_iv_pla), sep = " ~ ")
 
 
@@ -131,6 +139,7 @@ names(Formulas01_str) <- depVars
 names(Formulas02_str) <- depVars
 names(FormulasIV_str) <- depVars
 names(Formulas01_pla_str) <- depVars
+names(Formulas02_pla_str) <- depVars
 names(FormulasIV_pla_str) <- depVars
 
 #rFormulaFE <- paste0("factor(",FEVars,")")
@@ -292,6 +301,27 @@ p_bu_01 <- feRegSim_placebo(Formulas01_pla_str["burglary"])
 p_sr_01 <- feRegSim_placebo(Formulas01_pla_str["store_robbery"])
 
 
+### Model 2 whith cmnd FE - placebo
+
+# Tabble 2
+p_vd_02 <- feRegSim_placebo(Formulas02_pla_str["violent_death_sim"])
+p_vr_02 <- feRegSim_placebo(Formulas02_pla_str["vehicle_robbery"])
+p_rr_02 <- feRegSim_placebo(Formulas02_pla_str["street_robbery"])
+p_hm_02 <- feRegSim_placebo(Formulas02_pla_str["homicide"])
+p_pk_02 <- feRegSim_placebo(Formulas02_pla_str["dpolice_killing"])
+
+# Table 3 - Gaming 
+p_cf_02 <- feRegSim_placebo(Formulas02_pla_str["dbody_found"])
+p_vt_02 <- feRegSim_placebo(Formulas02_pla_str["vehicle_theft"])
+p_st_02 <- feRegSim_placebo(Formulas02_pla_str["street_theft"])
+
+
+# Table 4 - Spillovers
+p_or_02 <- feRegSim_placebo(Formulas02_pla_str["other_robberies"])
+p_cr_02 <- feRegSim_placebo(Formulas02_pla_str["cargo_robbery"])
+p_bu_02 <- feRegSim_placebo(Formulas02_pla_str["burglary"])
+p_sr_02 <- feRegSim_placebo(Formulas02_pla_str["store_robbery"])
+
 #### Placebo 2SLS
 
 # Tabble 2
@@ -423,34 +453,40 @@ tab4 <-
 
 # Table 2 - placebo
 tab2_pla <- 
-  export_summs(p_vd_01, 
+  export_summs(p_vd_01,
+               p_vd_02,
                p_vd_IV,
-               p_vr_01, 
+               p_vr_01,
+               p_vr_02, 
                p_vr_IV,
                p_rr_01, 
+               p_rr_02, 
                p_rr_IV,
                digits = 3,
                scale = TRUE,
                coefs = indepVar_label_pla,
                statistics = stats_labels,
-               model.names = models_labels_pla[1:6] #,
+               model.names = models_labels[1:9] #,
                # to.file ="xlsx",
                # file.name = file.path(OUTPUTS,"tab2.xlsx")
   )
 
 
 tab3_pla <- 
-  export_summs(p_cf_01, 
+  export_summs(p_cf_01,
+               p_cf_02,
                p_cf_IV, 
-               p_vt_01, 
+               p_vt_01,
+               p_vt_02,
                p_vt_IV,
                p_st_01, 
+               p_st_02,
                p_st_IV,
                digits = 3,
                scale = TRUE,
                coefs = indepVar_label_pla,
                statistics = stats_labels,
-               model.names = models_labels_pla[1:6] #,
+               model.names = models_labels[1:9] #,
                # to.file ="xlsx",
                # file.name = file.path(OUTPUTS,"tab2.xlsx")
   )
@@ -458,18 +494,22 @@ tab3_pla <-
 
 tab4_pla <- 
   export_summs(p_or_01, 
+               p_or_02,
                p_or_IV, 
                p_cr_01, 
+               p_cr_02,
                p_cr_IV,
                p_bu_01, 
+               p_bu_02, 
                p_bu_IV,
                p_sr_01,
+               p_sr_02,
                p_sr_IV,
                digits = 3,
                scale = TRUE,
                coefs = indepVar_label_pla,
                statistics = stats_labels,
-               model.names = models_labels_pla[1:8] #,
+               model.names = models_labels #,
                # to.file ="xlsx",
                # file.name = file.path(OUTPUTS,"tab2.xlsx")
   )
@@ -518,6 +558,17 @@ tab4_formated <- editTables(tab4,
                                           "Cargo robbery",
                                           "Burglary",
                                           "Robbery of commercial stores"))
+
+tab2_pla_formated <- editTables(tab2_pla, 
+                                colTitles = c("Violent Death", "Vehicle robbery", "Street robbery"))
+tab3_pla_formated <- editTables(tab3_pla, 
+                                colTitles = c("Cadavers Found (dummy)", "Car theft", "Street theft"))
+tab4_pla_formated <- editTables(tab4_pla, 
+                            colTitles = c("Robberies not included in the target", 
+                                          "Cargo robbery",
+                                          "Burglary",
+                                          "Robbery of commercial stores"))
+
 
 
 # Export
