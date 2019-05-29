@@ -19,12 +19,15 @@ EXPORT_plots = F
 #sim <- read.dta13("data_SIM_2019-01.dta")
 sim <- read.dta13(file.path(DROPBOX,"data_SIM_2019-04.dta"))
 
-
 sim <- sim[!is.na(sim$aisp) & !is.na(sim$year) & !is.na(sim$month), ]
 
 # Load shapefiles
 
 aisp_shp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
+
+# Load chief IDs
+# cmd <- fread(file = file.path(DATA, "ComandantesBatalhao.csv"),
+#             encoding = "UTF-8")
 
 
 
@@ -233,6 +236,10 @@ sim <- sim %>%
   dplyr::select(-c(plaTar_vd_l, plaTar_vr_l, plaTar_sr_l)) # remove lagged variables
 
 
+# Fix this so dist is not divided by zero
+sim$plaTar_vr_sem <- ifelse(sim$plaTar_vr_sem == 0, NA, sim$plaTar_vr_sem)
+
+
 # Create target per crime
 # First month of semester on target is always NA
 sim$on_target_vd_plapre <- (sim$violent_death_sim_cum <=  sim$plaTar_vd_cum) %>% as.numeric()
@@ -242,7 +249,7 @@ sim$on_target_sr_plapre <- (sim$street_robbery_cum <=  sim$plaTar_sr_cum) %>% as
 # Create overall target
 sim$on_target_plapre <-  (sim$on_target_vd_plapre==1 &
                           sim$on_target_vr_plapre==1 & 
-                          sim$on_target_sr_plapre==1)
+                          sim$on_target_sr_plapre==1) %>% as.numeric()
 
 #### Create IV vars
 
@@ -250,6 +257,9 @@ sim$on_target_plapre <-  (sim$on_target_vd_plapre==1 &
 sim$dist_target_vd_plapre <- (sim$violent_death_sim_cum /sim$plaTar_vd_sem) -1 
 sim$dist_target_vr_plapre <- (sim$vehicle_robbery_cum /sim$plaTar_vr_sem) -1 
 sim$dist_target_sr_plapre <- (sim$street_robbery_cum /sim$plaTar_sr_sem) -1 
+
+
+
 
 # Instrumental variable, one year lagged
 sim <- sim %>% 
