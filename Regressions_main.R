@@ -577,6 +577,9 @@ if(EXPORT_tables){
   huxtable::quick_docx(tab2_formated, file = file.path(OUTPUTS, "tab2_formated_draft.docx"))
   huxtable::quick_docx(tab3_formated, file = file.path(OUTPUTS, "tab3_formated_draft.docx"))
   huxtable::quick_docx(tab4_formated, file = file.path(OUTPUTS, "tab4_formated_draft.docx"))
+  
+  huxtable::quick_docx(tab2_pla_formated, file = file.path(OUTPUTS, "tab2_placebo_formated_draft.docx"))
+  
 }
 
 

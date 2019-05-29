@@ -152,6 +152,8 @@ regData <- function(reg, regdf){
     instrumentVars <- NULL
   }
   
+  regdf <- as.data.frame(regdf)
+  
   # Regression variables
   regVarsAll <- c(regDepVars(reg), 
                   regIndepVars(reg),
