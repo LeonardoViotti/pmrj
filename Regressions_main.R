@@ -184,6 +184,7 @@ feRegSim <- function(form){
   
 }
 
+# Regressions and Consley SEs - placebo
 feRegSim_placebo <- function(form){
   form <- as.formula(form)
   model <- felm(form, data = sr[sr$year < 2009,], keepCX = T)
@@ -191,10 +192,9 @@ feRegSim_placebo <- function(form){
   
   # Rename Dep var for IV just for exporting
   if (!is.null(model$endovars)){
-    rownames(model$coefficients)[grep("`on_", rownames(model$coefficients))] <- "on_target"
-    rownames(model$beta)[grep("`on_", rownames(model$beta))] <- "on_target"
-    colnames(model$cX)[grep("`on_", colnames(model$cX))] <- "on_target"
-    
+    rownames(model$coefficients)[grep("`on_", rownames(model$coefficients))] <- "on_target_plapre"
+    rownames(model$beta)[grep("`on_", rownames(model$beta))] <- "on_target_plapre"
+    colnames(model$cX)[grep("`on_", colnames(model$cX))] <- "on_target_plapre"
   }
   
   # Replace clust. SEs with Conley SEs
@@ -310,17 +310,18 @@ p_st_IV <- feRegSim_placebo(FormulasIV_pla_str["street_theft"])
 p_or_IV <- feRegSim_placebo(FormulasIV_pla_str["other_robberies"])
 p_cr_IV <- feRegSim_placebo(FormulasIV_pla_str["cargo_robbery"])
 p_bu_IV <- feRegSim_placebo(FormulasIV_pla_str["burglary"])
-p_sr_IV <- feRegSim_placebo(feRegSim_placebo["store_robbery"])
+p_sr_IV <- feRegSim_placebo(FormulasIV_pla_str["store_robbery"])
 
 #------------------------------------------------------------------------------#
 ##### Export ####
 
 indepVar_label <- c("On target" = "on_target")
+indepVar_label_pla <- c("On target" = "on_target_plapre")
 
 stats_labels <- c("Observations" = "nobs",  
                   "R2 adjusted" = "adj.r.squared")
 
-models_labels <- c("Violent Death", "Violent Death", "Carjacking", "Carjacking")
+#models_labels <- c("Violent Death", "Violent Death", "Carjacking", "Carjacking")
 
 
 models_labels <- c("Model 1" = "OLS", 
@@ -335,6 +336,17 @@ models_labels <- c("Model 1" = "OLS",
                    "Model 10" = "OLS", 
                    "Model 11" = "OLS", 
                    "Model 12" = "IV")
+
+
+models_labels_pla <- c("Model 1" = "OLS", 
+                       "Model 2" = "IV", 
+                       "Model 3" = "OLS", 
+                       "Model 4" = "IV",
+                       "Model 5" = "OLS", 
+                       "Model 6" = "IV",
+                       "Model 7" = "OLS", 
+                       "Model 8" = "IV")
+
 
 
 # Table 2
@@ -407,6 +419,60 @@ tab4 <-
                # file.name = file.path(OUTPUTS,"tab4.xlsx")
                )
   
+
+
+# Table 2 - placebo
+tab2_pla <- 
+  export_summs(p_vd_01, 
+               p_vd_IV,
+               p_vr_01, 
+               p_vr_IV,
+               p_rr_01, 
+               p_rr_IV,
+               digits = 3,
+               scale = TRUE,
+               coefs = indepVar_label_pla,
+               statistics = stats_labels,
+               model.names = models_labels_pla[1:6] #,
+               # to.file ="xlsx",
+               # file.name = file.path(OUTPUTS,"tab2.xlsx")
+  )
+
+
+tab3_pla <- 
+  export_summs(p_cf_01, 
+               p_cf_IV, 
+               p_vt_01, 
+               p_vt_IV,
+               p_st_01, 
+               p_st_IV,
+               digits = 3,
+               scale = TRUE,
+               coefs = indepVar_label_pla,
+               statistics = stats_labels,
+               model.names = models_labels_pla[1:6] #,
+               # to.file ="xlsx",
+               # file.name = file.path(OUTPUTS,"tab2.xlsx")
+  )
+
+
+tab4_pla <- 
+  export_summs(p_or_01, 
+               p_or_IV, 
+               p_cr_01, 
+               p_cr_IV,
+               p_bu_01, 
+               p_bu_IV,
+               p_sr_01,
+               p_sr_IV,
+               digits = 3,
+               scale = TRUE,
+               coefs = indepVar_label_pla,
+               statistics = stats_labels,
+               model.names = models_labels_pla[1:8] #,
+               # to.file ="xlsx",
+               # file.name = file.path(OUTPUTS,"tab2.xlsx")
+  )
 
 #### Table edits
 
