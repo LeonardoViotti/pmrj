@@ -21,12 +21,15 @@ EXPORT_tables = F
 #### Load data ####
 
 
-sr <-  read.dta13(file.path(DROPBOX, "data_SIM_2019-01.dta")) 
-placebo_gis <- read.csv(file.path(DROPBOX, "placebo_targets.csv"), header = T)
+# sr <-  read.dta13(file.path(DROPBOX, "data_SIM_2019-01.dta")) 
+# placebo_gis <- read.csv(file.path(DROPBOX, "placebo_targets.csv"), header = T)
+# 
+# # Add placebos and coordinates
+# sr <- merge(sr, placebo_gis, by = c("aisp", "year", "month" , "semester"), all.x = T)
 
-# Add placebos and coordinates
-sr <- merge(sr, placebo_gis, by = c("aisp", "year", "month" , "semester"), all.x = T)
 
+sr <- fread(file = file.path(DATA, "sim2019.csv"),
+             encoding = "UTF-8")
 
 #------------------------------------------------------------------------------#
 #### List regression variables ####
@@ -51,6 +54,13 @@ indepVars <- c("on_target",
                "max_prize",
                "population" )
 
+indepVars_pla <- c("on_target_plapre",
+                   #"policemen_aisp",
+                   #"policemen_upp",
+                   "n_precinct",
+                   #"max_prize",
+                   "population" )
+
 FEVars <- c("aisp",
             "year", 
             "month", 
@@ -59,15 +69,20 @@ FEVars <- c("aisp",
 ZVars <- c("lag12_dist_target_vr",
            "lag12_dist_target_sr",
            "lag12_dist_target_vd")
-
+ZVars_pla <- c("lag12_dist_target_vr_plapre",
+               "lag12_dist_target_sr_plapre",
+               "lag12_dist_target_vd_plapre")
 
 
 #------------------------------------------------------------------------------#
-### Regression formulas
+### Regression formulas ####
 
 # right hand side without FE
 rFormula <- paste(indepVars, collapse = " + ") 
+rFormula_pla <- paste(indepVars_pla, collapse = " + ") 
+
 rFormula_iv <- paste(indepVars[-1], collapse = " + ") 
+rFormula_iv_pla <- paste(indepVars_pla[-1], collapse = " + ") 
 
 # Add FE, cluster and instruments
 
@@ -85,24 +100,38 @@ config2 <- paste("|", FeForumala2, "| 0 |  ", clusterVars_form)
 
 # IV formula
 first_stage_left <- "on_target"
+first_stage_left_pla <- "on_target_plapre"
+
 first_stage_right <- paste(ZVars, collapse = " + ")
+first_stage_right_pla <- paste(ZVars_pla, collapse = " + ")
+
+
 formula_1st <-  paste("(", first_stage_left, " ~ ", first_stage_right, " )")
+formula_1st_pla <-  paste("(", first_stage_left_pla, " ~ ", first_stage_right_pla, " )")
 
 config_iv <- paste("|", FeForumala2, "|" ,  formula_1st,  "| ", clusterVars_form)
+config_iv_pla <- paste("|", FeForumala1, "|" ,  formula_1st_pla,  "| ", clusterVars_form)
 
 
-# Final formulas
+#### Final formulas ####
 
 Formulas01_str <- paste(depVars, paste(rFormula, config1), sep = " ~ ")
 Formulas02_str <- paste(depVars, paste(rFormula, config2), sep = " ~ ")
 FormulasIV_str <- paste(depVars, paste(rFormula_iv, config_iv), sep = " ~ ")
 
+# Placebo
+Formulas01_pla_str <- paste(depVars, paste(rFormula_pla, config1), sep = " ~ ")
+Formulas02_pla_str <- paste(depVars, paste(rFormula_pla, config2), sep = " ~ ")
+FormulasIV_pla_str <- paste(depVars, paste(rFormula_iv_pla, config_iv_pla), sep = " ~ ")
+
+
+
 # So it's easier to refernce to elements
 names(Formulas01_str) <- depVars
 names(Formulas02_str) <- depVars
 names(FormulasIV_str) <- depVars
-
-
+names(Formulas01_pla_str) <- depVars
+names(FormulasIV_pla_str) <- depVars
 
 #rFormulaFE <- paste0("factor(",FEVars,")")
 # rFormula1 <- paste(c(indepVars, rFormulaFE[1:2]), collapse = " + ") 
@@ -110,7 +139,7 @@ names(FormulasIV_str) <- depVars
 
 
 #------------------------------------------------------------------------------#
-### Spatial lag model formula
+### Spatial lag model formula ####
 
 # Add FEs
 sFormulaFE <- paste0("factor(",FEVars,")")
@@ -138,6 +167,26 @@ clse <- function(reg){
 feRegSim <- function(form){
   form <- as.formula(form)
   model <- felm(form, data = sr[sr$sem_year >100,], keepCX = T)
+  
+  
+  # Rename Dep var for IV just for exporting
+  if (!is.null(model$endovars)){
+    rownames(model$coefficients)[grep("`on_", rownames(model$coefficients))] <- "on_target"
+    rownames(model$beta)[grep("`on_", rownames(model$beta))] <- "on_target"
+    colnames(model$cX)[grep("`on_", colnames(model$cX))] <- "on_target"
+    
+  }
+  
+  # Replace clust. SEs with Conley SEs
+  model$cse <- clse(model)
+  
+  return(model)
+  
+}
+
+feRegSim_placebo <- function(form){
+  form <- as.formula(form)
+  model <- felm(form, data = sr[sr$year < 2009,], keepCX = T)
   
   
   # Rename Dep var for IV just for exporting
@@ -222,6 +271,46 @@ s_bu_IV <- feRegSim(FormulasIV_str["burglary"])
 s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
 
 
+#### Placebo OLS
+# Tabble 2
+p_vd_01 <- feRegSim_placebo(Formulas01_pla_str["violent_death_sim"])
+p_vr_01 <- feRegSim_placebo(Formulas01_pla_str["vehicle_robbery"])
+p_rr_01 <- feRegSim_placebo(Formulas01_pla_str["street_robbery"])
+p_hm_01 <- feRegSim_placebo(Formulas01_pla_str["homicide"])
+p_pk_01 <- feRegSim_placebo(Formulas01_pla_str["dpolice_killing"])
+
+# Table 3 - Gaming 
+p_cf_01 <- feRegSim_placebo(Formulas01_pla_str["dbody_found"])
+p_vt_01 <- feRegSim_placebo(Formulas01_pla_str["vehicle_theft"])
+p_st_01 <- feRegSim_placebo(Formulas01_pla_str["street_theft"])
+
+
+# Table 4 - Spillovers
+p_or_01 <- feRegSim_placebo(Formulas01_pla_str["other_robberies"])
+p_cr_01 <- feRegSim_placebo(Formulas01_pla_str["cargo_robbery"])
+p_bu_01 <- feRegSim_placebo(Formulas01_pla_str["burglary"])
+p_sr_01 <- feRegSim_placebo(Formulas01_pla_str["store_robbery"])
+
+
+#### Placebo 2SLS
+
+# Tabble 2
+p_vd_IV <- feRegSim_placebo(FormulasIV_pla_str["violent_death_sim"])
+p_vr_IV <- feRegSim_placebo(FormulasIV_pla_str["vehicle_robbery"])
+p_rr_IV <- feRegSim_placebo(FormulasIV_pla_str["street_robbery"])
+p_hm_IV <- feRegSim_placebo(FormulasIV_pla_str["homicide"])
+p_pk_IV <- feRegSim_placebo(FormulasIV_pla_str["dpolice_killing"])
+
+# Table 3 - Gaming 
+p_cf_IV <- feRegSim_placebo(FormulasIV_pla_str["dbody_found"])
+p_vt_IV <- feRegSim_placebo(FormulasIV_pla_str["vehicle_theft"])
+p_st_IV <- feRegSim_placebo(FormulasIV_pla_str["street_theft"])
+
+# Table 4 - Spillovers
+p_or_IV <- feRegSim_placebo(FormulasIV_pla_str["other_robberies"])
+p_cr_IV <- feRegSim_placebo(FormulasIV_pla_str["cargo_robbery"])
+p_bu_IV <- feRegSim_placebo(FormulasIV_pla_str["burglary"])
+p_sr_IV <- feRegSim_placebo(feRegSim_placebo["store_robbery"])
 
 #------------------------------------------------------------------------------#
 ##### Export ####
