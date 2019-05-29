@@ -26,8 +26,8 @@ sim <- sim[!is.na(sim$aisp) & !is.na(sim$year) & !is.na(sim$month), ]
 aisp_shp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
 
 # Load chief IDs
-# cmd <- fread(file = file.path(DATA, "ComandantesBatalhao.csv"),
-#             encoding = "UTF-8")
+cmd <- fread(file = file.path(DATA, "ComandantesBatalhao.csv"),
+            encoding = "Latin-1")
 
 
 
@@ -48,6 +48,21 @@ a_coords$aisp <- rownames(a_coords)
 
 #------------------------------------------------------------------------------#
 #### Variaveis ####
+
+#### Clean chief names
+cmd <- cmd %>% 
+  rename(year = vano,
+         month = mes,
+         cmd_name = nome_comandante_bpm)
+
+# Remover patente
+cmd$cmd_name  <- gsub("TEN CEL |CEL |MAJ", "", cmd$cmd_name )
+
+# Add variable to sim
+sim <- merge(sim, 
+             cmd, 
+             by = c("aisp", "year", "month"), 
+             all.x = T)
 
 
 #### Crime lag 
