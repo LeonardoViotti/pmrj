@@ -180,6 +180,11 @@ feRegSim <- function(form){
   # Replace clust. SEs with Conley SEs
   model$cse <- clse(model)
   
+  # Replace p-values with new ones from Conley SEs
+  model$cpval <-2*pt(-abs(model$coefficients/model$cse),
+                     df=model$df)
+  
+  # Return regression object
   return(model)
   
 }
@@ -200,6 +205,11 @@ feRegSim_placebo <- function(form){
   # Replace clust. SEs with Conley SEs
   model$cse <- clse(model)
   
+  # Replace p-values with new ones from Conley SEs
+  model$cpval <-2*pt(-abs(model$coefficients/model$cse),
+                     df=model$df)
+  
+  # Return regression object
   return(model)
   
 }
@@ -310,7 +320,7 @@ p_st_IV <- feRegSim_placebo(FormulasIV_pla_str["street_theft"])
 p_or_IV <- feRegSim_placebo(FormulasIV_pla_str["other_robberies"])
 p_cr_IV <- feRegSim_placebo(FormulasIV_pla_str["cargo_robbery"])
 p_bu_IV <- feRegSim_placebo(FormulasIV_pla_str["burglary"])
-p_sr_IV <- feRegSim_placebo(feRegSim_placebo["store_robbery"])
+p_sr_IV <- feRegSim_placebo(FormulasIV_pla_str["store_robbery"])
 
 #------------------------------------------------------------------------------#
 ##### Export ####
@@ -406,6 +416,8 @@ tab4 <-
                # to.file ="xlsx",
                # file.name = file.path(OUTPUTS,"tab4.xlsx")
                )
+
+
   
 
 #### Table edits
