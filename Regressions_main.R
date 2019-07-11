@@ -527,7 +527,6 @@ tab4_pla <-
   )
 
 #### Table edits
-
 editTables <- function(regTab, depVarLabel = "Number of occurrences", colTitles, nDepVars = 3) {
   
   # Dependent variables labels
@@ -545,12 +544,26 @@ editTables <- function(regTab, depVarLabel = "Number of occurrences", colTitles,
         c("Chief FE" , rep(c("No", "Yes", "Yes"), length(colTitles)))
       ) )
   
-  # Make this more stable
-  regTab <- rbind(add_header, regTab[1:4,], add_lines, regTab[5:6,])
+  # Add column numbers
+  add_colNumbers <-
+    hux(
+      rbind(
+        c("" , paste0("(", 2:length(regTab)-1, ")"))
+      ) )
   
+  # Make this more stable
+  regTab <- rbind(add_header, 
+                  regTab[1], 
+                  add_colNumbers,
+                  regTab[2:4], 
+                  add_lines, 
+                  regTab[5:6,])
+  
+  # Edit cell borders
+  bottom_border(regTab)[3, ] <- 0.4
   # Cell merges
   #regTab  <- regTab %>% merge_cells(1:1, 1:ncol(regTab)) 
-
+  
   
   # Formating
   align(regTab) <- "center"
