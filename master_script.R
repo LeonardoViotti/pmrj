@@ -10,6 +10,7 @@ rm(list = ls())
 #### Section switches ####
 
 RUN_placebo_targets_construction = F
+RUN_regrssion_analysis = T
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -151,6 +152,8 @@ regData <- function(reg, regdf){
     instrumentVars <- NULL
   }
   
+  regdf <- as.data.frame(regdf)
+  
   # Regression variables
   regVarsAll <- c(regDepVars(reg), 
                   regIndepVars(reg),
@@ -168,21 +171,24 @@ regData <- function(reg, regdf){
 
 
 #------------------------------------------------------------------------------#
-#### Section switches ####
-
-RUN_placebo_targets = F
+#### Sections ####
 
 
 #------------------------------------------------------------------------------#
 #### Create placebo targets ####
 
 if(RUN_placebo_targets_construction){
-  source(file.path(GITHUB, "placebo_targets.R"))
+  source(file.path(GITHUB, "Construction_placebo_targets.R"))
   
 }
 
 #------------------------------------------------------------------------------#
 #### GIS analysis ####
 
+
 #------------------------------------------------------------------------------#
 #### Rgression analysis ####
+
+if(RUN_regrssion_analysis){
+  source(file.path(GITHUB, "Regressions_main.R"))
+}

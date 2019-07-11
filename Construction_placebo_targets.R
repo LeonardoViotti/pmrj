@@ -19,12 +19,15 @@ EXPORT_plots = F
 #sim <- read.dta13("data_SIM_2019-01.dta")
 sim <- read.dta13(file.path(DROPBOX,"data_SIM_2019-04.dta"))
 
-
 sim <- sim[!is.na(sim$aisp) & !is.na(sim$year) & !is.na(sim$month), ]
 
 # Load shapefiles
 
 aisp_shp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
+
+# Load chief IDs
+cmd <- fread(file = file.path(DATA, "ComandantesBatalhao.csv"),
+            encoding = "Latin-1")
 
 
 
@@ -46,6 +49,21 @@ a_coords$aisp <- rownames(a_coords)
 #------------------------------------------------------------------------------#
 #### Variaveis ####
 
+#### Clean chief names
+cmd <- cmd %>% 
+  rename(year = vano,
+         month = mes,
+         cmd_name = nome_comandante_bpm)
+
+# Remover patente
+cmd$cmd_name  <- gsub("TEN CEL |CEL |MAJ", "", cmd$cmd_name )
+
+# Add variable to sim
+sim <- merge(sim, 
+             cmd, 
+             by = c("aisp", "year", "month"), 
+             all.x = T)
+
 
 #### Crime lag 
 
@@ -56,6 +74,7 @@ lagFun <- function(x, n){
 }
 
 
+#### Laged crimes to construct placebos
 sim <- 
   sim %>%
   dplyr::arrange(aisp, year,  semester) %>%
@@ -232,6 +251,17 @@ sim <- sim %>%
          plaTar_sr_cum = cumsum(replace_na(plaTar_sr_l,0))) %>% 
   dplyr::select(-c(plaTar_vd_l, plaTar_vr_l, plaTar_sr_l)) # remove lagged variables
 
+# Change zeros to NA if year is 2004
+bol04 <- sim$year ==2004
+
+sim$plaTar_vd_cum[bol04] <- NA
+sim$plaTar_vr_cum[bol04] <- NA
+sim$plaTar_sr_cum[bol04] <- NA
+
+
+# Fix this so dist is not divided by zero
+sim$plaTar_vr_sem <- ifelse(sim$plaTar_vr_sem == 0, NA, sim$plaTar_vr_sem)
+
 
 # Create target per crime
 # First month of semester on target is always NA
@@ -242,7 +272,7 @@ sim$on_target_sr_plapre <- (sim$street_robbery_cum <=  sim$plaTar_sr_cum) %>% as
 # Create overall target
 sim$on_target_plapre <-  (sim$on_target_vd_plapre==1 &
                           sim$on_target_vr_plapre==1 & 
-                          sim$on_target_sr_plapre==1)
+                          sim$on_target_sr_plapre==1) %>% as.numeric()
 
 #### Create IV vars
 
@@ -250,6 +280,9 @@ sim$on_target_plapre <-  (sim$on_target_vd_plapre==1 &
 sim$dist_target_vd_plapre <- (sim$violent_death_sim_cum /sim$plaTar_vd_sem) -1 
 sim$dist_target_vr_plapre <- (sim$vehicle_robbery_cum /sim$plaTar_vr_sem) -1 
 sim$dist_target_sr_plapre <- (sim$street_robbery_cum /sim$plaTar_sr_sem) -1 
+
+
+
 
 # Instrumental variable, one year lagged
 sim <- sim %>% 
@@ -264,6 +297,8 @@ sim <- sim %>%
 #                            year,
 #                            month,
 #                            semester,
+#                            violent_death_sim_cum,
+#                            plaTar_vd_sem,
 #                            lag12_dist_target_vd_plapre,
 #                            dist_target_vd_plapre)
 #             )
