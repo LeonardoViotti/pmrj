@@ -599,11 +599,11 @@ tab4_pla_formated <- editTables(tab4_pla,
 # Export
 
 if(EXPORT_tables){
-  huxtable::quick_docx(tab2_formated, file = file.path(OUTPUTS, "tab2_formated_draft.docx"))
-  huxtable::quick_docx(tab3_formated, file = file.path(OUTPUTS, "tab3_formated_draft.docx"))
-  huxtable::quick_docx(tab4_formated, file = file.path(OUTPUTS, "tab4_formated_draft.docx"))
+  huxtable::quick_docx(tab2_formated, file = file.path(OUTPUTS_final, "tab2_formated.docx"))
+  huxtable::quick_docx(tab3_formated, file = file.path(OUTPUTS_final, "tab3_formated.docx"))
+  huxtable::quick_docx(tab4_formated, file = file.path(OUTPUTS_final, "tab4_formated.docx"))
   
-  huxtable::quick_docx(tab2_pla_formated, file = file.path(OUTPUTS, "tab2_placebo_formated_draft.docx"))
+  huxtable::quick_docx(tab2_pla_formated, file = file.path(OUTPUTS_final, "tab2_placebo_formated.docx"))
   
 }
 

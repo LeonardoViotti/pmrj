@@ -6,8 +6,8 @@
 
 
 
-ProjFolder <- ("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
-ProjFolder_OUT_plots <- file.path(ProjFolder, "Plots")
+# ProjFolder <- ("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
+# ProjFolder_OUT_plots <- file.path(ProjFolder, "Plots")
 
 
 RjProj_aze <- CRS("+proj=aeqd +lat_0=-22.911522 +lon_0=-43.397503") 
@@ -17,12 +17,12 @@ RjProj_unp <- CRS("+init=epsg:4326")
 #------------------------------------------------------------------------------#
 #### Load Data ####
 
-sim <- read.dta13(file.path(ProjFolder, "data_SIM_2019-01.dta"))
+sim <- read.dta13(file.path(DATA, "data_SIM_2019-01.dta"))
 
 #------------------------------------------------------------------------------#
 #### Load Shape Files ####
 
-aisp <- readOGR(dsn = file.path(ProjFolder,"GIS"), layer = "lm_aisp_2019")
+aisp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
 aisp <- spTransform(aisp, RjProj_unp)
 
 #------------------------------------------------------------------------------#

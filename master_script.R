@@ -66,6 +66,8 @@ CONLEYse_FUNs <- file.path(GITHUB, "ConleySE")
 
 DATA <- file.path(DROPBOX, "data")
 OUTPUTS <- file.path(DROPBOX, "Results")
+OUTPUTS_final <- file.path(OUTPUTS, "Final")
+
 GIS <- file.path(DROPBOX, "GIS")
 
 
