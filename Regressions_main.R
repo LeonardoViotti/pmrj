@@ -31,6 +31,12 @@ EXPORT_tables = F
 sr <- fread(file = file.path(DATA, "sim2019.csv"),
              encoding = "UTF-8")
 
+
+# Load aisps shapefile
+aisp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
+aisp <- spTransform(aisp, RjProj_unp)
+
+
 #------------------------------------------------------------------------------#
 #### List regression variables ####
 
@@ -80,7 +86,7 @@ ZVars_pla <- c("lag12_dist_target_vr_plapre",
 
 
 #------------------------------------------------------------------------------#
-### Regression formulas ####
+### OLS formulas ####
 
 # right hand side without FE
 rFormula <- paste(indepVars, collapse = " + ") 
@@ -148,20 +154,23 @@ names(FormulasIV_pla_str) <- depVars
 
 
 #------------------------------------------------------------------------------#
-### Spatial lag model formula ####
+### Spatial lag formulas ####
 
 # Add FEs
 sFormulaFE <- paste0("factor(",FEVars,")")
-sFormula1 <- paste(c(indepVars, sFormulaFE[1:2]), collapse = " + ")
+sFormula1 <- paste(c(indepVars, sFormulaFE[1:3]), collapse = " + ")
 sFormula2 <- paste(c(indepVars, sFormulaFE), collapse = " + ")
 
-Formulas01_lg <- paste(depVars, sFormula1, sep = " ~ ")
+Formulas01_sl_str <- paste(depVars, sFormula1, sep = " ~ ")
+Formulas02_sl_str <- paste(depVars, sFormula2, sep = " ~ ")
 
+names(Formulas01_sl_str) <- depVars
+names(Formulas02_sl_str) <- depVars
 
 #------------------------------------------------------------------------------#
-#### Regression models ####
+#### OLS models ####
 
-
+# Conley SE function
 clse <- function(reg){
   vcv <- ConleySEs(reg = reg,
                    unit = "aisp", 
@@ -212,11 +221,11 @@ feRegSim_placebo <- function(form){
   }
   
   # Replace clust. SEs with Conley SEs
-  model$cse <- clse(model)
-  
-  # Replace p-values with new ones from Conley SEs
-  model$cpval <-2*pt(-abs(model$coefficients/model$cse),
-                     df=model$df)
+  # model$cse <- clse(model)
+  # 
+  # # Replace p-values with new ones from Conley SEs
+  # model$cpval <-2*pt(-abs(model$coefficients/model$cse),
+  #                    df=model$df)
   
   # Return regression object
   return(model)
@@ -351,6 +360,70 @@ p_or_IV <- feRegSim_placebo(FormulasIV_pla_str["other_robberies"])
 p_cr_IV <- feRegSim_placebo(FormulasIV_pla_str["cargo_robbery"])
 p_bu_IV <- feRegSim_placebo(FormulasIV_pla_str["burglary"])
 p_sr_IV <- feRegSim_placebo(FormulasIV_pla_str["store_robbery"])
+
+
+
+#------------------------------------------------------------------------------#
+#### Spatial lag models ####
+
+# Keep only analysis years
+sr_sl <- sr %>% subset(year > 2008 & year < 2016)
+
+# Remove ilha do governador and keep balanced panel
+sr_sl <- sr_sl[!(sr_sl$aisp %in% c(17,41))]
+aisp <- aisp[!(aisp@data$aisp %in% c(17,41)),]
+
+
+# Set panel data index 
+sr_sl$year_month <- sr_sl$year*100 + sr_sl$month
+ps <- pdata.frame(sr_sl, index = c("aisp", "year_month"))
+
+
+# Neighbourhood definition
+nb <- poly2nb(aisp, queen = T)
+
+# Neighbour weights
+lw <- nb2listw(nb,
+               style = "W",
+               zero.policy = TRUE)
+
+
+
+#### Regressions
+
+# SAR model function
+SARlag_reg <- function(formula, data, nbW ){
+  spml(formula = as.formula(formula), 
+       data=data, 
+       model = "pooling",
+       lag = T,
+       listw = nbW)
+}
+
+
+
+# Column 1
+sl_vd_01 <- SARlag_reg(Formulas01_sl_str["violent_death_sim"],
+                       data = ps,
+                       nbW = lw)
+sl_vr_01 <- SARlag_reg(Formulas01_sl_str["vehicle_robbery"],
+                       data = ps,
+                       nbW = lw)
+sl_rr_01 <- SARlag_reg(Formulas01_sl_str["street_robbery"],
+                       data = ps,
+                       nbW = lw)
+
+# Column 2 - MULTY COLINEARITY!!!
+# sl_vd_02 <- SARlag_reg(Formulas02_sl_str["violent_death_sim"],
+#                        data = ps,
+#                        nbW = lw)
+# sl_vr_02 <- SARlag_reg(Formulas02_sl_str["vehicle_robbery"],
+#                        data = ps,
+#                        nbW = lw)
+# sl_rr_02 <- SARlag_reg(Formulas02_sl_str["street_robbery"],
+#                        data = ps,
+#                        nbW = lw)
+
 
 #------------------------------------------------------------------------------#
 ##### Export ####
@@ -525,6 +598,24 @@ tab4_pla <-
                # to.file ="xlsx",
                # file.name = file.path(OUTPUTS,"tab2.xlsx")
   )
+
+
+
+# Table 2 - Spatial Lag model
+# tab2_sl <- 
+#   export_summs(sl_vd_01,
+#                sl_vr_01,
+#                sl_rr_01, 
+#                digits = 3,
+#                scale = TRUE,
+#                coefs = indepVar_label_pla,
+#                statistics = stats_labels,
+#                model.names = models_labels[c(1,4,7)] #,
+#                # to.file ="xlsx",
+#                # file.name = file.path(OUTPUTS,"tab2.xlsx")
+#   )
+
+
 
 #### Table edits
 editTables <- function(regTab, depVarLabel = "Number of occurrences", colTitles, nDepVars = 3) {
