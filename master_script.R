@@ -10,7 +10,7 @@ rm(list = ls())
 #### Section switches ####
 
 RUN_placebo_targets_construction = F
-RUN_regrssion_analysis = T
+RUN_regrssion_analysis = F
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -21,6 +21,8 @@ library(lfe)
 library(data.table)
 library(shomR) # ConleySEs but not on CRAN
 library(spdep) # lagsarlm 
+library(plm) # Panel data
+library(splm) # Spatial panel data
 library(Rcpp)
 library(Hmisc)
 
@@ -37,7 +39,8 @@ library(maps)
 library(geosphere)
 library(viridis)
 library(tmap)
-library(spdep)
+library(spdep) # Moran's I
+library(spatialreg) # Spatial lag model
 library(readstata13)
 library(tidyverse)
 library(broom)
