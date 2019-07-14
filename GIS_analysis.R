@@ -4,6 +4,7 @@
 
 #------------------------------------------------------------------------------#
 
+EXPORT_plots = F
 
 
 # ProjFolder <- ("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
@@ -19,6 +20,10 @@ RjProj_unp <- CRS("+init=epsg:4326")
 
 sim <- read.dta13(file.path(DATA, "data_SIM_2019-01.dta"))
 
+# Keep only analysis years for now
+sim <- sim %>% subset(year > 2008 & year < 2016)
+
+
 #------------------------------------------------------------------------------#
 #### Load Shape Files ####
 
@@ -31,20 +36,43 @@ aisp <- spTransform(aisp, RjProj_unp)
 # Aggregate crime data by average of the entire series. I'm not not sure if this
 # is the right thing to do, but it's the easiest to write the draft code
 
-sim_ano <- aggregate(cbind(violent_death_sim, 
-                           street_robbery,
-                           vehicle_robbery) ~ aisp + year, 
-                     sum, 
-                     data = sim)
+#policemen_aisp + policemen_upp + n_precinct + max_prize + population | aisp + year + month
 
-sim_ano$population <- aggregate(population ~ aisp + year, 
-                                mean, 
-                                data = sim)$population
 
-sim_aisp <- aggregate(cbind(violent_death_sim, 
+# Collapse by year sum of crime
+sim_ano_sum <- aggregate(cbind(violent_death_sim, 
+                               street_robbery,
+                               vehicle_robbery) ~ aisp + year, 
+                         sum, 
+                         data = sim)
+
+# Collapse by year average other variables
+sim_ano_avg <- aggregate(cbind(population, 
+                               on_target,
+                               policemen_aisp,
+                               policemen_upp,
+                               n_precinct,
+                               max_prize) ~ aisp + year, 
+                         mean,
+                         na.rm = T,
+                         na.action = na.pass,
+                         data = sim)
+
+
+sim_ano <- cbind(sim_ano_avg, sim_ano_sum %>% select(-aisp, -year))
+
+sim_aisp <- aggregate(cbind(population,
+                            on_target,
+                            policemen_aisp,   
+                            policemen_upp,
+                            n_precinct,
+                            max_prize,        
+                            violent_death_sim,
                             street_robbery,
-                            vehicle_robbery,
-                            population) ~ aisp, mean, data = sim_ano)
+                            vehicle_robbery) ~ aisp, 
+                      mean, 
+                      data = sim_ano)
+
 
 
 #------------------------------------------------------------------------------#
@@ -81,10 +109,9 @@ aisp$rv_pop <- aisp$vehicle_robbery /(aisp$population/100000)
 aisp$rr_pop <- aisp$street_robbery/(aisp$population/100000)
 
 #------------------------------------------------------------------------------#
-#### Moran's I ####
+#### Neighborhood definition ####
 
 # Remove ilha do governador
-
 aisp_simp <- aisp[aisp@data$aisp != 17,]
 
 # Neighbourhood definition
@@ -92,6 +119,11 @@ nb <- poly2nb(aisp_simp, queen = T)
 
 # Neighbour weights
 lw <- nb2listw(nb, style = "W", zero.policy = TRUE)
+
+
+
+#------------------------------------------------------------------------------#
+#### Moran's I ####
 
 # Calculate lagged values
 aisp_simp$lv_pop_lag <- lag.listw(lw, aisp_simp$lv_pop)
@@ -192,57 +224,61 @@ heat_city_rr <- heatFUN(data = rio_aisp_df,
 #------------------------------------------------------------------------------#
 #### Export plots  ####
 
-png(filename = file.path(ProjFolder_OUT_plots, 
-                         "heatMap_lv.png"),
-    width = 1000, height = 700)
+if(EXPORT_plots){
+  png(filename = file.path(ProjFolder_OUT_plots, 
+                           "heatMap_lv.png"),
+      width = 1000, height = 700)
   heat_lv
-dev.off()
-
-png(filename = file.path(ProjFolder_OUT_plots, 
-                         "heatMap_city_lv.png"),
-    width = 1000, height = 700)
+  dev.off()
+  
+  png(filename = file.path(ProjFolder_OUT_plots, 
+                           "heatMap_city_lv.png"),
+      width = 1000, height = 700)
   heat_city_lv
-dev.off()
-
-
-png(filename = file.path(ProjFolder_OUT_plots, 
-                         "heatMap_rv.png"),
-    width = 1000, height = 700)
+  dev.off()
+  
+  
+  png(filename = file.path(ProjFolder_OUT_plots, 
+                           "heatMap_rv.png"),
+      width = 1000, height = 700)
   heat_rv
-dev.off()
+  dev.off()
+  
+  
+  png(filename = file.path(ProjFolder_OUT_plots, 
+                           "heatMap_city_rv.png"),
+      width = 1000, height = 700)
+  heat_city_rv
+  dev.off()
+  
+  
+  png(filename = file.path(ProjFolder_OUT_plots, 
+                           "heatMap_rr.png"),
+      width = 1000, height = 700)
+  heat_rr
+  dev.off()
+  
+  
+  png(filename = file.path(ProjFolder_OUT_plots, 
+                           "heatMap_city_rr.png"),
+      width = 1000, height = 700)
+  heat_city_rr
+  dev.off()
+  
+  
+  # Moran's I monte carlo simulation
+  png(filename = file.path(ProjFolder_OUT_plots, 
+                           "MoranMC.png"))
+  
+  par(mfrow=c(3,1))
+  plot(MC_lv, las= 1, xlab = "Violent Death", main = "")
+  plot(MC_rv, las= 1, xlab = "Car jacking", main = "")
+  plot(MC_rr, las= 1, xlab = "Street robbery", main = "")
+  
+  dev.off()
+}
 
 
-png(filename = file.path(ProjFolder_OUT_plots, 
-                         "heatMap_city_rv.png"),
-    width = 1000, height = 700)
-heat_city_rv
-dev.off()
-
-
-png(filename = file.path(ProjFolder_OUT_plots, 
-                         "heatMap_rr.png"),
-    width = 1000, height = 700)
-heat_rr
-dev.off()
-
-
-png(filename = file.path(ProjFolder_OUT_plots, 
-                         "heatMap_city_rr.png"),
-    width = 1000, height = 700)
-heat_city_rr
-dev.off()
-
-
-# Moran's I monte carlo simulation
-png(filename = file.path(ProjFolder_OUT_plots, 
-                         "MoranMC.png"))
-
-par(mfrow=c(3,1))
-plot(MC_lv, las= 1, xlab = "Violent Death", main = "")
-plot(MC_rv, las= 1, xlab = "Car jacking", main = "")
-plot(MC_rr, las= 1, xlab = "Street robbery", main = "")
-
-dev.off()
 
 
 
