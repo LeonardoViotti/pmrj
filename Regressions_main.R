@@ -364,7 +364,7 @@ p_sr_IV <- feRegSim_placebo(FormulasIV_pla_str["store_robbery"])
 
 
 #------------------------------------------------------------------------------#
-#### Spatial lag models ####
+#### SPATIAL ANALSYS ####
 
 # Keep only analysis years
 sr_sl <- sr %>% subset(year > 2008 & year < 2016)
@@ -374,10 +374,40 @@ sr_sl <- sr_sl[!(sr_sl$aisp %in% c(17,41))]
 aisp <- aisp[!(aisp@data$aisp %in% c(17,41)),]
 
 
-# Set panel data index 
+#------------------------#
+#### Create variables ####
+
+
+# Year and month
 sr_sl$year_month <- sr_sl$year*100 + sr_sl$month
+
+# Deaths per 100 thousand
+sr_sl$lv_pop <- sr_sl$violent_death_sim/(sr_sl$population/100000)
+
+# Carjack per 100 thousand
+sr_sl$rv_pop <- sr_sl$vehicle_robbery /(sr_sl$population/100000)
+
+# Street robbery per 100 thousand
+sr_sl$rr_pop <- sr_sl$street_robbery/(sr_sl$population/100000)
+
+# Montly variation - current month minus previous
+sr_sl <- sr_sl %>% 
+  group_by(aisp) %>% 
+  arrange(aisp, year_month) %>% 
+  mutate(lv_pop_d = lv_pop - dplyr::lag(lv_pop, n = 1),
+         rv_pop_d = rv_pop - dplyr::lag(rv_pop, n = 1),
+         rr_pop_d = rr_pop - dplyr::lag(rr_pop, n = 1),
+         # Replace inf values
+         lv_pop_d = ifelse(!is.finite(lv_pop_d),NA, lv_pop_d),
+         rv_pop_d = ifelse(!is.finite(rv_pop_d),NA, rv_pop_d),
+         rr_pop_d = ifelse(!is.finite(rr_pop_d),NA, rr_pop_d))
+
+
+# Set panel data indexes
 ps <- pdata.frame(sr_sl, index = c("aisp", "year_month"))
 
+
+#### Spatial Variables
 
 # Neighbourhood definition
 nb <- poly2nb(aisp, queen = T)
@@ -387,7 +417,15 @@ lw <- nb2listw(nb,
                style = "W",
                zero.policy = TRUE)
 
+# Calculate spatial lagged values level
+ps$lv_pop_slag <- slag(ps$lv_pop, lw)
+ps$rv_pop_slag <- slag(ps$rv_pop, lw)
+ps$rr_pop_slag <- slag(ps$rr_pop, lw)
 
+
+
+#------------------------------------------------------------------------------#
+#### Spatial lag models ####
 
 #### Regressions
 
@@ -424,6 +462,33 @@ sl_rr_01 <- SARlag_reg(Formulas01_sl_str["street_robbery"],
 #                        data = ps,
 #                        nbW = lw)
 
+
+#------------------------------------------------------------------------------#
+#### Moran's I ####
+
+
+
+# Moran's I level
+moran_lv <- lm(lv_pop_lag ~ lv_pop, data = ps)
+moran_rv <- lm(rv_pop_lag ~ rv_pop, data = ps) %>% summary
+moran_rr <- lm(rr_pop_lag ~ rr_pop, data = ps) %>% summary
+
+
+# Moran's I delta
+
+#can't have NAs, so I'm removing all obs where the
+#monthly crime difference is NA
+ps_semJAn <- ps %>% subset(month != 1) 
+
+# Calculate spatial lagged values diff
+ps_semJAn$lv_pop_d_slag <- slag(ps_semJAn$lv_pop_d, lw)
+ps_semJAn$rv_pop_d_slag <- slag(ps_semJAn$rv_pop_d, lw)
+ps_semJAn$rr_pop_d_slag <- slag(ps_semJAn$rr_pop_d, lw)
+
+
+moran_lv <- lm(lv_pop_d_slag ~ lv_pop_d + factor(year) + factor(month), data = ps_semJAn)
+moran_rv <- lm(rv_pop_d_slag ~ rv_pop_d + factor(year) + factor(month), data = ps_semJAn)
+moran_rr <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data = ps_semJAn)
 
 #------------------------------------------------------------------------------#
 ##### Export ####
