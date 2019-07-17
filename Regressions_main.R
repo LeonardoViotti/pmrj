@@ -31,6 +31,7 @@ EXPORT_tables = F
 sr <- fread(file = file.path(DATA, "sim2019.csv"),
              encoding = "UTF-8")
 
+sr$year_month <- sr$year*100+ sr$month
 
 # Load aisps shapefile
 aisp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
@@ -367,7 +368,7 @@ p_sr_IV <- feRegSim_placebo(FormulasIV_pla_str["store_robbery"])
 #### SPATIAL ANALSYS ####
 
 # Keep only analysis years
-sr_sl <- sr %>% subset(year > 2008 & year < 2016)
+sr_sl <- sr %>% subset(year_month > 200906 & year_month < 201507)
 
 # Remove ilha do governador and keep balanced panel
 sr_sl <- sr_sl[!(sr_sl$aisp %in% c(17,41))]
@@ -379,7 +380,7 @@ aisp <- aisp[!(aisp@data$aisp %in% c(17,41)),]
 
 
 # Year and month
-sr_sl$year_month <- sr_sl$year*100 + sr_sl$month
+#sr_sl$year_month <- sr_sl$year*100 + sr_sl$month
 
 # Deaths per 100 thousand
 sr_sl$lv_pop <- sr_sl$violent_death_sim/(sr_sl$population/100000)
@@ -469,9 +470,9 @@ sl_rr_01 <- SARlag_reg(Formulas01_sl_str["street_robbery"],
 
 
 # Moran's I level
-moran_lv <- lm(lv_pop_lag ~ lv_pop, data = ps)
-moran_rv <- lm(rv_pop_lag ~ rv_pop, data = ps) %>% summary
-moran_rr <- lm(rr_pop_lag ~ rr_pop, data = ps) %>% summary
+# moran_lv <- lm(lv_pop_lag ~ lv_pop, data = ps)
+# moran_rv <- lm(rv_pop_lag ~ rv_pop, data = ps) %>% summary
+# moran_rr <- lm(rr_pop_lag ~ rr_pop, data = ps) %>% summary
 
 
 # Moran's I delta
@@ -479,6 +480,9 @@ moran_rr <- lm(rr_pop_lag ~ rr_pop, data = ps) %>% summary
 #can't have NAs, so I'm removing all obs where the
 #monthly crime difference is NA
 ps_semJAn <- ps %>% subset(month != 1) 
+
+
+
 
 # Calculate spatial lagged values diff
 ps_semJAn$lv_pop_d_slag <- slag(ps_semJAn$lv_pop_d, lw)
