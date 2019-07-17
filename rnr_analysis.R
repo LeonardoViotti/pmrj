@@ -359,5 +359,48 @@ moran_rr <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data = p
 ##### Export ####
 
 
+#### Export placebo table ####
+
+indepVar_label <- c("On target" = "on_target")
+indepVar_label_pla <- c("On target" = "on_target_plapre")
+
+stats_labels <- c("Observations" = "nobs",  
+                  "R2 adjusted" = "adj.r.squared")
+
+#models_labels <- c("Violent Death", "Violent Death", "Carjacking", "Carjacking")
+
+
+models_labels <- c("Model 1" = "OLS", 
+                   "Model 2" = "OLS", 
+                   "Model 3" = "IV", 
+                   "Model 4" = "OLS",
+                   "Model 5" = "OLS", 
+                   "Model 6" = "IV",
+                   "Model 7" = "OLS", 
+                   "Model 8" = "OLS", 
+                   "Model 9" = "IV")
+
+# Table 2 - placebo
+tab2_pla <- 
+  export_summs(p_vd_01,
+               p_vd_02,
+               p_vd_IV,
+               p_vr_01,
+               p_vr_02, 
+               p_vr_IV,
+               p_rr_01, 
+               p_rr_02, 
+               p_rr_IV,
+               digits = 3,
+               scale = TRUE,
+               coefs = indepVar_label_pla,
+               statistics = stats_labels,
+               model.names = models_labels[1:9] #,
+               # to.file ="xlsx",
+               # file.name = file.path(OUTPUTS,"tab2.xlsx")
+  )
+
+
+#### Export spatial lag ####
 
 
