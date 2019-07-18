@@ -133,6 +133,8 @@ regDepVars <- function(x){
     depV <- colnames(x$coefficients)
   }else if (class(x) == "lm"){
     depV <- names(x$model)[1]
+  }else if (class(x) == "splm"){
+    depV <- names(x$coefficients)[-1]
   }else{
     warning("Not sure what that regression is")
   }
