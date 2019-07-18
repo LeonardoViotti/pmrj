@@ -4,6 +4,8 @@
 
 #------------------------------------------------------------------------------#
 
+EXPORT_tables = T
+
 #------------------------------------------------------------------------------#
 #### Load data ####
 
@@ -177,65 +179,39 @@ feRegSim_placebo <- function(form){
 #### Placebo OLS
 # Tabble 2
 p_vd_01 <- feRegSim_placebo(Formulas01_pla_str["violent_death_sim"])
+p_vd_01_data <- regData(p_vd_01, sr_pl)
+
 p_vr_01 <- feRegSim_placebo(Formulas01_pla_str["vehicle_robbery"])
+p_vr_01_data <- regData(p_vr_01, sr_pl)
+
 p_rr_01 <- feRegSim_placebo(Formulas01_pla_str["street_robbery"])
-# p_hm_01 <- feRegSim_placebo(Formulas01_pla_str["homicide"])
-# p_pk_01 <- feRegSim_placebo(Formulas01_pla_str["dpolice_killing"])
-
-# # Table 3 - Gaming 
-# p_cf_01 <- feRegSim_placebo(Formulas01_pla_str["dbody_found"])
-# p_vt_01 <- feRegSim_placebo(Formulas01_pla_str["vehicle_theft"])
-# p_st_01 <- feRegSim_placebo(Formulas01_pla_str["street_theft"])
-
-
-# # Table 4 - Spillovers
-# p_or_01 <- feRegSim_placebo(Formulas01_pla_str["other_robberies"])
-# p_cr_01 <- feRegSim_placebo(Formulas01_pla_str["cargo_robbery"])
-# p_bu_01 <- feRegSim_placebo(Formulas01_pla_str["burglary"])
-# p_sr_01 <- feRegSim_placebo(Formulas01_pla_str["store_robbery"])
+p_rr_01_data <- regData(p_rr_01, sr_pl)
 
 
 ### Model 2 whith cmnd FE - placebo
 
 # Tabble 2
 p_vd_02 <- feRegSim_placebo(Formulas02_pla_str["violent_death_sim"])
-p_vr_02 <- feRegSim_placebo(Formulas02_pla_str["vehicle_robbery"])
-p_rr_02 <- feRegSim_placebo(Formulas02_pla_str["street_robbery"])
-# p_hm_02 <- feRegSim_placebo(Formulas02_pla_str["homicide"])
-# p_pk_02 <- feRegSim_placebo(Formulas02_pla_str["dpolice_killing"])
+p_vd_02_data <- regData(p_vd_02, sr_pl)
 
-# # Table 3 - Gaming 
-# p_cf_02 <- feRegSim_placebo(Formulas02_pla_str["dbody_found"])
-# p_vt_02 <- feRegSim_placebo(Formulas02_pla_str["vehicle_theft"])
-# p_st_02 <- feRegSim_placebo(Formulas02_pla_str["street_theft"])
- 
- 
-# # Table 4 - Spillovers
-# p_or_02 <- feRegSim_placebo(Formulas02_pla_str["other_robberies"])
-# p_cr_02 <- feRegSim_placebo(Formulas02_pla_str["cargo_robbery"])
-# p_bu_02 <- feRegSim_placebo(Formulas02_pla_str["burglary"])
-# p_sr_02 <- feRegSim_placebo(Formulas02_pla_str["store_robbery"])
+p_vr_02 <- feRegSim_placebo(Formulas02_pla_str["vehicle_robbery"])
+p_vr_02_data <- regData(p_vr_02, sr_pl)
+
+p_rr_02 <- feRegSim_placebo(Formulas02_pla_str["street_robbery"])
+p_rr_02_data <- regData(p_rr_02, sr_pl)
+
 
 #### Placebo 2SLS
 
 # Tabble 2
 p_vd_IV <- feRegSim_placebo(FormulasIV_pla_str["violent_death_sim"])
+p_vd_IV_data <- regData(p_vd_IV, sr_pl)
+
 p_vr_IV <- feRegSim_placebo(FormulasIV_pla_str["vehicle_robbery"])
+p_vr_IV_data <- regData(p_vr_IV, sr_pl)
+
 p_rr_IV <- feRegSim_placebo(FormulasIV_pla_str["street_robbery"])
-# p_hm_IV <- feRegSim_placebo(FormulasIV_pla_str["homicide"])
-# p_pk_IV <- feRegSim_placebo(FormulasIV_pla_str["dpolice_killing"])
-
-# # Table 3 - Gaming 
-# p_cf_IV <- feRegSim_placebo(FormulasIV_pla_str["dbody_found"])
-# p_vt_IV <- feRegSim_placebo(FormulasIV_pla_str["vehicle_theft"])
-# p_st_IV <- feRegSim_placebo(FormulasIV_pla_str["street_theft"])
-
-# # Table 4 - Spillovers
-# p_or_IV <- feRegSim_placebo(FormulasIV_pla_str["other_robberies"])
-# p_cr_IV <- feRegSim_placebo(FormulasIV_pla_str["cargo_robbery"])
-# p_bu_IV <- feRegSim_placebo(FormulasIV_pla_str["burglary"])
-# p_sr_IV <- feRegSim_placebo(FormulasIV_pla_str["store_robbery"])
-
+p_rr_IV_data <- regData(p_rr_IV, sr_pl)
 
 
 #------------------------------------------------------------------------------#
@@ -319,18 +295,6 @@ sl_rr_01 <- SARlag_reg(Formulas01_sl_str["street_robbery"],
                        data = ps,
                        nbW = lw)
 
-# Column 2 - MULTY COLINEARITY!!!
-# sl_vd_02 <- SARlag_reg(Formulas02_sl_str["violent_death_sim"],
-#                        data = ps,
-#                        nbW = lw)
-# sl_vr_02 <- SARlag_reg(Formulas02_sl_str["vehicle_robbery"],
-#                        data = ps,
-#                        nbW = lw)
-# sl_rr_02 <- SARlag_reg(Formulas02_sl_str["street_robbery"],
-#                        data = ps,
-#                        nbW = lw)
-
-
 #------------------------------------------------------------------------------#
 #### Moran's I ####
 
@@ -343,20 +307,22 @@ sl_rr_01 <- SARlag_reg(Formulas01_sl_str["street_robbery"],
 # Moran's I delta
 #can't have NAs, so I'm removing all obs where the
 #monthly crime difference is NA
-ps_semJAn <- ps %>% subset(month != 1) 
 
-# Calculate spatial lagged values diff
-ps_semJAn$lv_pop_d_slag <- slag(ps_semJAn$lv_pop_d, lw)
-ps_semJAn$rv_pop_d_slag <- slag(ps_semJAn$rv_pop_d, lw)
-ps_semJAn$rr_pop_d_slag <- slag(ps_semJAn$rr_pop_d, lw)
+ps_semJJ <- ps %>% subset(!(month %in% c(1,7)))
 
 
-moran_lv <- lm(lv_pop_d_slag ~ lv_pop_d + factor(year) + factor(month), data = ps_semJAn)
-moran_rv <- lm(rv_pop_d_slag ~ rv_pop_d + factor(year) + factor(month), data = ps_semJAn)
-moran_rr <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data = ps_semJAn)
+# Calculate spatial lagged values for on_target
+ps_semJJ$lv_pop_d_slag <- slag(ps_semJJ$lv_pop_d, lw)
+ps_semJJ$rv_pop_d_slag <- slag(ps_semJJ$rv_pop_d, lw)
+ps_semJJ$rr_pop_d_slag <- slag(ps_semJJ$rr_pop_d, lw)
+
+
+moran_lv <- lm(lv_pop_d_slag ~ lv_pop_d + factor(year) + factor(month), data = ps_semJJ)
+moran_rv <- lm(rv_pop_d_slag ~ rv_pop_d + factor(year) + factor(month), data = ps_semJJ)
+moran_rr <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data = ps_semJJ)
 
 #------------------------------------------------------------------------------#
-##### Export ####
+##### Initial Exporting tables ####
 
 
 #### Export placebo table ####
@@ -401,6 +367,216 @@ tab2_pla <-
   )
 
 
-#### Export spatial lag ####
+#### Export spatial lag MANUALLY ####
 
+# Regression variables
+regVars <- c("violent_death_sim",
+             "vehicle_robbery",
+             "street_robbery",
+             "on_target",
+             "policemen_aisp",
+             "policemen_upp",
+             "n_precinct",
+             "max_prize",
+             "population",
+             "aisp",
+             "year",
+             "month")
+
+# Regression data
+ps_complete_bol <- complete.cases(ps[,regVars])
+slregData <- ps[ps_complete_bol,]
+
+coefs <- 
+  c(sl_vd_01$coefficients['on_target'],
+    sl_vr_01$coefficients['on_target'],
+    sl_rr_01$coefficients['on_target'])
+
+
+ses <- 
+  c(sl_vd_01$vcov['on_target','on_target'] %>% sqrt(),
+    sl_vr_01$vcov['on_target','on_target'] %>% sqrt(),
+    sl_rr_01$vcov['on_target','on_target'] %>% sqrt())
+
+
+# N obs
+n_obs<- rep(sum(ps_complete_bol, 3))
+
+# Number of AISPs
+n_aisp <- c(37,37,37)
+
+
+# Y mean
+Ymean <- c(mean(slregData$violent_death_sim),
+           mean(slregData$vehicle_robbery),
+           mean(slregData$street_robbery))
+
+# Adjusted R squared
+arsq <- 
+  function(model,data, depVar){
+    n <- nrow(data)
+    k <- length(model) -1
+    sse <- sum(model$residuals^2)
+    sst <- var( data[,depVar] ) * (n-1)
+    rsq <- 1-(sse/sst)
+    
+    arsq <- 1 -(1-rsq)*((n-1)/(n-k-1))
+    return(arsq)
+  }
+
+adjus_Rsq <- 
+  c(arsq(sl_vd_01, slregData, "violent_death_sim"),
+    arsq(sl_vr_01, slregData, "vehicle_robbery"),
+    arsq(sl_rr_01, slregData, "street_robbery"))
+
+
+#### Create the table ####
+#sl_vd_01
+
+slRegTable <- 
+  rbind(c("Violent  deaths",
+          "Vehicle  robbery  (Carjacking)", 
+          "Street  robbery"),
+        c("SAR", "SAR", "SAR"),
+        c("(1)", "(2)", "(3)"),
+        coefs %>% round(2),
+        ses %>% round(2) ,
+        n_obs,
+        n_aisp,
+        Ymean %>% round(2),
+        adjus_Rsq %>% round(2)
+  )
+
+#colnames(slRegTable) <- c("violent_death_sim", "vehicle_robbery", "street_robbery")
+
+
+# add stars
+slRegTable[4,] <- paste0("(",slRegTable[4,],")***")
+
+# Add row names
+rows <- c("",
+          "",
+          "On target",
+          "",
+          "Observations",
+          "Number of aisp",
+          "Y mean",
+          "R2 adjusted")
+
+rownames(slRegTable) <- (1:dim(slRegTable)[1])
+
+slRegTable <- slRegTable %>%
+  as.data.frame(stringsAsFactors = F)
+
+slRegTable <- 
+  cbind(rows,
+        slRegTable,
+        stringsAsFactors = F) 
+
+slRegTable_hux <- huxtable(slRegTable)
+
+
+#------------------------------------------------------------------------------#
+##### Processing tables ####
+
+
+#### Placebo
+editTables <- function(regTab, 
+                       depVarLabel = "Number of occurrences", 
+                       colTitles, 
+                       nDepVars = 3) {
+  
+  # Dependent variables labels
+  add_vec <- ""
+  for (ndp in 1:length(colTitles)){
+    add_vec <- c(add_vec, c("", colTitles[ndp], ""))
+  }
+  
+  add_header <- hux(rbind(add_vec))
+  
+  # Additional lines in the bottom
+  add_lines <- 
+    hux(
+      rbind(
+        c("Chief FE" , rep(c("No", "Yes", "Yes"), length(colTitles)))
+      ) )
+  
+  # Add column numbers
+  add_colNumbers <-
+    hux(
+      rbind(
+        c("" , paste0("(", 2:length(regTab)-1, ")"))
+      ) )
+  
+  # Make this more stable
+  regTab <- rbind(add_header, 
+                  regTab[1], 
+                  add_colNumbers,
+                  regTab[2:4], 
+                  add_lines, 
+                  regTab[5:6,])
+  
+  # Edit cell borders
+  bottom_border(regTab)[3, ] <- 0.4
+  # Cell merges
+  #regTab  <- regTab %>% merge_cells(1:1, 1:ncol(regTab)) 
+  
+  
+  # Formating
+  align(regTab) <- "center"
+  align(regTab[1:nrow(regTab)-1,1]) <- "left"
+  
+  font_size(regTab) <- 10
+  
+  return(regTab)
+  
+}
+
+
+
+
+tab2_pla_preForm <- editTables(tab2_pla, 
+                                colTitles = c("Violent Death", "Vehicle robbery", "Street robbery"))
+
+# Add Y means
+Ymeans_pla <- 
+  c("Y mean",
+    p_vd_01_data$violent_death %>% mean,
+    p_vd_02_data$violent_death %>% mean,
+    p_vd_IV_data$violent_death %>% mean,
+    p_vr_01_data$vehicle_robbery %>% mean,
+    p_vr_02_data$vehicle_robbery %>% mean,
+    p_vr_IV_data$vehicle_robbery %>% mean,
+    p_rr_01_data$street_robbery %>% mean,
+    p_rr_02_data$street_robbery %>% mean,
+    p_rr_IV_data$street_robbery %>% mean
+  )
+
+nAisp_pla <- c("Number of aisp", rep(39,9))
+
+tab2_pla_formated <- rbind(tab2_pla_preForm[1:7,],
+                           nAisp_pla,
+                           Ymeans_pla,
+                           tab2_pla_preForm[8:9,])
+
+
+caption(tab2_pla_formated) <- "Table XX – Effect of expectancy of receiving bonuses on crime rates (Placebo)"
+
+
+#### Spatial lag table
+bottom_border(slRegTable_hux)[1, ] <- c(0,rep(0.4, dim(slRegTable_hux)[2]-1))
+bottom_border(slRegTable_hux)[2, ] <- 0.4
+bottom_border(slRegTable_hux)[4, ] <- 0.4
+
+caption(slRegTable_hux) <- "Table XX – Effect of expectancy of receiving bonuses on crime rates (Spatial Auto-corrlation)"
+
+colnames(slRegTable_hux) <- c(1:dim(slRegTable_hux)[2])
+
+#------------------------------------------------------------------------------#
+##### Actually exporting ####
+
+if(EXPORT_tables){
+  huxtable::quick_xlsx(tab2_pla_formated, file = file.path(OUTPUTS_final, "tab2_placebo_formated.xlsx"))
+  huxtable::quick_xlsx(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_formated.xlsx"))
+}
 
