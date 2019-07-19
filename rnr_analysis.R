@@ -5,6 +5,7 @@
 #------------------------------------------------------------------------------#
 
 EXPORT_tables = T
+EXPORT_plots = T
 
 #------------------------------------------------------------------------------#
 #### Load data ####
@@ -317,9 +318,13 @@ ps_semJJ$rv_pop_d_slag <- slag(ps_semJJ$rv_pop_d, lw)
 ps_semJJ$rr_pop_d_slag <- slag(ps_semJJ$rr_pop_d, lw)
 
 
-moran_lv <- lm(lv_pop_d_slag ~ lv_pop_d + factor(year) + factor(month), data = ps_semJJ)
-moran_rv <- lm(rv_pop_d_slag ~ rv_pop_d + factor(year) + factor(month), data = ps_semJJ)
-moran_rr <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data = ps_semJJ)
+moran_lv_01 <- lm(lv_pop_d_slag ~ lv_pop_d, data = ps_semJJ)
+moran_rv_01 <- lm(rv_pop_d_slag ~ rv_pop_d, data = ps_semJJ)
+moran_rr_01 <- lm(rr_pop_d_slag ~ rr_pop_d, data = ps_semJJ)
+
+moran_lv_02 <- lm(lv_pop_d_slag ~ lv_pop_d + factor(year) + factor(month), data = ps_semJJ)
+moran_rv_02 <- lm(rv_pop_d_slag ~ rv_pop_d + factor(year) + factor(month), data = ps_semJJ)
+moran_rr_02 <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data = ps_semJJ)
 
 #------------------------------------------------------------------------------#
 ##### Initial Exporting tables ####
@@ -451,10 +456,11 @@ slRegTable <-
 
 
 # add stars
-slRegTable[4,] <- paste0("(",slRegTable[4,],")***")
+slRegTable[5,] <- paste0("(",slRegTable[5,],")***")
 
 # Add row names
 rows <- c("",
+          "",
           "",
           "On target",
           "",
@@ -470,8 +476,7 @@ slRegTable <- slRegTable %>%
 
 slRegTable <- 
   cbind(rows,
-        slRegTable,
-        stringsAsFactors = F) 
+        slRegTable) 
 
 slRegTable_hux <- huxtable(slRegTable)
 
@@ -517,7 +522,7 @@ editTables <- function(regTab,
                   regTab[5:6,])
   
   # Edit cell borders
-  bottom_border(regTab)[3, ] <- 0.4
+  bottom_border(regTab)[4, ] <- 0.4
   # Cell merges
   #regTab  <- regTab %>% merge_cells(1:1, 1:ncol(regTab)) 
   
@@ -540,8 +545,7 @@ tab2_pla_preForm <- editTables(tab2_pla,
 
 # Add Y means
 Ymeans_pla <- 
-  c("Y mean",
-    p_vd_01_data$violent_death %>% mean,
+  c(p_vd_01_data$violent_death %>% mean,
     p_vd_02_data$violent_death %>% mean,
     p_vd_IV_data$violent_death %>% mean,
     p_vr_01_data$vehicle_robbery %>% mean,
@@ -550,7 +554,8 @@ Ymeans_pla <-
     p_rr_01_data$street_robbery %>% mean,
     p_rr_02_data$street_robbery %>% mean,
     p_rr_IV_data$street_robbery %>% mean
-  )
+  ) %>% round(2)
+Ymeans_pla <- c("Y mean", Ymeans_pla)
 
 nAisp_pla <- c("Number of aisp", rep(39,9))
 
@@ -564,14 +569,79 @@ caption(tab2_pla_formated) <- "Table XX – Effect of expectancy of receiving bo
 
 
 #### Spatial lag table
-bottom_border(slRegTable_hux)[1, ] <- c(0,rep(0.4, dim(slRegTable_hux)[2]-1))
-bottom_border(slRegTable_hux)[2, ] <- 0.4
-bottom_border(slRegTable_hux)[4, ] <- 0.4
+bottom_border(slRegTable_hux)[1, ] <- 0.4
+bottom_border(slRegTable_hux)[2, ] <- c(0,rep(0.4, dim(slRegTable_hux)[2]-1))
+bottom_border(slRegTable_hux)[3, ] <- c(0,rep(0.4, dim(slRegTable_hux)[2]-1))
+bottom_border(slRegTable_hux)[5, ] <- 0.4
+bottom_border(slRegTable_hux)[9, ] <- 0.4
+
 
 caption(slRegTable_hux) <- "Table XX – Effect of expectancy of receiving bonuses on crime rates (Spatial Auto-corrlation)"
 
 colnames(slRegTable_hux) <- c(1:dim(slRegTable_hux)[2])
 
+
+#------------------------------------------------------------------------------#
+##### Moran's I plots ####
+
+# Graphics formatting definition
+moran_plot <- function(reg, label, data){
+  moranI <- reg$coefficients[2] %>% round(4)
+  pVal <- summary(reg)$coefficients[regIndepVars(reg)
+                                    ,"Pr(>|t|)"] %>% round(4)
+  title <- paste("Moran's I =",
+                 moranI,
+                 "-",
+                 "P value =",
+                 pVal)
+  with(data, 
+       plot(regIndepVars(reg)%>% get(), 
+            regDepVars(reg)%>% get(),
+            xlab = label,
+            ylab = paste("W", label),
+            cex.lab=2,
+            cex.axis=1.5))
+  abline(reg)
+  title(main=title, 
+        cex.main=2 )
+  
+}
+  
+  
+#### Export graphs
+if(EXPORT_plots){
+    
+  # Violent death  
+  png(file = file.path(OUTPUTS_final, 
+                       "moran_lv_01.png"),
+      width = 600, 
+      height = 600)
+  moran_plot(moran_lv_01, 
+             "Violent Death",
+             ps_semJJ)
+  dev.off()
+  
+  # Vehicle rob
+  png(file = file.path(OUTPUTS_final, 
+                       "moran_rv_01.png"),
+      width = 600, 
+      height = 600)
+  moran_plot(moran_rv_01, 
+             "Vehicle robbery",
+             ps_semJJ)
+  dev.off()
+  
+  # Street rob
+  png(file = file.path(OUTPUTS_final, 
+                       "moran_rr_01.png"),
+      width = 600, 
+      height = 600)
+  moran_plot(moran_rr_01, 
+             "Street robbery",
+             ps_semJJ)
+  dev.off()
+  
+  }
 #------------------------------------------------------------------------------#
 ##### Actually exporting ####
 
