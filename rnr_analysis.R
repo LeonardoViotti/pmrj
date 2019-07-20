@@ -4,8 +4,8 @@
 
 #------------------------------------------------------------------------------#
 
-EXPORT_tables = T
-EXPORT_plots = T
+EXPORT_tables = F
+EXPORT_plots = F
 
 #------------------------------------------------------------------------------#
 #### Load data ####
@@ -28,7 +28,9 @@ sr_pl <- sr[sr$year < 2009,]
 #### Spatial analysis
 
 # Keep only analysis years
-sr_sl <- sr %>% subset(year_month > 200906 & year_month < 201507)
+# sr_sl <- sr %>% subset(year_month > 200912 & year_month < 201507)
+sr_sl <- sr %>% subset(sem_year > 100)
+
 
 # Remove ilha do governador and keep balanced panel
 sr_sl <- sr_sl[!(sr_sl$aisp %in% c(17,41))]
@@ -91,7 +93,7 @@ rFormula_iv_pla <- paste(indepVars_pla[-1], collapse = " + ")
 
 # Add FE, cluster and instruments
 
-clusterVars = c("latitude", "longitude" )
+clusterVars = c("aisp")
 #clusterVars= "0"
 
 clusterVars_form <- paste(clusterVars, collapse =  " + ")
@@ -405,7 +407,9 @@ ses <-
 
 
 # N obs
-n_obs<- rep(sum(ps_complete_bol, 3))
+n_obs <- c(sl_vd_01$residuals %>% length(),
+           sl_vr_01$residuals %>% length(),
+           sl_rr_01$residuals %>% length())
 
 # Number of AISPs
 n_aisp <- c(37,37,37)
@@ -522,7 +526,7 @@ editTables <- function(regTab,
                   regTab[5:6,])
   
   # Edit cell borders
-  bottom_border(regTab)[4, ] <- 0.4
+  #bottom_border(regTab)[4, ] <- 0.4
   # Cell merges
   #regTab  <- regTab %>% merge_cells(1:1, 1:ncol(regTab)) 
   
@@ -542,6 +546,9 @@ editTables <- function(regTab,
 
 tab2_pla_preForm <- editTables(tab2_pla, 
                                 colTitles = c("Violent Death", "Vehicle robbery", "Street robbery"))
+
+
+
 
 # Add Y means
 Ymeans_pla <- 
@@ -563,6 +570,8 @@ tab2_pla_formated <- rbind(tab2_pla_preForm[1:7,],
                            nAisp_pla,
                            Ymeans_pla,
                            tab2_pla_preForm[8:9,])
+
+bottom_border(tab2_pla_formated[3]) <- c(0,rep(0.4, dim(tab2_pla_formated)[2]-1))
 
 
 caption(tab2_pla_formated) <- "Table XX – Effect of expectancy of receiving bonuses on crime rates (Placebo)"
@@ -591,8 +600,8 @@ moran_plot <- function(reg, label, data){
                                     ,"Pr(>|t|)"] %>% round(4)
   title <- paste("Moran's I =",
                  moranI,
-                 "-",
-                 "P value =",
+                 "\n",
+                 "P value ~",
                  pVal)
   with(data, 
        plot(regIndepVars(reg)%>% get(), 
@@ -610,12 +619,13 @@ moran_plot <- function(reg, label, data){
   
 #### Export graphs
 if(EXPORT_plots){
-    
+
   # Violent death  
   png(file = file.path(OUTPUTS_final, 
                        "moran_lv_01.png"),
       width = 600, 
       height = 600)
+  par(mar = c(5, 5, 5, 5))
   moran_plot(moran_lv_01, 
              "Violent Death",
              ps_semJJ)
@@ -626,6 +636,7 @@ if(EXPORT_plots){
                        "moran_rv_01.png"),
       width = 600, 
       height = 600)
+  par(mar = c(5, 5, 5, 5))
   moran_plot(moran_rv_01, 
              "Vehicle robbery",
              ps_semJJ)
@@ -636,6 +647,7 @@ if(EXPORT_plots){
                        "moran_rr_01.png"),
       width = 600, 
       height = 600)
+  par(mar = c(5, 5, 5, 5))
   moran_plot(moran_rr_01, 
              "Street robbery",
              ps_semJJ)
