@@ -33,6 +33,8 @@ sr <- fread(file = file.path(DATA, "sim2019.csv"),
 
 sr$year_month <- sr$year*100+ sr$month
 
+
+
 # Load aisps shapefile
 aisp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
 aisp <- spTransform(aisp, RjProj_unp)
@@ -98,8 +100,9 @@ rFormula_iv_pla <- paste(indepVars_pla[-1], collapse = " + ")
 
 # Add FE, cluster and instruments
 
-clusterVars = c("latitude", "longitude" )
-#clusterVars= "0"
+# clusterVars = c("latitude", "longitude" )
+#clusterVars = c("aisp" )
+clusterVars= "0"
 
 clusterVars_form <- paste(clusterVars, collapse =  " + ")
 
@@ -185,7 +188,8 @@ clse <- function(reg){
 # Original regressions and Consley SEs
 feRegSim <- function(form){
   form <- as.formula(form)
-  model <- felm(form, data = sr[sr$sem_year >100,], keepCX = T)
+  model <- felm(form, data = sr[year_month > 200906 & year_month < 201501,], keepCX = T)
+  #model <- felm(form, data = sr[sem_year > 100,], keepCX = T)
   
   
   # Rename Dep var for IV just for exporting
@@ -196,32 +200,7 @@ feRegSim <- function(form){
     
   }
   
-  # Replace clust. SEs with Conley SEs
-  model$cse <- clse(model)
-  
-  # Replace p-values with new ones from Conley SEs
-  model$cpval <-2*pt(-abs(model$coefficients/model$cse),
-                     df=model$df)
-  
-  # Return regression object
-  return(model)
-  
-}
-
-# Regressions and Consley SEs - placebo
-feRegSim_placebo <- function(form){
-  form <- as.formula(form)
-  model <- felm(form, data = sr[sr$year < 2009,], keepCX = T)
-  
-  
-  # Rename Dep var for IV just for exporting
-  if (!is.null(model$endovars)){
-    rownames(model$coefficients)[grep("`on_", rownames(model$coefficients))] <- "on_target_plapre"
-    rownames(model$beta)[grep("`on_", rownames(model$beta))] <- "on_target_plapre"
-    colnames(model$cX)[grep("`on_", colnames(model$cX))] <- "on_target_plapre"
-  }
-  
-  # Replace clust. SEs with Conley SEs
+  # # Replace clust. SEs with Conley SEs
   # model$cse <- clse(model)
   # 
   # # Replace p-values with new ones from Conley SEs
@@ -232,6 +211,7 @@ feRegSim_placebo <- function(form){
   return(model)
   
 }
+
 
 
 ### Model 1 whithout cmnd FE
@@ -300,68 +280,6 @@ s_bu_IV <- feRegSim(FormulasIV_str["burglary"])
 s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
 
 
-#### Placebo OLS
-# Tabble 2
-p_vd_01 <- feRegSim_placebo(Formulas01_pla_str["violent_death_sim"])
-p_vr_01 <- feRegSim_placebo(Formulas01_pla_str["vehicle_robbery"])
-p_rr_01 <- feRegSim_placebo(Formulas01_pla_str["street_robbery"])
-p_hm_01 <- feRegSim_placebo(Formulas01_pla_str["homicide"])
-p_pk_01 <- feRegSim_placebo(Formulas01_pla_str["dpolice_killing"])
-
-# Table 3 - Gaming 
-p_cf_01 <- feRegSim_placebo(Formulas01_pla_str["dbody_found"])
-p_vt_01 <- feRegSim_placebo(Formulas01_pla_str["vehicle_theft"])
-p_st_01 <- feRegSim_placebo(Formulas01_pla_str["street_theft"])
-
-
-# Table 4 - Spillovers
-p_or_01 <- feRegSim_placebo(Formulas01_pla_str["other_robberies"])
-p_cr_01 <- feRegSim_placebo(Formulas01_pla_str["cargo_robbery"])
-p_bu_01 <- feRegSim_placebo(Formulas01_pla_str["burglary"])
-p_sr_01 <- feRegSim_placebo(Formulas01_pla_str["store_robbery"])
-
-
-### Model 2 whith cmnd FE - placebo
-
-# Tabble 2
-p_vd_02 <- feRegSim_placebo(Formulas02_pla_str["violent_death_sim"])
-p_vr_02 <- feRegSim_placebo(Formulas02_pla_str["vehicle_robbery"])
-p_rr_02 <- feRegSim_placebo(Formulas02_pla_str["street_robbery"])
-p_hm_02 <- feRegSim_placebo(Formulas02_pla_str["homicide"])
-p_pk_02 <- feRegSim_placebo(Formulas02_pla_str["dpolice_killing"])
-
-# Table 3 - Gaming 
-p_cf_02 <- feRegSim_placebo(Formulas02_pla_str["dbody_found"])
-p_vt_02 <- feRegSim_placebo(Formulas02_pla_str["vehicle_theft"])
-p_st_02 <- feRegSim_placebo(Formulas02_pla_str["street_theft"])
-
-
-# Table 4 - Spillovers
-p_or_02 <- feRegSim_placebo(Formulas02_pla_str["other_robberies"])
-p_cr_02 <- feRegSim_placebo(Formulas02_pla_str["cargo_robbery"])
-p_bu_02 <- feRegSim_placebo(Formulas02_pla_str["burglary"])
-p_sr_02 <- feRegSim_placebo(Formulas02_pla_str["store_robbery"])
-
-#### Placebo 2SLS
-
-# Tabble 2
-p_vd_IV <- feRegSim_placebo(FormulasIV_pla_str["violent_death_sim"])
-p_vr_IV <- feRegSim_placebo(FormulasIV_pla_str["vehicle_robbery"])
-p_rr_IV <- feRegSim_placebo(FormulasIV_pla_str["street_robbery"])
-p_hm_IV <- feRegSim_placebo(FormulasIV_pla_str["homicide"])
-p_pk_IV <- feRegSim_placebo(FormulasIV_pla_str["dpolice_killing"])
-
-# Table 3 - Gaming 
-p_cf_IV <- feRegSim_placebo(FormulasIV_pla_str["dbody_found"])
-p_vt_IV <- feRegSim_placebo(FormulasIV_pla_str["vehicle_theft"])
-p_st_IV <- feRegSim_placebo(FormulasIV_pla_str["street_theft"])
-
-# Table 4 - Spillovers
-p_or_IV <- feRegSim_placebo(FormulasIV_pla_str["other_robberies"])
-p_cr_IV <- feRegSim_placebo(FormulasIV_pla_str["cargo_robbery"])
-p_bu_IV <- feRegSim_placebo(FormulasIV_pla_str["burglary"])
-p_sr_IV <- feRegSim_placebo(FormulasIV_pla_str["store_robbery"])
-
 
 
 #------------------------------------------------------------------------------#
@@ -425,74 +343,6 @@ ps$rr_pop_slag <- slag(ps$rr_pop, lw)
 
 
 
-#------------------------------------------------------------------------------#
-#### Spatial lag models ####
-
-#### Regressions
-
-# SAR model function
-SARlag_reg <- function(formula, data, nbW ){
-  spml(formula = as.formula(formula), 
-       data=data, 
-       model = "pooling",
-       lag = T,
-       listw = nbW)
-}
-
-
-
-# Column 1
-sl_vd_01 <- SARlag_reg(Formulas01_sl_str["violent_death_sim"],
-                       data = ps,
-                       nbW = lw)
-sl_vr_01 <- SARlag_reg(Formulas01_sl_str["vehicle_robbery"],
-                       data = ps,
-                       nbW = lw)
-sl_rr_01 <- SARlag_reg(Formulas01_sl_str["street_robbery"],
-                       data = ps,
-                       nbW = lw)
-
-# Column 2 - MULTY COLINEARITY!!!
-# sl_vd_02 <- SARlag_reg(Formulas02_sl_str["violent_death_sim"],
-#                        data = ps,
-#                        nbW = lw)
-# sl_vr_02 <- SARlag_reg(Formulas02_sl_str["vehicle_robbery"],
-#                        data = ps,
-#                        nbW = lw)
-# sl_rr_02 <- SARlag_reg(Formulas02_sl_str["street_robbery"],
-#                        data = ps,
-#                        nbW = lw)
-
-
-#------------------------------------------------------------------------------#
-#### Moran's I ####
-
-
-
-# Moran's I level
-# moran_lv <- lm(lv_pop_lag ~ lv_pop, data = ps)
-# moran_rv <- lm(rv_pop_lag ~ rv_pop, data = ps) %>% summary
-# moran_rr <- lm(rr_pop_lag ~ rr_pop, data = ps) %>% summary
-
-
-# Moran's I delta
-
-#can't have NAs, so I'm removing all obs where the
-#monthly crime difference is NA
-ps_semJAn <- ps %>% subset(month != 1) 
-
-
-
-
-# Calculate spatial lagged values diff
-ps_semJAn$lv_pop_d_slag <- slag(ps_semJAn$lv_pop_d, lw)
-ps_semJAn$rv_pop_d_slag <- slag(ps_semJAn$rv_pop_d, lw)
-ps_semJAn$rr_pop_d_slag <- slag(ps_semJAn$rr_pop_d, lw)
-
-
-moran_lv <- lm(lv_pop_d_slag ~ lv_pop_d + factor(year) + factor(month), data = ps_semJAn)
-moran_rv <- lm(rv_pop_d_slag ~ rv_pop_d + factor(year) + factor(month), data = ps_semJAn)
-moran_rr <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data = ps_semJAn)
 
 #------------------------------------------------------------------------------#
 ##### Export ####
@@ -602,87 +452,6 @@ tab4 <-
                )
 
 
-  
-
-
-# Table 2 - placebo
-tab2_pla <- 
-  export_summs(p_vd_01,
-               p_vd_02,
-               p_vd_IV,
-               p_vr_01,
-               p_vr_02, 
-               p_vr_IV,
-               p_rr_01, 
-               p_rr_02, 
-               p_rr_IV,
-               digits = 3,
-               scale = TRUE,
-               coefs = indepVar_label_pla,
-               statistics = stats_labels,
-               model.names = models_labels[1:9] #,
-               # to.file ="xlsx",
-               # file.name = file.path(OUTPUTS,"tab2.xlsx")
-  )
-
-
-tab3_pla <- 
-  export_summs(p_cf_01,
-               p_cf_02,
-               p_cf_IV, 
-               p_vt_01,
-               p_vt_02,
-               p_vt_IV,
-               p_st_01, 
-               p_st_02,
-               p_st_IV,
-               digits = 3,
-               scale = TRUE,
-               coefs = indepVar_label_pla,
-               statistics = stats_labels,
-               model.names = models_labels[1:9] #,
-               # to.file ="xlsx",
-               # file.name = file.path(OUTPUTS,"tab2.xlsx")
-  )
-
-
-tab4_pla <- 
-  export_summs(p_or_01, 
-               p_or_02,
-               p_or_IV, 
-               p_cr_01, 
-               p_cr_02,
-               p_cr_IV,
-               p_bu_01, 
-               p_bu_02, 
-               p_bu_IV,
-               p_sr_01,
-               p_sr_02,
-               p_sr_IV,
-               digits = 3,
-               scale = TRUE,
-               coefs = indepVar_label_pla,
-               statistics = stats_labels,
-               model.names = models_labels #,
-               # to.file ="xlsx",
-               # file.name = file.path(OUTPUTS,"tab2.xlsx")
-  )
-
-
-
-# Table 2 - Spatial Lag model
-# tab2_sl <- 
-#   export_summs(sl_vd_01,
-#                sl_vr_01,
-#                sl_rr_01, 
-#                digits = 3,
-#                scale = TRUE,
-#                coefs = indepVar_label_pla,
-#                statistics = stats_labels,
-#                model.names = models_labels[c(1,4,7)] #,
-#                # to.file ="xlsx",
-#                # file.name = file.path(OUTPUTS,"tab2.xlsx")
-#   )
 
 
 
@@ -744,26 +513,14 @@ tab4_formated <- editTables(tab4,
                                           "Burglary",
                                           "Robbery of commercial stores"))
 
-tab2_pla_formated <- editTables(tab2_pla, 
-                                colTitles = c("Violent Death", "Vehicle robbery", "Street robbery"))
-tab3_pla_formated <- editTables(tab3_pla, 
-                                colTitles = c("Cadavers Found (dummy)", "Car theft", "Street theft"))
-tab4_pla_formated <- editTables(tab4_pla, 
-                            colTitles = c("Robberies not included in the target", 
-                                          "Cargo robbery",
-                                          "Burglary",
-                                          "Robbery of commercial stores"))
-
 
 
 # Export
 
 if(EXPORT_tables){
-  huxtable::quick_docx(tab2_formated, file = file.path(OUTPUTS_final, "tab2_formated.docx"))
-  huxtable::quick_docx(tab3_formated, file = file.path(OUTPUTS_final, "tab3_formated.docx"))
-  huxtable::quick_docx(tab4_formated, file = file.path(OUTPUTS_final, "tab4_formated.docx"))
-  
-  huxtable::quick_docx(tab2_pla_formated, file = file.path(OUTPUTS_final, "tab2_placebo_formated.docx"))
+  huxtable::quick_docx(tab2_formated, file = file.path(OUTPUTS_final, "tab2_formated2.docx"))
+  huxtable::quick_docx(tab3_formated, file = file.path(OUTPUTS_final, "tab3_formated2.docx"))
+  huxtable::quick_docx(tab4_formated, file = file.path(OUTPUTS_final, "tab4_formated2.docx"))
   
 }
 
@@ -776,64 +533,3 @@ for (ndp in 1:length(colTitles)){
 }
 
 
-
-#------------------------------------------------------------------------------#
-#### Spatial lag ####
-
-# #foo <- as.formula(Formulas01_lg)
-# foo <- formula("")
-# 
-# lagsarlm(foo, 
-#          listw = lw, 
-#          data = sr, 
-# #          method="Matrix")
-# 
-# 
-# sr$year_month <- sr$year*100+ sr$month
-# 
-# #formula.f <-  "violent_death_sim ~ on_target | year_month + aisp  | 0 |  latitude + longitude"
-# formula.f <- Formulas01_str[1]
-# formula.f <- as.formula(formula.f) 
-# 
-# reg.f <- felm(formula.f, data = sr, keepCX = T)
-# 
-# foo <- ConleySEs(reg = reg.f,
-#           unit = "aisp", 
-#           time = c("year","month"),
-#           #time = "year",
-#           dist_cutoff = 5,
-#           #balanced_pnl = F,
-#           #dist_fn = "Haversine", lag_cutoff = 5, cores = 1, verbose = FALSE,
-#           lat = "latitude", lon = "longitude") 
-# 
-# 
-# 
-# #r_vd_01
-
-
-
-#------------------------------------------------------------------------------#
-# ##### Export ####
-# foo <- 
-# export_summs(r_vd, 
-#              r_vr, 
-#              r_rr,
-#              #to.file = "docx",
-#              coefs = "on_target",
-#              statistics = c("nobs", "adj.r.squared") 
-#              #file.name = "C:/Users/wb519128/Desktop/test.docx"
-#              )
-# 
-# bar <- hux("names" = "FE",
-#            "Model 1"  = "No",
-#            "Model 2"  = "No",
-#            "Model 3"  = "Yes")
-# names(bar) <- names(foo)
-# 
-# fob <- rbind(foo[1:3], bar, foo[4:nrow(foo)])
-# 
-# export_summs(fob,
-#              file.name = "C:/Users/wb519128/Desktop/test.docx"
-# )
-# 
-# ff <- as_flextable(fob)
