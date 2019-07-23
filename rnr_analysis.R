@@ -345,13 +345,13 @@ stats_labels <- c("Observations" = "nobs",
 
 models_labels <- c("Model 1" = "OLS", 
                    "Model 2" = "OLS", 
-                   "Model 3" = "IV", 
+                   "Model 3" = "2SLS", 
                    "Model 4" = "OLS",
                    "Model 5" = "OLS", 
-                   "Model 6" = "IV",
+                   "Model 6" = "2SLS",
                    "Model 7" = "OLS", 
                    "Model 8" = "OLS", 
-                   "Model 9" = "IV")
+                   "Model 9" = "2SLS")
 
 # Table 2 - placebo
 tab2_pla <- 
