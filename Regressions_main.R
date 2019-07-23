@@ -34,10 +34,25 @@ sr <- fread(file = file.path(DATA, "sim2019.csv"),
 sr$year_month <- sr$year*100+ sr$month
 
 
+#------------------------------------------------------------------------------#
+#### Reconstruct instrument ####
 
-# Load aisps shapefile
-aisp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
-aisp <- spTransform(aisp, RjProj_unp)
+# bar <- sr %>% 
+#   subset(year_month > 200906 & year_month < 201507)
+# 
+# foo <- sr %>% 
+#   subset(year_month > 200906 & year_month < 201507)
+#   mutate(dist_target_vd=violent_death_sim_cum /target_vd_sem -1,
+#          lag12_dist_target_vd = dplyr::lag(dist_target_vd,12))
+
+# gen dist_target_vd=violent_death_sim_cum /target_vd_sem -1 
+# bysort aisp (month_year): gen lag12_dist_target_vd=dist_target_vd[_n-12]
+# 
+# gen dist_target_vr=(vehicle_robbery_cum)/(target_vr_sem ) -1 
+# bysort aisp (month_year): gen lag12_dist_target_vr=dist_target_vr[_n-12]
+# 
+# gen dist_target_sr=street_robbery_cum /target_sr_sem -1 
+# bysort aisp (month_year): gen lag12_dist_target_sr=dist_target_sr[_n-12]
 
 
 #------------------------------------------------------------------------------#
@@ -137,20 +152,10 @@ Formulas01_str <- paste(depVars, paste(rFormula, config1), sep = " ~ ")
 Formulas02_str <- paste(depVars, paste(rFormula, config2), sep = " ~ ")
 FormulasIV_str <- paste(depVars, paste(rFormula_iv, config_iv), sep = " ~ ")
 
-# Placebo
-Formulas01_pla_str <- paste(depVars, paste(rFormula_pla, config1), sep = " ~ ")
-Formulas02_pla_str <- paste(depVars, paste(rFormula_pla, config2_pla), sep = " ~ ")
-FormulasIV_pla_str <- paste(depVars, paste(rFormula_iv_pla, config_iv_pla), sep = " ~ ")
-
-
-
 # So it's easier to refernce to elements
 names(Formulas01_str) <- depVars
 names(Formulas02_str) <- depVars
 names(FormulasIV_str) <- depVars
-names(Formulas01_pla_str) <- depVars
-names(Formulas02_pla_str) <- depVars
-names(FormulasIV_pla_str) <- depVars
 
 #rFormulaFE <- paste0("factor(",FEVars,")")
 # rFormula1 <- paste(c(indepVars, rFormulaFE[1:2]), collapse = " + ") 
@@ -175,22 +180,21 @@ names(Formulas02_sl_str) <- depVars
 #### OLS models ####
 
 # Conley SE function
-clse <- function(reg){
-  vcv <- ConleySEs(reg = reg,
-                   unit = "aisp", 
-                   time = c("year","month"),
-                   lat = "latitude", lon = "longitude")$Spatial_HAC
-  ses <- diag(vcv)
-  return(ses)
-}
-
+# clse <- function(reg){
+#   vcv <- ConleySEs(reg = reg,
+#                    unit = "aisp", 
+#                    time = c("year","month"),
+#                    lat = "latitude", lon = "longitude")$Spatial_HAC
+#   ses <- diag(vcv)
+#   return(ses)
+# }
 
 # Original regressions and Consley SEs
 feRegSim <- function(form){
   form <- as.formula(form)
-  model <- felm(form, data = sr[year_month > 200906 & year_month < 201501,], keepCX = T)
-  #model <- felm(form, data = sr[sem_year > 100,], keepCX = T)
-  
+  #model <- felm(form, data = sr[year_month > 200906 & year_month < 201501,], keepCX = T)
+  model <- felm(form, data = sr[sem_year > 100,], keepCX = T)
+
   
   # Rename Dep var for IV just for exporting
   if (!is.null(model$endovars)){
@@ -279,67 +283,6 @@ s_cr_IV <- feRegSim(FormulasIV_str["cargo_robbery"])
 s_bu_IV <- feRegSim(FormulasIV_str["burglary"])
 s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
 
-
-
-
-#------------------------------------------------------------------------------#
-#### SPATIAL ANALSYS ####
-
-# Keep only analysis years
-sr_sl <- sr %>% subset(year_month > 200906 & year_month < 201507)
-
-# Remove ilha do governador and keep balanced panel
-sr_sl <- sr_sl[!(sr_sl$aisp %in% c(17,41))]
-aisp <- aisp[!(aisp@data$aisp %in% c(17,41)),]
-
-
-#------------------------#
-#### Create variables ####
-
-
-# Year and month
-#sr_sl$year_month <- sr_sl$year*100 + sr_sl$month
-
-# Deaths per 100 thousand
-sr_sl$lv_pop <- sr_sl$violent_death_sim/(sr_sl$population/100000)
-
-# Carjack per 100 thousand
-sr_sl$rv_pop <- sr_sl$vehicle_robbery /(sr_sl$population/100000)
-
-# Street robbery per 100 thousand
-sr_sl$rr_pop <- sr_sl$street_robbery/(sr_sl$population/100000)
-
-# Montly variation - current month minus previous
-sr_sl <- sr_sl %>% 
-  group_by(aisp) %>% 
-  arrange(aisp, year_month) %>% 
-  mutate(lv_pop_d = lv_pop - dplyr::lag(lv_pop, n = 1),
-         rv_pop_d = rv_pop - dplyr::lag(rv_pop, n = 1),
-         rr_pop_d = rr_pop - dplyr::lag(rr_pop, n = 1),
-         # Replace inf values
-         lv_pop_d = ifelse(!is.finite(lv_pop_d),NA, lv_pop_d),
-         rv_pop_d = ifelse(!is.finite(rv_pop_d),NA, rv_pop_d),
-         rr_pop_d = ifelse(!is.finite(rr_pop_d),NA, rr_pop_d))
-
-
-# Set panel data indexes
-ps <- pdata.frame(sr_sl, index = c("aisp", "year_month"))
-
-
-#### Spatial Variables
-
-# Neighbourhood definition
-nb <- poly2nb(aisp, queen = T)
-
-# Neighbour weights
-lw <- nb2listw(nb,
-               style = "W",
-               zero.policy = TRUE)
-
-# Calculate spatial lagged values level
-ps$lv_pop_slag <- slag(ps$lv_pop, lw)
-ps$rv_pop_slag <- slag(ps$rv_pop, lw)
-ps$rr_pop_slag <- slag(ps$rr_pop, lw)
 
 
 
