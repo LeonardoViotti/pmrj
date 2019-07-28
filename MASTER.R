@@ -9,7 +9,7 @@ rm(list = ls())
 #------------------------------------------------------------------------------#
 #### Section switches ####
 
-RUN_placebo_targets_construction = T
+RUN_placebo_targets_construction = F
 RUN_main_analysis = F
 RUN_rnr_analysis = F
 

@@ -14,6 +14,10 @@ EXPORT_tables = F
 sr <- fread(file = file.path(DATA, "sim2019.csv"),
              encoding = "UTF-8")
 
+# Keep same sample for all models, i.e from 2010 onwards because of IV
+sr <- sr[sem_year > 100,]
+
+
 
 sr$year_month <- sr$year*100+ sr$month
 
@@ -122,7 +126,7 @@ names(Formulas02_sl_str) <- depVars
 feRegSim <- function(form){
   form <- as.formula(form)
   #model <- felm(form, data = sr[year_month > 200906 & year_month < 201501,], keepCX = T)
-  model <- felm(form, data = sr[sem_year > 100,], keepCX = T)
+  model <- felm(form, data = sr, keepCX = T)
 
   
   # Rename Dep var for IV just for exporting
