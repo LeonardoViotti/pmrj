@@ -5,55 +5,17 @@
 
 #------------------------------------------------------------------------------#
 
-
-# TO DOS:
-
-#               EXPORTAR TABLEAS PARA O WORD
-#               RODAR MODELO DE SPATIAL LAG
-#               RODAR TESTE DE ENDOGENEIDADE DO INSTRUMENTO
-#               EXPLICAR QUE EU NAO CONSIGO FAZER EXATAMENTE A MESMA COISA NO IV PORQUE A BASE E MENOR
-
-
-
 EXPORT_tables = F
 
 #------------------------------------------------------------------------------#
 #### Load data ####
 
 
-# sr <-  read.dta13(file.path(DROPBOX, "data_SIM_2019-01.dta")) 
-# placebo_gis <- read.csv(file.path(DROPBOX, "placebo_targets.csv"), header = T)
-# 
-# # Add placebos and coordinates
-# sr <- merge(sr, placebo_gis, by = c("aisp", "year", "month" , "semester"), all.x = T)
-
-
 sr <- fread(file = file.path(DATA, "sim2019.csv"),
              encoding = "UTF-8")
 
+
 sr$year_month <- sr$year*100+ sr$month
-
-
-#------------------------------------------------------------------------------#
-#### Reconstruct instrument ####
-
-# bar <- sr %>% 
-#   subset(year_month > 200906 & year_month < 201507)
-# 
-# foo <- sr %>% 
-#   subset(year_month > 200906 & year_month < 201507)
-#   mutate(dist_target_vd=violent_death_sim_cum /target_vd_sem -1,
-#          lag12_dist_target_vd = dplyr::lag(dist_target_vd,12))
-
-# gen dist_target_vd=violent_death_sim_cum /target_vd_sem -1 
-# bysort aisp (month_year): gen lag12_dist_target_vd=dist_target_vd[_n-12]
-# 
-# gen dist_target_vr=(vehicle_robbery_cum)/(target_vr_sem ) -1 
-# bysort aisp (month_year): gen lag12_dist_target_vr=dist_target_vr[_n-12]
-# 
-# gen dist_target_sr=street_robbery_cum /target_sr_sem -1 
-# bysort aisp (month_year): gen lag12_dist_target_sr=dist_target_sr[_n-12]
-
 
 #------------------------------------------------------------------------------#
 #### List regression variables ####
@@ -78,29 +40,16 @@ indepVars <- c("on_target",
                "max_prize",
                "population" )
 
-indepVars_pla <- c("on_target_plapre",
-                   #"policemen_aisp",
-                   #"policemen_upp",
-                   "n_precinct",
-                   #"max_prize",
-                   "population" )
-
 FEVars <- c("aisp",
             "year", 
             "month", 
             "id_cmt")
 
-FEVars_pla <- c("aisp",
-                "year", 
-                "month", 
-                "cmd_name")
 
 ZVars <- c("lag12_dist_target_vr",
            "lag12_dist_target_sr",
            "lag12_dist_target_vd")
-ZVars_pla <- c("lag12_dist_target_vr_plapre",
-               "lag12_dist_target_sr_plapre",
-               "lag12_dist_target_vd_plapre")
+
 
 
 #------------------------------------------------------------------------------#
@@ -108,10 +57,8 @@ ZVars_pla <- c("lag12_dist_target_vr_plapre",
 
 # right hand side without FE
 rFormula <- paste(indepVars, collapse = " + ") 
-rFormula_pla <- paste(indepVars_pla, collapse = " + ") 
 
 rFormula_iv <- paste(indepVars[-1], collapse = " + ") 
-rFormula_iv_pla <- paste(indepVars_pla[-1], collapse = " + ") 
 
 # Add FE, cluster and instruments
 
@@ -127,23 +74,14 @@ config1 <- paste("|", FeForumala1, "| 0 | ", clusterVars_form )
 FeForumala2 <- paste(FEVars, collapse = " + ") # with cmd FE
 config2 <- paste("|", FeForumala2, "| 0 |  ", clusterVars_form)
 
-FeForumala2_pla <- paste(FEVars_pla, collapse = " + ") # with cmd FE
-config2_pla <- paste("|", FeForumala2_pla, "| 0 |  ", clusterVars_form)
-
-
 # IV formula
 first_stage_left <- "on_target"
-first_stage_left_pla <- "on_target_plapre"
 
 first_stage_right <- paste(ZVars, collapse = " + ")
-first_stage_right_pla <- paste(ZVars_pla, collapse = " + ")
-
 
 formula_1st <-  paste("(", first_stage_left, " ~ ", first_stage_right, " )")
-formula_1st_pla <-  paste("(", first_stage_left_pla, " ~ ", first_stage_right_pla, " )")
 
 config_iv <- paste("|", FeForumala2, "|" ,  formula_1st,  "| ", clusterVars_form)
-config_iv_pla <- paste("|", FeForumala2_pla, "|" ,  formula_1st_pla,  "| ", clusterVars_form)
 
 
 #### Final formulas
@@ -179,15 +117,6 @@ names(Formulas02_sl_str) <- depVars
 #------------------------------------------------------------------------------#
 #### OLS models ####
 
-# Conley SE function
-# clse <- function(reg){
-#   vcv <- ConleySEs(reg = reg,
-#                    unit = "aisp", 
-#                    time = c("year","month"),
-#                    lat = "latitude", lon = "longitude")$Spatial_HAC
-#   ses <- diag(vcv)
-#   return(ses)
-# }
 
 # Original regressions and Consley SEs
 feRegSim <- function(form){
@@ -204,18 +133,11 @@ feRegSim <- function(form){
     
   }
   
-  # # Replace clust. SEs with Conley SEs
-  # model$cse <- clse(model)
-  # 
-  # # Replace p-values with new ones from Conley SEs
-  # model$cpval <-2*pt(-abs(model$coefficients/model$cse),
-  #                    df=model$df)
   
   # Return regression object
   return(model)
   
 }
-
 
 
 ### Model 1 whithout cmnd FE
@@ -467,12 +389,5 @@ if(EXPORT_tables){
   
 }
 
-
-colTitles = c("Violent Death", "Vehicle robbery", "Street robbery")
-
-add_vec <- ""
-for (ndp in 1:length(colTitles)){
-  add_vec <- c(add_vec, c("", colTitles[ndp], ""))
-}
 
 

@@ -9,8 +9,9 @@ rm(list = ls())
 #------------------------------------------------------------------------------#
 #### Section switches ####
 
-RUN_placebo_targets_construction = F
-RUN_regrssion_analysis = F
+RUN_placebo_targets_construction = T
+RUN_main_analysis = F
+RUN_rnr_analysis = F
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -83,16 +84,6 @@ GIS <- file.path(DROPBOX, "GIS")
 
 #------------------------------------------------------------------------------#
 #### Function definition ####
-
-# Run cpp functions from shomR package that are not working from package install
-# only. https://github.com/shommazumder/shomR
-
-sourceCpp(file.path(CONLEYse_FUNs, "cpp-functions.cpp"))
-
-# Run debugged version of ConleySEs function and dependencies
-#source(file.path(CONLEYse_FUNs, "iterate-obs-function_draft.R"))
-source(file.path(CONLEYse_FUNs, "ConleySE_fun_draft.R"))
-
 
 
 #### My own functions
@@ -187,22 +178,25 @@ regData <- function(reg, regdf){
 #------------------------------------------------------------------------------#
 #### Sections ####
 
-
 #------------------------------------------------------------------------------#
 #### Create placebo targets ####
 
 if(RUN_placebo_targets_construction){
-  source(file.path(GITHUB, "Construction_placebo_targets.R"))
+  source(file.path(GITHUB, "construction_placebo_targets.R"))
   
 }
 
 #------------------------------------------------------------------------------#
-#### GIS analysis ####
+#### Main Analysis ####
+
+if(RUN_main_analysis){
+  source(file.path(GITHUB, "analysis_main.R"))
+}
 
 
 #------------------------------------------------------------------------------#
-#### Rgression analysis ####
+#### R&R Analysis ####
 
-if(RUN_regrssion_analysis){
-  source(file.path(GITHUB, "Regressions_main.R"))
+if(RUN_rnr_analysis){
+  source(file.path(GITHUB, "analysis_rnr.R"))
 }
