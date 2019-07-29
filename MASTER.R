@@ -9,9 +9,19 @@ rm(list = ls())
 #------------------------------------------------------------------------------#
 #### Section switches ####
 
+
+# Run differnt sections of analysis
+
 RUN_placebo_targets_construction = F
 RUN_main_analysis = F
 RUN_rnr_analysis = F
+
+
+# Settings switches
+
+EXPORT_data = F
+EXPORT_plots = F
+EXPORT_tables = F
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -172,6 +182,23 @@ regData <- function(reg, regdf){
   
   return(completeData)
   
+}
+
+
+#------------------------------------------------------------------------------#
+#### Load Data and other Globals ####
+
+
+# Load raw data to construct placebo targets
+raw_data <- read.dta13(file.path(DATA,"data_SIM_2019-07.dta"))
+
+
+# Load final data created by construct_placebo_targets.R
+if(file.exists(file.path(DATA, "data_SIM_2019_constructed.csv"))){
+  final_data <- fread(file = file.path(DATA, "data_SIM_2019_constructed.csv"),
+                      encoding = "UTF-8")
+}else{
+  print("Please, turn RUN_placebo_targets_construction to TRUE and run again.")
 }
 
 

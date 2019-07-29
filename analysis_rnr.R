@@ -10,10 +10,10 @@ EXPORT_plots = F
 #------------------------------------------------------------------------------#
 #### Load data ####
 
-sr <- fread(file = file.path(DATA, "sim2019.csv"),
-            encoding = "UTF-8")
-# Create year+month variable
-sr$year_month <- sr$year*100+ sr$month
+
+
+# Loading data into a new object to be processed
+sr <- final_data
 
 # Load aisps shapefile
 aisp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")

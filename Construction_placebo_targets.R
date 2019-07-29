@@ -9,18 +9,31 @@
 #### Settings ####
 
 
-EXPORT_data = T
-EXPORT_plots = F
+
+# These are all defined in MASTER.R, only use to explicitly overwrite master.
+OVERWRITE_MASTER_SWITCHES = F
+
+if(OVERWRITE_MASTER_SWITCHES){
+  EXPORT_data = F
+  EXPORT_plots = F
+  EXPORT_tables = F
+}
+
+
 
 #------------------------------------------------------------------------------#
 #### Load constructed data ####
 
-sim <- read.dta13(file.path(DATA,"data_SIM_2019-07.dta"))
+# sim <- read.dta13(file.path(DATA,"data_SIM_2019-07.dta"))
 
+# Loading data into a new object to be processed
+sim <- raw_data
 sim <- sim[!is.na(sim$aisp) & !is.na(sim$year) & !is.na(sim$month), ]
 
-# Load shapefiles
+# Create this useful numeric version of this variable
+sim$year_month <- sim$year*100+ sim$month
 
+# Load shapefiles
 aisp_shp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
 
 # Load chief IDs
@@ -362,36 +375,31 @@ sim <-
          "sr_placebo_tar" = "plaTar_sr")
 
 
-
-
-
-
-
 if (EXPORT_data){
   # Exporting just the new variables to be merged with the original data. Since the
   # original data is .dta, so it won't lose meta data
-  plaExport <- sim[, c("aisp",
-                       "year",
-                       "month",
-                       "semester",
-                       "qua_vd",
-                       "qua_vr",
-                       "qua_sr",
-                       "vd_placebo_tar",
-                       "vr_placebo_tar",
-                       "sr_placebo_tar", 
-                       "latitude",
-                       "longitude")]
-  
-  
-  write.csv(plaExport,
-            file.path(DATA, "placebo_targets.csv"),
-            row.names = F,
-            na = "")
+  # plaExport <- sim[, c("aisp",
+  #                      "year",
+  #                      "month",
+  #                      "semester",
+  #                      "qua_vd",
+  #                      "qua_vr",
+  #                      "qua_sr",
+  #                      "vd_placebo_tar",
+  #                      "vr_placebo_tar",
+  #                      "sr_placebo_tar", 
+  #                      "latitude",
+  #                      "longitude")]
+  # 
+  # 
+  # write.csv(plaExport,
+  #           file.path(DATA, "placebo_targets.csv"),
+  #           row.names = F,
+  #           na = "")
   
   # Exporting the entire data to run in R
   write.csv(sim,
-            file.path(DATA, "sim2019.csv"),
+            file.path(DATA, "data_SIM_2019_constructed.csv"),
             row.names = F,
             na = "")
   

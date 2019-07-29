@@ -10,16 +10,11 @@ EXPORT_tables = F
 #------------------------------------------------------------------------------#
 #### Load data ####
 
-
-sr <- fread(file = file.path(DATA, "sim2019.csv"),
-             encoding = "UTF-8")
+# Loading data into a new object to be processed
+sr <- final_data
 
 # Keep same sample for all models, i.e from 2010 onwards because of IV
 sr <- sr[sem_year > 100,]
-
-
-
-sr$year_month <- sr$year*100+ sr$month
 
 #------------------------------------------------------------------------------#
 #### List regression variables ####
@@ -103,20 +98,9 @@ names(FormulasIV_str) <- depVars
 # rFormula1 <- paste(c(indepVars, rFormulaFE[1:2]), collapse = " + ") 
 # rFormula2 <- paste(c(indepVars, rFormulaFE), collapse = " + ") 
 
-
 #------------------------------------------------------------------------------#
-### Spatial lag formulas ####
+#### Poisson formulas ####
 
-# Add FEs
-sFormulaFE <- paste0("factor(",FEVars,")")
-sFormula1 <- paste(c(indepVars, sFormulaFE[1:3]), collapse = " + ")
-sFormula2 <- paste(c(indepVars, sFormulaFE), collapse = " + ")
-
-Formulas01_sl_str <- paste(depVars, sFormula1, sep = " ~ ")
-Formulas02_sl_str <- paste(depVars, sFormula2, sep = " ~ ")
-
-names(Formulas01_sl_str) <- depVars
-names(Formulas02_sl_str) <- depVars
 
 #------------------------------------------------------------------------------#
 #### OLS models ####
@@ -210,7 +194,8 @@ s_bu_IV <- feRegSim(FormulasIV_str["burglary"])
 s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
 
 
-
+#------------------------------------------------------------------------------#
+#### Poisson models ####
 
 
 #------------------------------------------------------------------------------#
