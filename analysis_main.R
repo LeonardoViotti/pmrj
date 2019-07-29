@@ -5,7 +5,14 @@
 
 #------------------------------------------------------------------------------#
 
-EXPORT_tables = F
+# These are all defined in MASTER.R, only use to explicitly overwrite master.
+OVERWRITE_MASTER_SWITCHES = F
+
+if(OVERWRITE_MASTER_SWITCHES){
+  EXPORT_data = F
+  EXPORT_plots = F
+  EXPORT_tables = F
+}
 
 #------------------------------------------------------------------------------#
 #### Load data ####
@@ -15,45 +22,6 @@ sr <- final_data
 
 # Keep same sample for all models, i.e from 2010 onwards because of IV
 sr <- sr[sem_year > 100,]
-
-#------------------------------------------------------------------------------#
-#### List regression variables ####
-
-depVars <- c("violent_death_sim",
-             "vehicle_robbery",
-             "street_robbery",
-             "homicide",
-             "dpolice_killing",
-             "vehicle_theft",
-             "street_theft",
-             "dbody_found",
-             "other_robberies",
-             "cargo_robbery",
-             "burglary",
-             "store_robbery")
-names(depVars) <- depVars
-
-
-indepVars <- c("on_target",
-               "policemen_aisp",
-               "policemen_upp",
-               "n_precinct",
-               "max_prize",
-               "population" )
-names(indepVars) <- indepVars
-
-FEVars <- c("aisp",
-            "year", 
-            "month", 
-            "id_cmt")
-names(FEVars) <- FEVars
-
-
-ZVars <- c("lag12_dist_target_vr",
-           "lag12_dist_target_sr",
-           "lag12_dist_target_vd")
-names(ZVars) <- ZVars
-
 
 #------------------------------------------------------------------------------#
 ### OLS formulas ####
@@ -440,4 +408,81 @@ if(EXPORT_tables){
 }
 
 
+#------------------------------------------------------------------------------#
+#### Monthly coef graphs ####
 
+
+#### Create Variables
+
+# Create month order dummys
+sr$m2 <- ifelse(sr$month %in% c(2,8), 1, 0)
+sr$m3 <- ifelse(sr$month %in% c(3,9), 1, 0)
+sr$m4 <- ifelse(sr$month %in% c(4,10), 1, 0)
+sr$m5 <- ifelse(sr$month %in% c(5,11), 1, 0)
+sr$m6 <- ifelse(sr$month %in% c(6,12), 1, 0)
+
+# Create on_target X mN interaction
+sr$month2 <- sr$m2*sr$on_target
+sr$month3 <- sr$m3*sr$on_target
+sr$month4 <- sr$m4*sr$on_target
+sr$month5 <- sr$m5*sr$on_target
+sr$month6 <- sr$m6*sr$on_target
+
+
+#### Construct monthly regression formulas
+month_dummies <- c("month2", 
+                   "month3",
+                   "month4",
+                   "month5",
+                   "month6")
+
+rFormula_plot <- paste(c(month_dummies, 
+                         # Remove on_targer as it is already in the interactions
+                         indepVars[-1]), 
+                       collapse = " + ") 
+Formulas02_plot_str <- paste(depVars, paste(rFormula_plot, config2), sep = " ~ ")
+names(Formulas02_plot_str) <- depVars
+
+#### Monthly regression
+rplot_vd <- feRegSim(Formulas02_plot_str["violent_death_sim"])
+rplot_vr <- feRegSim(Formulas02_plot_str["vehicle_robbery"])
+rplot_rr <- feRegSim(Formulas02_plot_str["street_robbery"])
+
+
+#### Actual plots
+
+model = rplot_vd
+vars = month_dummies
+
+monthCoefPlot <- function(model,
+                         vars){
+  # Select only month coeffs
+  coefs_df <- data.frame(coef = model$coefficients[vars,],
+                         month = vars,
+                         se = model$rse[vars])
+  
+  plot <- 
+    ggplot(data = coefs_df,
+                 aes(y = coef,
+                     x = month)) +
+    geom_point()+
+    geom_errorbar(aes(ymin=coef-se, 
+                      ymax=coef+se),
+                  width=.2)+
+    geom_hline(yintercept=0,
+               color = "red")
+
+  return(plot)  
+}
+
+coefPlot_vd <- 
+  monthCoefPlot(model = rplot_vd,
+                vars = month_dummies)
+
+coefPlot_vr <- 
+  monthCoefPlot(model = rplot_vr,
+                vars = month_dummies)
+
+coefPlot_rr <- 
+  monthCoefPlot(model = rplot_rr,
+                vars = month_dummies)
