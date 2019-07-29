@@ -31,6 +31,8 @@ depVars <- c("violent_death_sim",
              "cargo_robbery",
              "burglary",
              "store_robbery")
+names(depVars) <- depVars
+
 
 indepVars <- c("on_target",
                "policemen_aisp",
@@ -38,17 +40,19 @@ indepVars <- c("on_target",
                "n_precinct",
                "max_prize",
                "population" )
+names(indepVars) <- indepVars
 
 FEVars <- c("aisp",
             "year", 
             "month", 
             "id_cmt")
+names(FEVars) <- FEVars
 
 
 ZVars <- c("lag12_dist_target_vr",
            "lag12_dist_target_sr",
            "lag12_dist_target_vd")
-
+names(ZVars) <- ZVars
 
 
 #------------------------------------------------------------------------------#
@@ -101,6 +105,44 @@ names(FormulasIV_str) <- depVars
 #------------------------------------------------------------------------------#
 #### Poisson formulas ####
 
+
+form1 <- vehicle_robbery ~ on_target + 
+  factor(year) +  factor( month) + factor(aisp) +factor(id_cmt) +
+  policemen_aisp + policemen_upp + n_precinct+ offset(log(population))
+
+
+# Remove max prize for some reason
+poisson_indepVars <- indepVars[!(names(indepVars) %in% c("max_prize", "population"))]
+
+
+# Fixed effects
+sFormulaFE_poi <- paste(paste0("factor(",FEVars,")"), collapse = " + ") 
+
+# Construct right hand sied fo eq.
+rFormula_poi_0 <- paste(poisson_indepVars, collapse = " + ") 
+
+# Add FEs
+rFormula_poi_1 <-  paste(rFormula_poi_0, "+", sFormulaFE_poi)
+
+# Add Exposure variable
+
+# Exposure Variable
+exposure_variable <- "population"
+
+paste0(" offset(log(", exposure_variable, ")")
+
+rFormula_poi <-  paste(rFormula_poi_1,
+                       "+", 
+                       paste0(" offset(log(", 
+                              exposure_variable, 
+                              "))"
+                              )
+                       )
+
+
+# Final formula
+Formulas_poi_str <- paste(depVars, rFormula_poi, sep = " ~ ")
+names(Formulas_poi_str) <- depVars
 
 #------------------------------------------------------------------------------#
 #### OLS models ####
@@ -198,6 +240,21 @@ s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
 #### Poisson models ####
 
 
+RegPoisson <- function(form){
+  model <- 
+    glm(as.formula(form),
+        family = poisson,
+        data = sr)
+  return(model)
+  
+}
+
+p_vd <- RegPoisson(Formulas_poi_str["violent_death_sim"])
+p_vr <- RegPoisson(Formulas_poi_str["vehicle_robbery"])
+p_rr <- RegPoisson(Formulas_poi_str["street_robbery"])
+p_po <- RegPoisson(Formulas_poi_str["dpolice_killing"])
+
+
 #------------------------------------------------------------------------------#
 ##### Export ####
 
@@ -222,16 +279,6 @@ models_labels <- c("Model 1" = "OLS",
                    "Model 10" = "OLS", 
                    "Model 11" = "OLS", 
                    "Model 12" = "IV")
-
-
-models_labels_pla <- c("Model 1" = "OLS", 
-                       "Model 2" = "IV", 
-                       "Model 3" = "OLS", 
-                       "Model 4" = "IV",
-                       "Model 5" = "OLS", 
-                       "Model 6" = "IV",
-                       "Model 7" = "OLS", 
-                       "Model 8" = "IV")
 
 
 
@@ -305,7 +352,21 @@ tab4 <-
                # file.name = file.path(OUTPUTS,"tab4.xlsx")
                )
 
-
+# Poisson model
+# tab5 <- 
+#   export_summs(p_vd, 
+#                p_vr,
+#                p_rr,
+#                p_po,
+#                digits = 3,
+#                scale = TRUE,
+#                transform.response = T,
+#                coefs = indepVar_label,
+#                model.names = models_labels,
+#                statistics = stats_labels #,
+#                # to.file ="xlsx",
+#                # file.name = file.path(OUTPUTS,"tab4.xlsx")
+#   )
 
 
 

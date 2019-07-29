@@ -362,8 +362,6 @@ if (EXPORT_plots){
 }
 
 
-  
-
 #------------------------------------------------------------------------------#
 #### Exportart a base ####
 
@@ -376,27 +374,7 @@ sim <-
 
 
 if (EXPORT_data){
-  # Exporting just the new variables to be merged with the original data. Since the
-  # original data is .dta, so it won't lose meta data
-  # plaExport <- sim[, c("aisp",
-  #                      "year",
-  #                      "month",
-  #                      "semester",
-  #                      "qua_vd",
-  #                      "qua_vr",
-  #                      "qua_sr",
-  #                      "vd_placebo_tar",
-  #                      "vr_placebo_tar",
-  #                      "sr_placebo_tar", 
-  #                      "latitude",
-  #                      "longitude")]
-  # 
-  # 
-  # write.csv(plaExport,
-  #           file.path(DATA, "placebo_targets.csv"),
-  #           row.names = F,
-  #           na = "")
-  
+
   # Exporting the entire data to run in R
   write.csv(sim,
             file.path(DATA, "data_SIM_2019_constructed.csv"),
