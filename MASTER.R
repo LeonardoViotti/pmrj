@@ -37,6 +37,7 @@ library(splm) # Spatial panel data
 library(Rcpp)
 library(Hmisc)
 
+library(stargazer)
 library(huxtable)
 library(flextable)
 #library(officer)
@@ -173,8 +174,14 @@ regData <- function(reg, regdf){
   regVarsAll <- c(regDepVars(reg), 
                   regIndepVars(reg),
                   feVars,
-                  clusterVars,
+                  #clusterVars,
                   instrumentVars)
+  if(clusterVars != 0){
+    regVarsAll <- c(regVarsAll,
+                    clusterVars)
+  }
+  
+  
   
   # Make sure all observarions are the same
   completeBol <- complete.cases(regdf[,regVarsAll])
@@ -186,7 +193,7 @@ regData <- function(reg, regdf){
 
 
 #------------------------------------------------------------------------------#
-#### Load Data and other Globals ####
+#### Load Data ####
 
 
 # Load raw data to construct placebo targets
@@ -200,6 +207,51 @@ if(file.exists(file.path(DATA, "data_SIM_2019_constructed.csv"))){
 }else{
   print("Please, turn RUN_placebo_targets_construction to TRUE and run again.")
 }
+
+
+
+#------------------------------------------------------------------------------#
+#### Globals ####
+
+####  List regression variables 
+
+depVars <- c("violent_death_sim",
+             "vehicle_robbery",
+             "street_robbery",
+             "homicide",
+             "dpolice_killing",
+             "vehicle_theft",
+             "street_theft",
+             "dbody_found",
+             "other_robberies",
+             "cargo_robbery",
+             "burglary",
+             "store_robbery")
+names(depVars) <- depVars
+
+
+indepVars <- c("on_target",
+               "policemen_aisp",
+               "policemen_upp",
+               "n_precinct",
+               "max_prize",
+               "population" )
+names(indepVars) <- indepVars
+
+FEVars <- c("aisp",
+            "year", 
+            "month", 
+            "id_cmt")
+names(FEVars) <- FEVars
+
+
+ZVars <- c("lag12_dist_target_vr",
+           "lag12_dist_target_sr",
+           "lag12_dist_target_vd")
+names(ZVars) <- ZVars
+
+
+
 
 
 #------------------------------------------------------------------------------#
