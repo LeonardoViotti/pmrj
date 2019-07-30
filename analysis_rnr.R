@@ -93,8 +93,8 @@ rFormula_iv_pla <- paste(indepVars_pla[-1], collapse = " + ")
 
 # Add FE, cluster and instruments
 
-clusterVars = c("aisp")
-#clusterVars= "0"
+#clusterVars = c("aisp")
+clusterVars= "0"
 
 clusterVars_form <- paste(clusterVars, collapse =  " + ")
 
@@ -354,24 +354,32 @@ models_labels <- c("Model 1" = "OLS",
                    "Model 9" = "2SLS")
 
 # Table 2 - placebo
-tab2_pla <- 
-  export_summs(p_vd_01,
-               p_vd_02,
-               p_vd_IV,
-               p_vr_01,
-               p_vr_02, 
-               p_vr_IV,
-               p_rr_01, 
-               p_rr_02, 
-               p_rr_IV,
-               digits = 3,
-               scale = TRUE,
-               coefs = indepVar_label_pla,
-               statistics = stats_labels,
-               model.names = models_labels[1:9] #,
-               # to.file ="xlsx",
-               # file.name = file.path(OUTPUTS,"tab2.xlsx")
-  )
+tab2_pla_regs <- 
+  list(p_vd_01,
+       p_vd_02,
+       p_vd_IV,
+       p_vr_01,
+       p_vr_02, 
+       p_vr_IV,
+       p_rr_01, 
+       p_rr_02, 
+       p_rr_IV)
+
+
+tab2_pla_addLines <- list(chifeFE_line_9,
+                      Ymean_row(tab2_pla_regs),
+                      n_aisp_line_9)
+
+
+createTable(reg_list = tab2_pla_regs,
+            add_lines_list = tab2_pla_addLines,
+            dep_var_labels = c("Violent deaths", 
+                               "Vehicle robbery (Carjacking)",	
+                               "Street robbery"),
+            title = "Table B1– Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2006 and 2008)",
+            outPath = file.path(OUTPUTS_final, "tab2_pla.html"))
+
+
 
 
 #### Export spatial lag MANUALLY ####
