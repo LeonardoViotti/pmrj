@@ -302,11 +302,14 @@ p_po_data <-  regData(p_po, regdf = sr)
 
 #### Define commun elements
 n_aisp_line_9 <- c("Number of aisp", rep("39", 9))
+n_aisp_line_12 <- c("Number of aisp", rep("39", 12))
+
 chifeFE_line_9 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 3))
 chifeFE_line_12 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 4))
 
 indepVar_label <- "On target"
 col_labels_9 <- rep(c("OLS",	"OLS",	"2SLS"), 3)
+col_labels_12 <- rep(c("OLS",	"OLS",	"2SLS"), 4)
 
 
 
@@ -319,7 +322,7 @@ Ymean <- function(x){
 
 # Function to create the row for regression tables
 Ymean_row <- function(list){
-  c("Y mean", sapply(bar, Ymean) %>% round(2))
+  c("Y mean", sapply(list, Ymean) %>% round(2))
 }
 
 
@@ -356,7 +359,7 @@ tab2_regs <-
        r_rr_02,
        r_rr_IV)
 
-tab2_addLines <- list(chifeFE_line,
+tab2_addLines <- list(chifeFE_line_9,
                    Ymean_row(tab2_regs),
                    n_aisp_line_9)
 
@@ -367,7 +370,7 @@ createTable(reg_list = tab2_regs,
                                "Vehicle robbery (Carjacking)",	
                                "Street robbery"),
             title = "Table 2 – Effect of expectancy of receiving bonuses on crime rates",
-            outPath = file.path(OUTPUTS, "tab2.html"))
+            outPath = file.path(OUTPUTS_final, "tab2.html"))
 
 
 
@@ -383,6 +386,20 @@ tab3_regs <-
                g_st_01, 
                g_st_02,
                g_st_IV)
+
+
+tab3_addLines <- list(chifeFE_line_9,
+                      Ymean_row(tab3_regs),
+                      n_aisp_line_9)
+
+
+createTable(reg_list = tab3_regs,
+            add_lines_list = tab3_addLines,
+            dep_var_labels = c("Cadavers Found (dummy)", 
+                               "Car theft",	
+                               "Street theft"),
+            title = "Table 3– Expectancy of receiving bonuses and gaming",
+            outPath = file.path(OUTPUTS_final, "tab3.html"))
 
 
 
@@ -401,6 +418,22 @@ tab4_regs <-
                s_sr_02,
                s_sr_IV)
 
+tab4_addLines <- list(chifeFE_line_12,
+                      Ymean_row(tab4_regs),
+                      n_aisp_line_12)
+
+
+createTable(reg_list = tab4_regs,
+            add_lines_list = tab4_addLines,
+            dep_var_labels = c("Robberies not included in the target", 
+                               "Cargo robbery	",	
+                               "Burglary",
+                               "Robbery of commercial stores"),
+            title = "Table 4– Expectancy of receiving bonuses and positive spill overs on other crimes",
+            outPath = file.path(OUTPUTS_final, "tab4.html"))
+
+
+
 # Poisson model
 tab5_regs <-
   list(p_vd,
@@ -409,75 +442,19 @@ tab5_regs <-
        p_po)
 
 
-
-#### Table edits
-editTables <- function(regTab, depVarLabel = "Number of occurrences", colTitles, nDepVars = 3) {
-  
-  # Dependent variables labels
-  add_vec <- ""
-  for (ndp in 1:length(colTitles)){
-    add_vec <- c(add_vec, c("", colTitles[ndp], ""))
-  }
-  
-  add_header <- hux(rbind(add_vec))
-  
-  # Additional lines in the bottom
-  add_lines <- 
-    hux(
-      rbind(
-        c("Chief FE" , rep(c("No", "Yes", "Yes"), length(colTitles)))
-      ) )
-  
-  # Add column numbers
-  add_colNumbers <-
-    hux(
-      rbind(
-        c("" , paste0("(", 2:length(regTab)-1, ")"))
-      ) )
-  
-  # Make this more stable
-  regTab <- rbind(add_header, 
-                  regTab[1], 
-                  add_colNumbers,
-                  regTab[2:4], 
-                  add_lines, 
-                  regTab[5:6,])
-  
-  # Edit cell borders
-  bottom_border(regTab)[3, ] <- 0.4
-  # Cell merges
-  #regTab  <- regTab %>% merge_cells(1:1, 1:ncol(regTab)) 
-  
-  
-  # Formating
-  align(regTab) <- "center"
-  align(regTab[1:nrow(regTab)-1,1]) <- "left"
-  
-  font_size(regTab) <- 10
-  
-  return(regTab)
-  
-}
+tab5_addLines <- list(c("Chief FE", "Yes", "Yes", "Yes", "Yes"),
+                      Ymean_row(tab5_regs),
+                      c("Number of aisp", rep("39", 4)))
 
 
-tab2_formated <- editTables(tab2, colTitles = c("Violent Death", "Vehicle robbery", "Street robbery"))
-tab3_formated <- editTables(tab3, colTitles = c("Cadavers Found (dummy)", "Car theft", "Street theft"))
-tab4_formated <- editTables(tab4, 
-                            colTitles = c("Robberies not included in the target", 
-                                          "Cargo robbery",
-                                          "Burglary",
-                                          "Robbery of commercial stores"))
-
-
-
-# Export
-
-if(EXPORT_tables){
-  huxtable::quick_docx(tab2_formated, file = file.path(OUTPUTS_final, "tab2_formated2.docx"))
-  huxtable::quick_docx(tab3_formated, file = file.path(OUTPUTS_final, "tab3_formated2.docx"))
-  huxtable::quick_docx(tab4_formated, file = file.path(OUTPUTS_final, "tab4_formated2.docx"))
-  
-}
+createTable(reg_list = tab5_regs,
+            add_lines_list = tab5_addLines,
+            dep_var_labels = c("Violent deaths", 
+                               "Vehicle robbery (Carjacking)",	
+                               "Street robbery",
+                               "Police homicide (dummy)"),
+            title = "Table 5– Robustness: Poisson Regressions",
+            outPath = file.path(OUTPUTS_final, "tab5.html"))
 
 
 #------------------------------------------------------------------------------#
