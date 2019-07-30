@@ -117,7 +117,7 @@ regIndepVars <- function(x){
   # Work with felm and lm
   if(class(x) == "felm"){
     indepV <- rownames(x$coefficients)
-  }else if (class(x) == "lm"){
+  }else if (class(x) %in% c("lm", "glm")){
     indepV <- names(x$model)[-1]
   }else{
     warning("Not sure what that regression is")
@@ -133,7 +133,7 @@ regDepVars <- function(x){
   # Work with felm and lm
   if(class(x) == "felm"){
     depV <- colnames(x$coefficients)
-  }else if (class(x) == "lm"){
+  }else if (class(x)  %in% c("lm", "glm")){
     depV <- names(x$model)[1]
   }else if (class(x) == "splm"){
     depV <- names(x$coefficients)[-1]
