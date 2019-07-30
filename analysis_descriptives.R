@@ -8,17 +8,14 @@
 #------------------------------------------------------------------------------#
 #### Load data ####
 
-sd <- final_data
+#sd <- final_data
 
 # Keep same sample for as regressions
-sd <- sd[sem_year > 100,]
+sd <- regData(reg = r_vd_01, regdf = sr)
 
 
 #------------------------------------------------------------------------------#
 #### Table 1 - General descriptives ####
-
-tab1Data <- regData(reg = r_vd_01, regdf = sr)
-
 
 
 tab1Vars <- c(indepVars["on_target"],
@@ -30,20 +27,12 @@ tab1Vars <- c(indepVars["on_target"],
 
 
 
-stargazer(tab1Data %>% select(tab1Vars),
+stargazer(sd %>% select(tab1Vars),
           type = "text")
 
 
 #------------------------------------------------------------------------------#
 #### Box plot - Number of ocurrences per AISP ####
-
-
-sg1 <- sr %>% subset(year_month < 201507 & year_month > 200912)
-sg2 <- sr %>% subset(sem_year > 100)
-
-
-sg3 <- regData(reg = r_vd_01, regdf = sr)
-sg4 <- regData(reg = r_vd_IV, regdf = sr)
 
 
 boxPlotSim <- function(var,
@@ -55,33 +44,26 @@ boxPlotSim <- function(var,
              x =  factor(aisp, levels = unique(data$aisp) %>% sort(decreasing = T))
          )
   ) + 
-    geom_boxplot() +
+    geom_boxplot(col = "dodgerblue4") +
     coord_flip() + 
-    labs(x= ylab, y = xlab) # Because of coord_flip() these are inverted
-  
-  
+    labs(x= ylab, y = xlab) +  # Because of coord_flip() these are inverted
+  theme_minimal()
   
 }
 
-#bplot_vd <- 
-  boxPlotSim(sg1$violent_death_sim,
-             data = sg1,
+bplot_vd <- 
+  boxPlotSim(sd$violent_death_sim,
+             data = sd,
              xlab = "Victims of Violent Death",
              ylab = "")
-
-  boxPlotSim(sg3$violent_death_sim,
-             data = sg3,
-             xlab = "Victims of Violent Death",
-             ylab = "")
-
 
 bplot_rr <- 
-  boxPlotSim(sg1$street_robbery,
+  boxPlotSim(sd$street_robbery,
              xlab = "Registers of Street Robbery",
              ylab = "")
 
 bplot_vd <- 
-  boxPlotSim(sg1$vehicle_robbery,
+  boxPlotSim(sd$vehicle_robbery,
              xlab = "Registers of Vehicle Robbery",
              ylab = "")
 
@@ -89,5 +71,14 @@ bplot_vd <-
 #------------------------------------------------------------------------------#
 #### Bar plot 2 - Number od awards per AISP ####
 
+
 #------------------------------------------------------------------------------#
 #### Bar plot 2 - % of months on target per AISP ####
+
+ggplot(data = sd ,
+       aes(y = on_target,
+           x =  factor(aisp, levels = unique(sd$aisp) %>% sort(decreasing = T))
+           )
+       ) +
+  geom_bar(stat="identity")
+
