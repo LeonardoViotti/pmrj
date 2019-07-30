@@ -117,10 +117,10 @@ names(Formulas_poi_str) <- depVars
 
 
 # Original regressions and Consley SEs
-feRegSim <- function(form){
+feRegSim <- function(form, data = sr){
   form <- as.formula(form)
   #model <- felm(form, data = sr[year_month > 200906 & year_month < 201501,], keepCX = T)
-  model <- felm(form, data = sr, keepCX = T)
+  model <- felm(form, data = data, keepCX = T)
 
   
   # Rename Dep var for IV just for exporting
@@ -460,21 +460,25 @@ createTable(reg_list = tab5_regs,
 #------------------------------------------------------------------------------#
 #### Monthly coef graphs ####
 
+cpsr <- sr %>% subset(year > 2009 & year < 2016)
+
+
+
 #### Create Variables
 
 # Create month order dummys
-sr$m2 <- ifelse(sr$month %in% c(2,8), 1, 0)
-sr$m3 <- ifelse(sr$month %in% c(3,9), 1, 0)
-sr$m4 <- ifelse(sr$month %in% c(4,10), 1, 0)
-sr$m5 <- ifelse(sr$month %in% c(5,11), 1, 0)
-sr$m6 <- ifelse(sr$month %in% c(6,12), 1, 0)
+cpsr$m2 <- ifelse(cpsr$month %in% c(2,8), 1, 0)
+cpsr$m3 <- ifelse(cpsr$month %in% c(3,9), 1, 0)
+cpsr$m4 <- ifelse(cpsr$month %in% c(4,10), 1, 0)
+cpsr$m5 <- ifelse(cpsr$month %in% c(5,11), 1, 0)
+cpsr$m6 <- ifelse(cpsr$month %in% c(6,12), 1, 0)
 
 # Create on_target X mN interaction
-sr$month2 <- sr$m2*sr$on_target
-sr$month3 <- sr$m3*sr$on_target
-sr$month4 <- sr$m4*sr$on_target
-sr$month5 <- sr$m5*sr$on_target
-sr$month6 <- sr$m6*sr$on_target
+cpsr$month2 <- cpsr$m2*cpsr$on_target
+cpsr$month3 <- cpsr$m3*cpsr$on_target
+cpsr$month4 <- cpsr$m4*cpsr$on_target
+cpsr$month5 <- cpsr$m5*cpsr$on_target
+cpsr$month6 <- cpsr$m6*cpsr$on_target
 
 
 #### Construct monthly regression formulas
@@ -492,15 +496,12 @@ Formulas02_plot_str <- paste(depVars, paste(rFormula_plot, config2), sep = " ~ "
 names(Formulas02_plot_str) <- depVars
 
 #### Monthly regression
-rplot_vd <- feRegSim(Formulas02_plot_str["violent_death_sim"])
-rplot_vr <- feRegSim(Formulas02_plot_str["vehicle_robbery"])
-rplot_rr <- feRegSim(Formulas02_plot_str["street_robbery"])
+rplot_vd <- feRegSim(Formulas02_plot_str["violent_death_sim"], data = cpsr)
+rplot_vr <- feRegSim(Formulas02_plot_str["vehicle_robbery"], data = cpsr)
+rplot_rr <- feRegSim(Formulas02_plot_str["street_robbery"], data = cpsr)
 
 
 #### Actual plots
-
-model = rplot_vd
-vars = month_dummies
 
 monthCoefPlot <- function(model,
                          vars){
@@ -508,17 +509,25 @@ monthCoefPlot <- function(model,
   coefs_df <- data.frame(coef = model$coefficients[vars,],
                          month = vars,
                          se = model$rse[vars])
+  # Format X axis
+  coefs_df$month <- c(2:6)
+  
   
   plot <- 
     ggplot(data = coefs_df,
                  aes(y = coef,
                      x = month)) +
-    geom_point()+
+    geom_point(col = "dodgerblue4", size = 2)+
     geom_errorbar(aes(ymin=coef-se, 
                       ymax=coef+se),
-                  width=.2)+
+                  col = "dodgerblue4",
+                  size = .5,
+                  width=.1)+
     geom_hline(yintercept=0,
-               color = "red")
+               color = "red")+
+    xlab("Month") +
+    ylab("")+
+    theme_minimal(base_size = 20)
 
   return(plot)  
 }
@@ -534,3 +543,31 @@ coefPlot_vr <-
 coefPlot_rr <- 
   monthCoefPlot(model = rplot_rr,
                 vars = month_dummies)
+
+
+
+# Export plots
+if(EXPORT_plots){
+  
+  png(file.path(OUTPUTS_final, "coef_plot_violent_death_sim.png"),
+      width = 600,
+      height = 400)
+  coefPlot_vd
+  dev.off()
+  
+  png(file.path(OUTPUTS_final, "coef_plot_street_robbery.png"),
+      width = 600,
+      height = 400)
+  coefPlot_rr
+  dev.off()
+  
+  png(file.path(OUTPUTS_final, "coef_plot_vehicle_robbery.png"),
+      width = 600,
+      height = 400)
+  coefPlot_vr
+  dev.off()
+  
+  
+}
+
+
