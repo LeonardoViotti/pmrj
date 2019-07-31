@@ -293,17 +293,16 @@ p_vr_data <-  regData(p_vr, regdf = sr)
 p_rr <- RegPoisson(Formulas_poi_str["street_robbery"])
 p_rr_data <-  regData(p_rr, regdf = sr)
 
-p_po <- RegPoisson(Formulas_poi_str["dpolice_killing"])
-p_po_data <-  regData(p_po, regdf = sr)
-
 
 #------------------------------------------------------------------------------#
 ##### Export ####
 
 #### Define commun elements
+n_aisp_line_3 <- c("Number of aisp", rep("39", 3))
 n_aisp_line_9 <- c("Number of aisp", rep("39", 9))
 n_aisp_line_12 <- c("Number of aisp", rep("39", 12))
 
+chifeFE_line_3 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 1))
 chifeFE_line_9 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 3))
 chifeFE_line_12 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 4))
 
@@ -343,7 +342,8 @@ createTable <- function(reg_list,
             digits = 3,
             omit.stat = c("rsq","ser", "f"),
             out = outPath,
-            type = "html")
+            type = "html"
+            )
 }
 
 
@@ -398,8 +398,8 @@ createTable(reg_list = tab3_regs,
             dep_var_labels = c("Cadavers Found (dummy)", 
                                "Car theft",	
                                "Street theft"),
-            title = "Table 3– Expectancy of receiving bonuses and gaming",
-            outPath = file.path(OUTPUTS_final, "tab3.html"))
+            title = "Table A1 – Expectancy of receiving bonuses and gaming",
+            outPath = file.path(OUTPUTS_final, "tabA1.html"))
 
 
 
@@ -429,8 +429,8 @@ createTable(reg_list = tab4_regs,
                                "Cargo robbery	",	
                                "Burglary",
                                "Robbery of commercial stores"),
-            title = "Table 4– Expectancy of receiving bonuses and positive spill overs on other crimes",
-            outPath = file.path(OUTPUTS_final, "tab4.html"))
+            title = "Table 3 – Expectancy of receiving bonuses and positive spill overs on other crimes",
+            outPath = file.path(OUTPUTS_final, "tab3.html")) # Order changed in paper
 
 
 
@@ -438,23 +438,37 @@ createTable(reg_list = tab4_regs,
 tab5_regs <-
   list(p_vd,
        p_vr,
-       p_rr,
-       p_po)
+       p_rr)
 
 
-tab5_addLines <- list(c("Chief FE", "Yes", "Yes", "Yes", "Yes"),
+tab5_addLines <- list(c("Chief FE", "Yes", "Yes", "Yes"),
                       Ymean_row(tab5_regs),
-                      c("Number of aisp", rep("39", 4)))
+                      c("Number of aisp", rep("39", 3)))
+
+
+stargazer(tab5_regs,
+          keep = ("on_target"),
+          covariate.labels = "On target",
+          # dep.var.labels = c("Violent deaths", 
+          #                    "Vehicle robbery (Carjacking)",	
+          #                    "Street robbery"),
+          title = "Table B4 – Robustness: Poisson Regressions",
+          dep.var.caption  = "Number  of  occurrences",
+          add.lines = tab5_addLines,
+          digits = 3,
+          omit.stat = c("rsq","ser", "f"),
+          out = file.path(OUTPUTS_final, "tabB4.html"),
+          type = "html"
+        )
 
 
 createTable(reg_list = tab5_regs,
             add_lines_list = tab5_addLines,
             dep_var_labels = c("Violent deaths", 
                                "Vehicle robbery (Carjacking)",	
-                               "Street robbery",
-                               "Police homicide (dummy)"),
-            title = "Table 5– Robustness: Poisson Regressions",
-            outPath = file.path(OUTPUTS_final, "tab5.html"))
+                               "Street robbery"),
+            title = "Table B4 – Robustness: Poisson Regressions",
+            outPath = file.path(OUTPUTS_final, "tabB4.html"))
 
 
 #------------------------------------------------------------------------------#
@@ -527,7 +541,7 @@ monthCoefPlot <- function(model,
                color = "red")+
     xlab("Month") +
     ylab("")+
-    theme_minimal(base_size = 20)
+    theme_minimal()
 
   return(plot)  
 }
@@ -549,23 +563,20 @@ coefPlot_rr <-
 # Export plots
 if(EXPORT_plots){
   
-  png(file.path(OUTPUTS_final, "coef_plot_violent_death_sim.png"),
-      width = 600,
-      height = 400)
-  coefPlot_vd
-  dev.off()
+  coefPlot_vd + 
+    ggsave(filename = file.path(OUTPUTS_final, "coef_plot_violent_death_sim.png"),
+           width = 6,
+           height = 4)
+
+  coefPlot_rr + 
+    ggsave(filename = file.path(OUTPUTS_final, "coef_plot_street_robbery.png"),
+           width = 6,
+           height = 4)
   
-  png(file.path(OUTPUTS_final, "coef_plot_street_robbery.png"),
-      width = 600,
-      height = 400)
-  coefPlot_rr
-  dev.off()
-  
-  png(file.path(OUTPUTS_final, "coef_plot_vehicle_robbery.png"),
-      width = 600,
-      height = 400)
-  coefPlot_vr
-  dev.off()
+  coefPlot_vr + 
+    ggsave(filename = file.path(OUTPUTS_final, "coef_plot_vehicle_robbery.png"),
+           width = 6,
+           height = 4)
   
   
 }
