@@ -14,6 +14,7 @@ rm(list = ls())
 
 RUN_placebo_targets_construction = F
 RUN_main_analysis = T
+RUN_desc_analysis = T
 RUN_rnr_analysis = F
 
 
@@ -21,7 +22,7 @@ RUN_rnr_analysis = F
 
 EXPORT_data = F
 EXPORT_plots = T
-EXPORT_tables = F
+EXPORT_tables = T
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -274,8 +275,24 @@ if(RUN_main_analysis){
 
 
 #------------------------------------------------------------------------------#
+#### Descriptive Analysis ####
+
+# This code depends on analysis_main.R to run! So if this option is not selected
+# on master it will sourced in analysis_descriptives.R
+
+
+if(RUN_desc_analysis){
+  source(file.path(GITHUB, "analysis_descriptives.R"))
+}
+
+
+#------------------------------------------------------------------------------#
 #### R&R Analysis ####
 
 if(RUN_rnr_analysis){
   source(file.path(GITHUB, "analysis_rnr.R"))
 }
+
+
+
+
