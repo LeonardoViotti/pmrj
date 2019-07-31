@@ -9,8 +9,20 @@ rm(list = ls())
 #------------------------------------------------------------------------------#
 #### Section switches ####
 
+
+# Run differnt sections of analysis
+
 RUN_placebo_targets_construction = F
-RUN_regrssion_analysis = F
+RUN_main_analysis = T
+RUN_desc_analysis = T
+RUN_rnr_analysis = F
+
+
+# Settings switches
+
+EXPORT_data = F
+EXPORT_plots = T
+EXPORT_tables = T
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -26,6 +38,7 @@ library(splm) # Spatial panel data
 library(Rcpp)
 library(Hmisc)
 
+library(stargazer)
 library(huxtable)
 library(flextable)
 #library(officer)
@@ -84,16 +97,6 @@ GIS <- file.path(DROPBOX, "GIS")
 #------------------------------------------------------------------------------#
 #### Function definition ####
 
-# Run cpp functions from shomR package that are not working from package install
-# only. https://github.com/shommazumder/shomR
-
-sourceCpp(file.path(CONLEYse_FUNs, "cpp-functions.cpp"))
-
-# Run debugged version of ConleySEs function and dependencies
-#source(file.path(CONLEYse_FUNs, "iterate-obs-function_draft.R"))
-source(file.path(CONLEYse_FUNs, "ConleySE_fun_draft.R"))
-
-
 
 #### My own functions
 
@@ -115,7 +118,7 @@ regIndepVars <- function(x){
   # Work with felm and lm
   if(class(x) == "felm"){
     indepV <- rownames(x$coefficients)
-  }else if (class(x) == "lm"){
+  }else if (class(x) %in% c("lm", "glm")){
     indepV <- names(x$model)[-1]
   }else{
     warning("Not sure what that regression is")
@@ -131,7 +134,7 @@ regDepVars <- function(x){
   # Work with felm and lm
   if(class(x) == "felm"){
     depV <- colnames(x$coefficients)
-  }else if (class(x) == "lm"){
+  }else if (class(x)  %in% c("lm", "glm")){
     depV <- names(x$model)[1]
   }else if (class(x) == "splm"){
     depV <- names(x$coefficients)[-1]
@@ -172,8 +175,14 @@ regData <- function(reg, regdf){
   regVarsAll <- c(regDepVars(reg), 
                   regIndepVars(reg),
                   feVars,
-                  clusterVars,
+                  #clusterVars,
                   instrumentVars)
+  if(clusterVars != 0){
+    regVarsAll <- c(regVarsAll,
+                    clusterVars)
+  }
+  
+  
   
   # Make sure all observarions are the same
   completeBol <- complete.cases(regdf[,regVarsAll])
@@ -185,24 +194,105 @@ regData <- function(reg, regdf){
 
 
 #------------------------------------------------------------------------------#
-#### Sections ####
+#### Load Data ####
 
+
+# Load raw data to construct placebo targets
+raw_data <- read.dta13(file.path(DATA,"data_SIM_2019-07.dta"))
+
+
+# Load final data created by construct_placebo_targets.R
+if(file.exists(file.path(DATA, "data_SIM_2019_constructed.csv"))){
+  final_data <- fread(file = file.path(DATA, "data_SIM_2019_constructed.csv"),
+                      encoding = "UTF-8")
+}else{
+  print("Please, turn RUN_placebo_targets_construction to TRUE and run again.")
+}
+
+
+
+#------------------------------------------------------------------------------#
+#### Globals ####
+
+####  List regression variables 
+
+depVars <- c("violent_death_sim",
+             "vehicle_robbery",
+             "street_robbery",
+             "homicide",
+             "dpolice_killing",
+             "vehicle_theft",
+             "street_theft",
+             "dbody_found",
+             "other_robberies",
+             "cargo_robbery",
+             "burglary",
+             "store_robbery")
+names(depVars) <- depVars
+
+
+indepVars <- c("on_target",
+               "policemen_aisp",
+               "policemen_upp",
+               "n_precinct",
+               "max_prize",
+               "population" )
+names(indepVars) <- indepVars
+
+FEVars <- c("aisp",
+            "year", 
+            "month", 
+            "id_cmt")
+names(FEVars) <- FEVars
+
+
+ZVars <- c("lag12_dist_target_vr",
+           "lag12_dist_target_sr",
+           "lag12_dist_target_vd")
+names(ZVars) <- ZVars
+
+
+
+
+
+#------------------------------------------------------------------------------#
+#### Sections ####
 
 #------------------------------------------------------------------------------#
 #### Create placebo targets ####
 
 if(RUN_placebo_targets_construction){
-  source(file.path(GITHUB, "Construction_placebo_targets.R"))
+  source(file.path(GITHUB, "construction_placebo_targets.R"))
   
 }
 
 #------------------------------------------------------------------------------#
-#### GIS analysis ####
+#### Main Analysis ####
+
+if(RUN_main_analysis){
+  source(file.path(GITHUB, "analysis_main.R"))
+}
 
 
 #------------------------------------------------------------------------------#
-#### Rgression analysis ####
+#### Descriptive Analysis ####
 
-if(RUN_regrssion_analysis){
-  source(file.path(GITHUB, "Regressions_main.R"))
+# This code depends on analysis_main.R to run! So if this option is not selected
+# on master it will sourced in analysis_descriptives.R
+
+
+if(RUN_desc_analysis){
+  source(file.path(GITHUB, "analysis_descriptives.R"))
 }
+
+
+#------------------------------------------------------------------------------#
+#### R&R Analysis ####
+
+if(RUN_rnr_analysis){
+  source(file.path(GITHUB, "analysis_rnr.R"))
+}
+
+
+
+

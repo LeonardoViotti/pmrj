@@ -9,20 +9,31 @@
 #### Settings ####
 
 
-EXPORT_data = F
-EXPORT_plots = F
+
+# These are all defined in MASTER.R, only use to explicitly overwrite master.
+OVERWRITE_MASTER_SWITCHES = F
+
+if(OVERWRITE_MASTER_SWITCHES){
+  EXPORT_data = F
+  EXPORT_plots = F
+  EXPORT_tables = F
+}
+
+
 
 #------------------------------------------------------------------------------#
 #### Load constructed data ####
 
-#setwd("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
-#sim <- read.dta13("data_SIM_2019-01.dta")
-sim <- read.dta13(file.path(DROPBOX,"data_SIM_2019-04.dta"))
+# sim <- read.dta13(file.path(DATA,"data_SIM_2019-07.dta"))
 
+# Loading data into a new object to be processed
+sim <- raw_data
 sim <- sim[!is.na(sim$aisp) & !is.na(sim$year) & !is.na(sim$month), ]
 
-# Load shapefiles
+# Create this useful numeric version of this variable
+sim$year_month <- sim$year*100+ sim$month
 
+# Load shapefiles
 aisp_shp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
 
 # Load chief IDs
@@ -351,8 +362,6 @@ if (EXPORT_plots){
 }
 
 
-  
-
 #------------------------------------------------------------------------------#
 #### Exportart a base ####
 
@@ -364,96 +373,13 @@ sim <-
          "sr_placebo_tar" = "plaTar_sr")
 
 
-
-
-
-
-
 if (EXPORT_data){
-  # Exporting just the new variables to be merged with the original data. Since the
-  # original data is .dta, so it won't lose meta data
-  plaExport <- sim[, c("aisp",
-                       "year",
-                       "month",
-                       "semester",
-                       "qua_vd",
-                       "qua_vr",
-                       "qua_sr",
-                       "vd_placebo_tar",
-                       "vr_placebo_tar",
-                       "sr_placebo_tar", 
-                       "latitude",
-                       "longitude")]
-  
-  
-  write.csv(plaExport,
-            file.path(DATA, "placebo_targets.csv"),
-            row.names = F,
-            na = "")
-  
+
   # Exporting the entire data to run in R
   write.csv(sim,
-            file.path(DATA, "sim2019.csv"),
+            file.path(DATA, "data_SIM_2019_constructed.csv"),
             row.names = F,
             na = "")
   
 }
-
-
-# bar <- sim[sim$year>2010 & sim$target_vd != 0,]
-# bar$vd_diff <- ((bar$target_vd - bar$plaTar_vd)/bar$target_vd)*100
-# summary(bar$vd_diff)
-# sd(bar$vd_diff, na.rm = T)
-# hist(bar$vd_diff)
-# 
-# bar <- sim[sim$year>2010 & sim$target_vd != 0 & sim$aisp !=9 & sim$aisp != 40,]
-# bar$vd_diff <- ((bar$target_vd - bar$plaTar_vd)/bar$target_vd)*100
-# reg1 <- lm(target_vd ~ vd_l, data = bar)
-# 
-# 
-# 
-# utils::View(bar[order(bar$vd_diff), 
-#                 c("aisp",
-#                   "year",
-#                   "month",
-#                   "semester",
-#                   "violent_death",
-#                   "vd_l",
-#                   "target_vd",
-#                   "plaTar_vd",
-#                   "vd_diff",
-#                   "vd_tx_l",
-#                   "qua_vd")])
-# 
-# 
-# utils::View(bar[bar$aisp == 4 & !is.na(bar$aisp), 
-#                 c("aisp",
-#                   "year",
-#                   "month",
-#                   "semester",
-#                   "violent_death",
-#                   "vd_l",
-#                   "target_vd",
-#                   "plaTar_vd",
-#                   "vd_diff",
-#                   "vd_tx_l",
-#                   "qua_vd")])
-
-#### Estabilidade
-# Sea taxa p100mil menor do que 10 homic??dios
-
-
-# #------------------------------------------------------------------------------#
-# #### Condstrucao do Dataset por semestre ####
-# 
-# 
-# # gambiarra do caralho
-# simSem <- sim %>% 
-#   dplyr::arrange(aisp, year,  semester) %>%
-#   dplyr::group_by(year, aisp, semester) %>%
-#   dplyr::summarise(pop = mean(population, na.rm = T),
-#                    vd = sum(violent_death, na.rm = T), 
-#                    tar = unique(target_vd_sem, na.rm = T))  #%>%
-# #dplyr::ungroup(year) %>%
-
 

@@ -5,7 +5,7 @@
 *.prj
 *.shx
 *.shp
-Shiny Dashboard/.Rhistory
+*.Rhistory
 *.dcf
 *.rds
 *.html
