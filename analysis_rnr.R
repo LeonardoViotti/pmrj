@@ -377,7 +377,7 @@ createTable(reg_list = tab2_pla_regs,
                                "Vehicle robbery (Carjacking)",	
                                "Street robbery"),
             title = "Table B1– Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2006 and 2008)",
-            outPath = file.path(OUTPUTS_final, "tab2_pla.html"))
+            outPath = file.path(OUTPUTS_final, "tabB1.html"))
 
 
 
@@ -666,7 +666,7 @@ if(EXPORT_plots){
 ##### Actually exporting ####
 
 if(EXPORT_tables){
-  huxtable::quick_xlsx(tab2_pla_formated, file = file.path(OUTPUTS_final, "tab2_placebo_formated.xlsx"))
+  #huxtable::quick_xlsx(tab2_pla_formated, file = file.path(OUTPUTS_final, "tab2_placebo_formated.xlsx"))
   huxtable::quick_xlsx(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_formated.xlsx"))
 }
 

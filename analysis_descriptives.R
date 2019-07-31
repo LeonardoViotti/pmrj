@@ -5,6 +5,15 @@
 #------------------------------------------------------------------------------#
 
 
+
+# This code depends on analysis_main.R to run! So if this option is not selected
+# on master it will be run here
+if(!RUN_main_analysis){
+  source(file.path(GITHUB, "analysis_main.R"))
+}
+
+
+
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
 OVERWRITE_MASTER_SWITCHES = F
 
@@ -38,7 +47,7 @@ tab1Vars <- c(indepVars["on_target"],
               "other_robberies",
               "vehicle_theft",
               "street_theft",
-              "dbody_found",
+              "body_found",
               "drug_seizure",
               "gun_seizure",
               "arrest2",
