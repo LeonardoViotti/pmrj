@@ -147,6 +147,26 @@ if(EXPORT_plots){
 #------------------------------------------------------------------------------#
 #### Bar plot 2 - Number od awards per AISP ####
 
+sd_awarded <- final_data %>% 
+  group_by(aisp) %>% 
+  summarise(awarded = sum(awarded, na.rm = T)) %>% 
+  arrange(awarded)
+
+
+ggplot(data = sd_awarded,
+       aes(y = awarded,
+           x = factor(aisp, levels = unique(sd_awarded$aisp)) 
+           )
+       ) +
+  geom_bar(stat="identity", 
+           width=0.7,
+           fill = "dodgerblue4")+
+  coord_flip() + 
+  ylab("Number of awards") +
+  xlab("AISP") +
+  theme_minimal()
+
+
 
 #------------------------------------------------------------------------------#
 #### Bar plot 2 - % of months on target per AISP ####

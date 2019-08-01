@@ -13,8 +13,8 @@ rm(list = ls())
 # Run differnt sections of analysis
 
 RUN_placebo_targets_construction = F
-RUN_main_analysis = T
-RUN_desc_analysis = T
+RUN_main_analysis = F
+RUN_desc_analysis = F
 RUN_rnr_analysis = F
 
 
