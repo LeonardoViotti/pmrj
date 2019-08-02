@@ -147,25 +147,67 @@ if(EXPORT_plots){
 #------------------------------------------------------------------------------#
 #### Bar plot 2 - Number od awards per AISP ####
 
-sd_awarded <- final_data %>% 
-  group_by(aisp) %>% 
-  summarise(awarded = sum(awarded, na.rm = T)) %>% 
+awar_data <- final_data
+
+# Fix aisps that are more in more than one risp
+awar_data$risp[awar_data$aisp == 39] <- 3
+awar_data$risp[awar_data$aisp == 40] <- 2
+awar_data$risp[awar_data$aisp == 41] <- 2
+
+# Collapse data by aisp
+sd_awarded <- awar_data %>% 
+  subset(year < 2016) %>% 
+  group_by(aisp, risp) %>% 
+  summarise(awarded = sum(awarded, na.rm = T)/6) %>% 
   arrange(awarded)
 
+# Create region var
 
-ggplot(data = sd_awarded,
-       aes(y = awarded,
-           x = factor(aisp, levels = unique(sd_awarded$aisp)) 
-           )
-       ) +
+sd_awarded$region  <- NA
+sd_awarded$region[sd_awarded$risp %in% c(1,2)] <- "State Capital"
+sd_awarded$region[sd_awarded$risp %in% c(3,4)] <- "Metroplitan area"
+sd_awarded$region[sd_awarded$risp %in% c(5,6,7)] <- "Other Cities"
+
+
+# color
+# The palette with grey:
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
+
+# The palette with black:
+cols <- c("dodgerblue4", "lightblue2", "darkslategrey", "deeppink4", "gray50", "mediumorchid4", "turquoise4")
+
+
+
+# Plot
+p_awards <- 
+  ggplot(data = sd_awarded,
+         aes(y = awarded,
+             x = factor(aisp, levels = unique(sd_awarded$aisp)) 
+         )
+  ) +
   geom_bar(stat="identity", 
            width=0.7,
-           fill = "dodgerblue4")+
+           aes(fill = factor(risp))
+  )+
   coord_flip() + 
   ylab("Number of awards") +
   xlab("AISP") +
+  #scale_fill_brewer(palette="Accent") + 
+  scale_fill_manual("RISP", values=cols) + 
+
   theme_minimal()
 
+
+
+if(EXPORT_plots){
+  
+  p_awards +
+    ggsave(filename = file.path(OUTPUTS_final, "awards_graph.png"),
+           width = 6,
+           height = 4)
+  
+  
+}
 
 
 #------------------------------------------------------------------------------#
