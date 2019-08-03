@@ -60,9 +60,9 @@ tab1VarLabels <- c("On target",
                    "Violent  deaths",
                    "Vehicle  robbery",
                    "Street  robbery",
-                   "Distance to violent death target",
-                   "Distance to vehicle robbery target",
-                   "Distance to street robbery target",
+                   "Distance from violent death target",
+                   "Distance from vehicle robbery target",
+                   "Distance from street robbery target",
                    "Robberies not inclued in the target",
                    "Vehicle theft",
                    "Street theft",
@@ -113,13 +113,13 @@ bplot_vd <-
 bplot_rr <- 
   boxPlotSim(sd$street_robbery,
              data = sd,
-             xlab = "Registers of Street Robbery",
+             xlab = "Records of Street Robbery",
              ylab = "")
 
 bplot_vr <- 
   boxPlotSim(sd$vehicle_robbery,
              data = sd,
-             xlab = "Registers of Vehicle Robbery",
+             xlab = "Records of Vehicle Robbery",
              ylab = "")
 
 
@@ -129,17 +129,19 @@ if(EXPORT_plots){
     ggsave(filename = file.path(OUTPUTS_final, "Boxplot_violent_death_sim.png"),
            width = 6,
            height = 4)
+  dev.off()
   
   bplot_rr + 
     ggsave(filename = file.path(OUTPUTS_final, "Boxplot_street_robbery.png"),
            width = 6,
            height = 4)
+  dev.off()
   
   bplot_vr + 
     ggsave(filename = file.path(OUTPUTS_final, "Boxplot_vehicle_robbery.png"),
            width = 6,
            height = 4)
-  
+  dev.off()
   
 }
 
