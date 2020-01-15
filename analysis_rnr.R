@@ -4,8 +4,14 @@
 
 #------------------------------------------------------------------------------#
 
-EXPORT_tables = F
-EXPORT_plots = F
+# These are all defined in MASTER.R, only use to explicitly overwrite master.
+OVERWRITE_MASTER_SWITCHES = F
+
+if(OVERWRITE_MASTER_SWITCHES){
+  EXPORT_data = F
+  EXPORT_plots = F
+  EXPORT_tables = F
+}
 
 #------------------------------------------------------------------------------#
 #### Load data ####
