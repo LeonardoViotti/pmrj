@@ -30,7 +30,6 @@ EXPORT_tables = F
 library(tidyverse)
 library(readstata13)
 library(lfe)
-library(data.table)
 # library(shomR) # ConleySEs but not on CRAN
 library(spdep) # lagsarlm 
 library(plm) # Panel data
@@ -57,6 +56,8 @@ library(spatialreg) # Spatial lag model
 library(readstata13)
 library(tidyverse)
 library(broom)
+
+library(data.table)
 
 #------------------------------------------------------------------------------#
 #### Projections ####
