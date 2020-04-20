@@ -24,6 +24,7 @@ vars <-
     "year",
     "year_month",
     "semester",
+    "population",
     "violent_death_sim",
     "vehicle_robbery",
     "street_robbery",
@@ -74,6 +75,9 @@ hit_month <- function(target, t){
 
   hit <- which(cum_target == max(cum_target))[1] 
 
+  # Replace 
+  
+  
   return( t[hit])
   
 }
@@ -81,41 +85,69 @@ hit_month <- function(target, t){
 # Create t diff from target
 esdf %<>% 
   group_by(aisp, year, semester) %>% 
-  mutate(hit_month = hit_idx(on_target,year_month),
-         t = unclass(year_month) - unclass(hit_month)+1,
-         t = as.factor(t))
+  mutate(hit_month = hit_month(on_target,year_month),
+         t = unclass(year_month) - unclass(hit_month),
+         t = as.factor(t),
+         # Replace t if there was no event
+         replace_t = ifelse(sum(on_target, na.rm = T) == 5,
+                99,
+                NA))
+esdf$t[esdf$replace_t == 99] <- 99
+
+# Per 100.000 pop crime vars
+esdf$vd_ppop <- (esdf$violent_death_sim/esdf$population)*10e4
+esdf$vr_ppop <- (esdf$vehicle_robbery/esdf$population)*10e4
+esdf$sr_ppop <- (esdf$street_robbery/esdf$population)*10e4
 
 #------------------------------------------------------------------------------#
 #### ES models ####
 
-eslm_vd <- felm(violent_death_sim ~ t | aisp | 0 | 0,
-                data = esdf)
+# Too few obs
+esdf_reg <- esdf %>% subset(!(t %in% c(4,5)))
 
+# chosing to drop -5 in lm
+esdf_reg$t <- relevel(esdf_reg$t %>% as.factor(), ref = "-4") 
 
+# Run models
+eslm_vd <- felm(vd_ppop ~ t | aisp | 0 | 0,
+                data = esdf_reg)
+
+eslm_vr <- felm(vr_ppop ~ t | aisp | 0 | 0,
+                data = esdf_reg)
+
+eslm_sr <- felm(sr_ppop ~ t | aisp | 0 | 0,
+                data = esdf_reg)
 
 #------------------------------------------------------------------------------#
 #### ES plots ####
 
 
-# Plot DF
-eslm_vd_df <- data.frame( coeff = eslm_vd$coeff,
-                          se = eslm_vd$se)  
+plotData <- function(reg){
+  
+  reg_df <- data.frame(coeff = reg$coeff,
+                       se = reg$se)  
+  
+  names(reg_df) <- c("coeff", "se") # not sure why it doesnt work simply using "coeff =" above
+  
+  reg_df$monthsFromTreat <- row.names(reg_df)
+  
+  # Fix variable names
+  reg_df$monthsFromTreat <- as.integer(sub("t", "", reg_df$monthsFromTreat))
+  reg_df$monthsFromTreat <- as.ordered(reg_df$monthsFromTreat)    
+  
+  return(reg_df)
+}
 
-names(eslm_vd_df) <- c("coeff", "se") # not sure why it doesnt work simply using "coeff =" above
-
-eslm_vd_df$monthsFromTreat <- row.names(eslm_vd_df)
-
-# Fix variable names
-eslm_vd_df$monthsFromTreat <- as.integer(sub("t", "", eslm_vd_df$monthsFromTreat))
-eslm_vd_df$monthsFromTreat <- as.ordered(eslm_vd_df$monthsFromTreat)   
-
+eslm_vd_df <- plotData(eslm_vd)
+eslm_vr_df <- plotData(eslm_vr)
+eslm_sr_df <- plotData(eslm_sr)
 
 # Plot
 plot_def <- function(regdata, title, xlabel){
   
   ggplot(regdata, aes(x=monthsFromTreat, y=coeff)) +
     geom_point(col = "navyblue")+
-    geom_vline(xintercept=6.5) +
+    geom_vline(xintercept=5) +
     geom_errorbar(aes(ymin = coeff - se, ymax = coeff + se),  col = "navyblue", width=.2)+
     
     xlab(xlabel) +
@@ -130,9 +162,29 @@ plot_def <- function(regdata, title, xlabel){
   
 }
 
+png(file= file.path(OUTPUTS, "ES_plot_vd.png"))
+plot_def(eslm_vd_df, # data
+         "Violent death", # title
+         "Months from event") # x label
+dev.off()
 
-reg_plot <-  plot_def(eslm_vd_df, # data
-                      "foo", # title
-                      "bar") # x label
+png(file= file.path(OUTPUTS, "ES_plot_vr.png"))
+plot_def(eslm_vr_df, # data
+         "Vehicle robbery", # title
+         "Months from event") # x label
+dev.off()
+
+
+png(file= file.path(OUTPUTS, "ES_plot_sr.png"))
+plot_def(eslm_sr_df, # data
+         "Street robbery", # title
+         "Months from event") # x label
+dev.off()
+
+
+
+
+
+
 
 
