@@ -1,6 +1,6 @@
 
 
-cd  "/Users/joanacmm/Dropbox/CrimeData/
+/* cd  "/Users/joanacmm/Dropbox/CrimeData/"
 
 *****************************************************************************************************************
 * ORGANIZE PCERJ INFORMATION
@@ -172,7 +172,7 @@ replace cycle=6 if month==6 | month==12
 
 *There are no information on targets for AISP 1 and AISP 13
  drop if aisp==1 | aisp==13
-*Meta mensal acumulada atÈ o mes anterior
+*Meta mensal acumulada at√© o mes anterior
 
 foreach x of varlist violent_death_sim target_vd street_robbery target_sr vehicle_robbery target_vr {
 
@@ -274,19 +274,21 @@ cd  "/Users/joanacmm/Dropbox/AvaliacaoSIM
 
 save data_SIM_2019-04.dta, replace
 
-exit
+exit */
 
 
 *****************************************************************************************************************
 * REGRESSIONS
 *****************************************************************************************************************
-cd  "/Users/joanacmm/Dropbox/AvaliacaoSIM/
+cd  "C:\Users\wb519128\Dropbox\Work\Insper\PMRJ\data"
 
- use Bases/data_SIM_2019-01.dta, clear
+ use data_SIM_2019-07.dta, clear
 
 *Table 1
 
-sum  violent_death_sim vehicle_robbery  street_robbery lag_dist_target_vd  lag_dist_target_vr lag_dist_target_sr police_killing  other_robberies cargo_robbery burglary store_robbery   vehicle_theft street_theft  body_found   drug_seizure gun_seizure arrest2  max_prize population  policemen_aisp policemen_upp  exp_similar  exper_cmt_total on_target_vd on_target_vr on_target_sr on_target if cycle~=1 & sem_year>100
+/*
+sum  violent_death_sim vehicle_robbery  street_robbery lag_dist_target_vd  lag_dist_target_vr lag_dist_target_sr police_killing  other_robberies cargo_robbery burglary store_robbery   vehicle_theft street_theft  body_found   drug_seizure gun_seizure arrest2  max_prize population  policemen_aisp policemen_upp  exp_similar  exper_cmt_total on_target_vd on_target_vr on_target_sr on_target if cycle~=1 & sem_year>100 
+*/
 
 *Table 2
 
@@ -399,7 +401,7 @@ xi: xtreg `y'  lag12_dist_target_vr lag12_dist_target_sr  lag12_dist_target_vd p
 	outreg2 using Results\tab8.xls, keep(lag12_dist_target_vr lag12_dist_target_sr lag12_dist_target_vd ) dec(3) nocons  aster(se) e(mean_y adj_R2 F_test)
 }
 
-*Table 8 - teste de autocorrelação
+*Table 8 - teste de autocorrela¬ç‚Äπo
 foreach y of varlist  violent_death_sim  vehicle_robbery  street_robbery homicide dpolice_killing {
 
   xi: xtreg  `y'  lag1_on_target policemen_aisp policemen_upp n_precinct max_prize population i.month i.year i.id_cmt if  cycle==1,  fe 
@@ -415,6 +417,8 @@ egen `x'6=sum(`x'), by(aisp sem_year)
 gen award_violent_death=(violent_death_sim6<=target_vd6) 
 gen award_street_robbery=(street_robbery6<= target_sr6)
 gen award_vehicle_robbery=(vehicle_robbery6 <= target_vr)
+
+drop awarded // Not sure if the right thing to do, just make sure that it runs
 gen awarded= (award_violent_death==1 | award_street_robbery==1 | award_vehicle_robbery==1)
 
 gen hit_target = (on_target==1  )
@@ -431,7 +435,7 @@ xi: xtreg `y' last_month_hit hit_target last_month  policemen_aisp policemen_upp
 	outreg2 using Results\tab10.xls, keep(last_month_hit hit_target last_month  ) dec(3) nocons  aster(se) e(mean_y adj_R2 F_test)
 }
 
- use Bases/data_SIM_2019-01.dta, clear
+ use data_SIM_2019-07.dta, clear
 gen last_month=(month==6 | month==12) 
 gen on_last_month=on_target*last_month
 keep if month==2 | month==6 | month==8 | month==12
@@ -445,6 +449,8 @@ xi: xtreg `y' on_last_month on_target last_month  policemen_aisp policemen_upp n
 *****************************************************************************************************************
 * FIGURES
 *****************************************************************************************************************
+drop cycle // Just so it runs
+
 gen cycle=1 if month==1 | month==7
 replace cycle=2 if month==2 | month==8
 replace cycle=3 if  month==3 | month==9
@@ -479,24 +485,26 @@ graph save "Figuras/ShareOnTargetVR.gph", replace
 graph bar (mean) on_target, over(aisp, label(angle(default) labsize(tiny))) ytitle(% months on target) title(Index)
 graph save "Figuras/ShareOnTarget.gph", replace
 
-graph combine "Figuras/ShareOnTargetVD.gph" "Figuras/ShareOnTargetSR.gph" "Figuras/ShareOnTargetVR.gph" "Figuras/ShareOnTarget.gph"
+//graph combine "Figuras/ShareOnTargetVD.gph" "Figuras/ShareOnTargetSR.gph" "Figuras/ShareOnTargetVR.gph" "Figuras/ShareOnTarget.gph"
 
 **********************************************************************************************************************************************************************************************************************************************
 *Numero de AISP premiadas por semestre
 **********************************************************************************************************************************************************************************************************************************************
 
+* Check sem_ano !!!
 
+/*
 preserve
 collapse (sum) premiada, by(sem_ano)
 *label define sem_ano 99 "2009s2" 100 "2010s1" 101 "2010s2" 102 "2011s1" 103 "2011s2" 104 "2012s1" 105 "2012s2" 106 "2013s1" 107 "2013s2" 108 "2014s1" 109 "2014s2" 110 "2015s1"
 *label values sem_ano sem_ano
-twoway (bar premiada sem_ano, sort ytick(#6) ylabel(#6) color(eltblue) xline(101.5 105.5) xtitle("") xtick(#12) xlabel(#12, angle(90) valuelabel) ytitle("N˙mero de AISP premiadas") barwidth(0.8) yscale(range(0(5)25)))
+twoway (bar premiada sem_ano, sort ytick(#6) ylabel(#6) color(eltblue) xline(101.5 105.5) xtitle("") xtick(#12) xlabel(#12, angle(90) valuelabel) ytitle("N√∫mero de AISP premiadas") barwidth(0.8) yscale(range(0(5)25)))
 graph export fig7.eps, replace 
 restore
 
 
 **********************************************************************************************************************************************************************************************************************************************
-*N˙mero de vezes que cada AISP foi premiada
+*N√∫mero de vezes que cada AISP foi premiada
 **********************************************************************************************************************************************************************************************************************************************
 
 
@@ -511,15 +519,15 @@ merge 1:1 aisp using C:\Users\Projetos\Dropbox\Livia\ISP\bases_apoio\aisp_batalh
 sort premiada
 gen x1=_n
 labmask x1, values(batalhao)
-twoway (bar premiada x1 if regiao==1,  hor fintensity(60) legend(size(small)) legend(label (1 "Baixada")) legend(col(4) position(6)) ytick(#41) ylabel(#41, labsize(tiny) valuelabel) ytitle("") xtitle("N˙mero de premiaÁıes") barwidth(0.7)) ///
+twoway (bar premiada x1 if regiao==1,  hor fintensity(60) legend(size(small)) legend(label (1 "Baixada")) legend(col(4) position(6)) ytick(#41) ylabel(#41, labsize(tiny) valuelabel) ytitle("") xtitle("N√∫mero de premia√ß√µes") barwidth(0.7)) ///
 	   (bar premiada x1 if regiao==2,  hor fintensity(60)  legend(size(small)) legend(label (2 "Capital")) barwidth(0.7)) ///
-	   (bar premiada x1 if regiao==3,  hor fintensity(60)  legend(size(small)) legend(label (3 "Grande NiterÛi")) barwidth(0.7)) ///
+	   (bar premiada x1 if regiao==3,  hor fintensity(60)  legend(size(small)) legend(label (3 "Grande Niter√≥i")) barwidth(0.7)) ///
 	   (bar premiada x1 if regiao==4,  hor legend(size(small)) legend(label (4 "Interior")) color(gs11) barwidth(0.7)) 
 graph export fig11.eps, replace 
 
 	   
 
-
+*/
 **********************************************************************************************************************************************************************************************************************************************
 *Boxplot dos crimes
 **********************************************************************************************************************************************************************************************************************************************
@@ -531,17 +539,21 @@ graph hbox street_robbery, over(aisp, label(labsize(vsmall))) ytitle(Registers o
 graph save "Figuras/BoxStreetRobbery.pdf", replace
 graph hbox vehicle_robbery, over(aisp, label(labsize(vsmall))) ytitle(Registers of Vehicle Robbery) ymtick(, labsize(minuscule))
 graph save "Figuras/BoxVehicleRobbery.pdf", replace
-graph combine "Figuras/BoxViolentDeath.gph" "Figuras/BoxStreetRobbery.gph" "Figuras/BoxVehicleRobbery.gph"
+//graph combine "Figuras/BoxViolentDeath.gph" "Figuras/BoxStreetRobbery.gph" "Figuras/BoxVehicleRobbery.gph"
 
 
 **********************************************************************************************************************************************************************************************************************************************
-*Histograma com percentual de reduÁ„o por fase
+*Histograma com percentual de redu√ß√£o por fase
 **********************************************************************************************************************************************************************************************************************************************
 
+/*
 cd  "/Users/joanacmm/Dropbox/AvaliacaoSIM"
 
- use data_SIM_2019-01.dta, clear
+ use data_SIM_2019-01.dta, clear */
  
+cd  "C:\Users\wb519128\Dropbox\Work\Insper\PMRJ\data"
+
+ use data_SIM_2019-07.dta, clear
 
 
 keep if year>2004
@@ -563,7 +575,8 @@ bysort aisp (sem_year): gen p_reducao_rr=(street_robbery/ street_robbery[_n-2])-
 recode p_reducao_rr (.=0) if street_robbery ==0 &  street_robbery[_n-2]==0
 format p_reducao_rr %9.1fc
 
-histogram  p_reducao_rr if p_reducao_rr<=3, percent  by(phase, imargin(small) ) xline(0) ytitle("% AISP") xtitle("Percentage variation of pedestrian robbery") /*tirei o 1% superior da distribuiÁ„o*/ 
+/*
+histogram  p_reducao_rr if p_reducao_rr<=3, percent  by(phase, imargin(small) ) xline(0) ytitle("% AISP") xtitle("Percentage variation of pedestrian robbery") /*tirei o 1% superior da distribui√ß√£o*/ 
 
 histogram  violent_death , percent    ytitle("% AISP") xtitle("Violent Death")  
 	graph save "Figuras/HistViolentDeath.gph", replace
@@ -572,7 +585,8 @@ histogram  street_robbery , percent   ytitle("% AISP") xtitle("Pedestrian Robber
 histogram  vehicle_robbery , percent    ytitle("% AISP") xtitle("Vehicle Robbery") 
 	graph save "Figuras/HistVehicleRobbery.gph", replace
 
-graph combine "Figuras/HistViolentDeath.gph" "Figuras/HistStreetRobbery.gph" "Figuras/HistVehicleRobbery.gph"
+	
+//graph combine "Figuras/HistViolentDeath.gph" "Figuras/HistStreetRobbery.gph" "Figuras/HistVehicleRobbery.gph"
 
 
  twoway (kdensity p_reducao_rr if phase==0, ytitle("") xtitle("Pedestrian Robbery Percentage Reduction") legend(label(1 "Before PFP")) ) (kdensity p_reducao_rr if phase==1, legend(label(2 "During PFP")) ) (kdensity p_reducao_rr if phase==2, legend(label(3 "After Non-payment")) ) if p_reducao_rv<3
@@ -622,4 +636,4 @@ twoway ( line mean_`x'2 cycle if year==2010, sort legend(label(1 "2010")) lpatte
  graph box lag_dist_target_vr, noout
 
 *Problema na base
- br aisp year month vehicle_robbery  vehicle_robbery_cum target_vr_sem dist_target_vr if dist_target_vr>1000 & dist_target_vr!=.
+ br aisp year month vehicle_robbery  vehicle_robbery_cum target_vr_sem dist_target_vr if dist_target_vr>1000 & dist_target_vr!=. */
