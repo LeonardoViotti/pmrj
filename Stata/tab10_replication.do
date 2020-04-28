@@ -1,5 +1,5 @@
-
- use data_SIM_2019-07.dta, clear
+cd  "C:\Users\wb519128\Dropbox\Work\Insper\PMRJ\data"
+use data_SIM_2019-07.dta, clear
 
 *Table 1
 
