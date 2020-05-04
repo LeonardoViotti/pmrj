@@ -16,7 +16,8 @@ egen `x'6=sum(`x'), by(aisp sem_year)
 // Target specific award, if AIPS was on target for each variable in the semester
 gen award_violent_death=(violent_death_sim6<=target_vd6) 
 gen award_street_robbery=(street_robbery6<= target_sr6)
-gen award_vehicle_robbery=(vehicle_robbery6 <= target_vr) // Potential error in the code
+//gen award_vehicle_robbery=(vehicle_robbery6 <= target_vr) // Potential error in the code
+gen award_vehicle_robbery=(vehicle_robbery6 <= target_vr6) // Fix
 
 
 // If AISP was awarded in any of the target variables
@@ -41,7 +42,7 @@ gen last_month_hit= hit_target*last_month
 // Regression
 foreach y of varlist  violent_death_sim  vehicle_robbery  street_robbery other_robberies cargo_robbery burglary store_robbery vehicle_theft street_theft  dbody_found {
 xi: xtreg `y' last_month_hit hit_target last_month  policemen_aisp policemen_upp n_precinct max_prize population i.month i.year  if sem_year>100,  fe 
-	outreg2 using Results\tab10.xls, keep(last_month_hit hit_target last_month  ) dec(3) nocons  aster(se) e(mean_y adj_R2 F_test)
+	outreg2 using Results\tab10_sembug.xls, keep(last_month_hit hit_target last_month  ) dec(3) nocons  aster(se) e(mean_y adj_R2 F_test)
 xi: xtreg `y' last_month_hit hit_target last_month  policemen_aisp policemen_upp n_precinct max_prize population i.month i.year i.id_cmt if sem_year>100,  fe 
-	outreg2 using Results\tab10.xls, keep(last_month_hit hit_target last_month  ) dec(3) nocons  aster(se) e(mean_y adj_R2 F_test)
+	outreg2 using Results\tab10_sembug.xls, keep(last_month_hit hit_target last_month  ) dec(3) nocons  aster(se) e(mean_y adj_R2 F_test)
 }
