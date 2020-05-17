@@ -17,7 +17,6 @@ RUN_main_analysis = F
 RUN_desc_analysis = F
 RUN_rnr_analysis = F
 
-
 # Settings switches
 
 EXPORT_data = F
@@ -28,6 +27,7 @@ EXPORT_tables = F
 #### Packages ####
 
 library(tidyverse)
+library(magrittr)
 library(readstata13)
 library(lfe)
 # library(shomR) # ConleySEs but not on CRAN
