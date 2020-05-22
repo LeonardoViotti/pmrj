@@ -42,10 +42,18 @@ sm <-
   ) %>% 
   #Hit_target varaible
   group_by(aisp) %>%
-  mutate(hit_target = ifelse(cycle == 1,
-                             lag(awarded) ,
+  mutate(hit_target = as.numeric(on_target == 1),
+         awarded_l = dplyr::lag(awarded, 1),
+         hit_target = ifelse(cycle == 1,
+                             awarded_l ,
                              on_target),
-         awarded_l = lag(awarded, 1))
+         # Replace NAs with zeros
+         hit_target = ifelse(is.na(hit_target),
+                             0 ,
+                             hit_target)
+         ) %>% 
+    ungroup()
+
   
 #------------------------------------------------------------------------------#
 # Regression
@@ -58,39 +66,57 @@ sm_reg <- sm %>%
   mutate(last_month_hit = hit_target*last_month)
 
 
-sm_reg$aisp<- relevel(sm_reg$aisp %>% as.character() %>% as.factor(), ref = '40')
+# sm_reg$aisp<- relevel(sm_reg$aisp %>% as.character() %>% as.factor(), ref = '40')
 
-# sm_reg$y <- sm_reg$violent_death_sim
-sm_reg$y <- sm_reg$vehicle_robbery
+sm_reg$y <- sm_reg$violent_death_sim
+#sm_reg$y <- sm_reg$vehicle_robbery
 
 
-felm(y ~ last_month_hit +  hit_target +  last_month  + 
+felm(y ~ last_month_hit +  hit_target +  last_month  +
        policemen_aisp + policemen_upp + n_precinct + max_prize +
-       population | aisp + year + month | 0 | 0,
-     data = sm_reg) %>% summary()  
-
-lm(y ~ last_month_hit +  hit_target +  last_month  + 
-       policemen_aisp + policemen_upp + n_precinct + max_prize +
-       population + factor(month) + factor(year) + factor(aisp), 
-   data = sm_reg %>% subset(sem_year>100)) %>% stargazer(type = 'text')   
-  
-
-felm(y ~ last_month_hit +  hit_target +  last_month  + 
-       policemen_aisp + policemen_upp + n_precinct + max_prize +
-       population | aisp + year + month,
-     data = sm_reg %>% subset(sem_year>100)) %>% stargazer(type = 'text')  
+       population | aisp + year | 0 | 0,
+     data = sm_reg %>% subset(sem_year>100)) %>% summary()
 
 
-sm_reg %>% select(hit_target,
-                  last_month,
-                  policemen_aisp,
-                  policemen_upp,
-                  n_precinct,
-                  max_prize,
-                  population,
-                  month,
-                  year) %>% summary()
+# lm(y ~ 
+#     last_month_hit +  
+#     hit_target   +
+#     last_month  +
+#     policemen_aisp +
+#     policemen_upp +
+#     n_precinct +
+#     max_prize +
+#     population +
+#     factor(year) +
+#     factor(aisp), 
+#    data = sm_reg %>% subset(sem_year>100)) %>% stargazer(type = 'text')   
 
+
+# 
+# sm_reg %>% 
+#   subset(sem_year>100) %>% 
+#   select(aisp, 
+#          year, 
+#          month,
+#          last_month,
+#          awarded,
+#          hit_target,
+#          policemen_aisp,
+#          policemen_upp,
+#          n_precinct,
+#          max_prize,
+#          population,
+#          month,
+#          year)  %>% View()
+# 
+# sm_reg %>% 
+#   subset(sem_year>100) %>% 
+#   select(aisp, 
+#          year, 
+#          month,
+#          awarded,
+#          awarded_l,
+#          year)  %>% View()
 
 
 
