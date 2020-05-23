@@ -38,10 +38,10 @@ keep if month==1 | month==6 | month==7 | month==12
 // Interaction variable
 gen last_month_hit= hit_target*last_month
 
-
-//local y violent_death_sim
-local y vehicle_robbery
-xtreg `y' last_month_hit hit_target last_month policemen_aisp policemen_upp n_precinct max_prize population i.month i.year  if sem_year>100,  fe 
+// Test diiferent models to make sure they replicate, mainly the removal of month FE for colinearity.
+/* local y violent_death_sim //local y vehicle_robbery
+xtreg `y' last_month_hit hit_target last_month policemen_aisp policemen_upp n_precinct max_prize population i.year  if sem_year>100,  fe 		
+reghdfe `y' last_month_hit hit_target last_month policemen_aisp policemen_upp n_precinct max_prize population  if sem_year>100,  absorb(year aisp) */
 
 if $EXPORT{
 	// Regression
