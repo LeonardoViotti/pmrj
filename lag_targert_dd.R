@@ -20,29 +20,77 @@
 
 #------------------------------------------------------------------------------#
 # Load data
-sm <- raw_data
+
+sm <- raw_data %>%
+  
+  
+  
+  # Also removig from 2016 just to be sure I'm doing the cleanest 
+  # exercise
+  subset(year < 2016) 
+  
 # sm <- final_data
 
 #------------------------------------------------------------------------------#
 # Create lagged variable
 
-# Since on_target variable is if the AISP is wihtin the expeceted target for that
-# month, regardless if it still has any perspective of being awarded in that semester,
-# create a variable (to be lagged) that means the aisp is still within the semester
+# Since on_target variable is if the AISP is wihtin the expeceted target 
+# for that month, regardless if it still has any perspective of being awarded
+# in that semester, create a variable (to be lagged) that means the aisp is still within the semester
 # target for all three crimes.
 
 # Create regression variables
-sm %<>% 
+sm %<>%
+  # Create semester sums of all crime variables adding suffix 6. This are
+  # used in the orignal model
+  group_by(aisp, sem_year) %>% 
+  mutate_at( c(depVars, "target_vd", "target_sr", "target_vr"),
+             .funs = list("6" = ~sum(., na.rm = T))
+  ) %>% 
+  ungroup() %>% 
+  
+  
+  
+  
   mutate(
-    # Still within the semester target for each crime 
-    hit_violent_death = as.integer(violent_death_sim_cum <= target_vd_sem), 
-    hit_street_robbery = as.integer(street_robbery_cum <= target_sr_sem),
-    hit_vehicle_robbery = as.integer(vehicle_robbery_cum <= target_vr_sem),
+    # Replace cumulative sum in first month to zero
+    violent_death_sim_cum = ifelse(is.na(violent_death_sim_cum),
+                                   0,
+                                   violent_death_sim_cum),
+    street_robbery_cum = ifelse(is.na(street_robbery_cum),
+                                   0,
+                                street_robbery_cum),
+    vehicle_robbery_cum = ifelse(is.na(vehicle_robbery_cum),
+                                 0,
+                                 vehicle_robbery_cum),
+
+    # Adjust sester target to take into account the 10% marging they had
+    # after 2013
+    target_vd_sem_adjusted = ifelse(year >= 2013,
+                                    target_vd_sem,
+                                    target_vd_sem*1.1),
+    target_sr_sem_adjusted = ifelse(year >= 2013,
+                                    target_sr_sem,
+                                    target_sr_sem*1.1),
+    target_vr_sem_adjusted = ifelse(year >= 2013,
+                                    target_vr_sem,
+                                    target_vr_sem*1.1),
     
+    # Still within the semester target for each crime
+    hit_violent_death = as.integer(violent_death_sim_cum <= target_vd_sem_adjusted),
+    hit_street_robbery = as.integer(street_robbery_cum <= target_sr_sem_adjusted),
+    hit_vehicle_robbery = as.integer(vehicle_robbery_cum <= target_vr_sem_adjusted),
+    
+    # Still within the semester target for each crime 
+    # (total sum in the semester)
+    # hit_violent_death = as.integer(violent_death_sim_6 <= target_vd_sem),
+    # hit_street_robbery = as.integer(street_robbery_6 <= target_sr_sem),
+    # hit_vehicle_robbery = as.integer(vehicle_robbery_6 <= target_vr_sem),
+
     # If within the semester target for all 3 crimes
     hit_month = as.integer(hit_violent_death==1 & 
-                        hit_street_robbery==1 & 
-                        hit_vehicle_robbery==1),
+                           hit_street_robbery==1 & 
+                           hit_vehicle_robbery==1),
     
     # Last month dummy
     last_month = ifelse(month==6 | month==12, 
@@ -53,19 +101,33 @@ sm %<>%
   group_by(aisp) %>%
   arrange(aisp, year, month) %>%
   mutate(hit_month_l = dplyr::lag(hit_month,
-                          n = 1L)) %>%
+                                  n = 1L)) %>%
+  
+  # Hit target original pra comparar
+  mutate(hit_target2 = as.numeric(on_target == 1),
+         hit_target2 = ifelse(cycle == 1,
+                              dplyr::lag(hit_month, 1),
+                              hit_target2),
+         # Replace NAs with zeros
+         hit_target2 = ifelse(is.na(hit_target2),
+                             0 ,
+                             hit_target2)) %>% 
+  
   ungroup() %>% 
   # Interaction
-  mutate(last_month_hit = last_month*hit_month_l)
-
+  mutate(last_month_hit = last_month*hit_month_l) %>% 
+  mutate(last_month_hit2 = last_month*hit_target2)
+  
 
 
 #------------------------------------------------------------------------------#
 ##### Regression data set ### 
 
 # Create a data set with only target months
-sm_reg <- sm %>% 
-  subset(sem_year>100) %>% 
+sm_reg <- sm %>%
+  # Removing placebo months and 2009
+  subset(sem_year>100) %>%
+  # Keep only regression months
   subset(month %in% c(6,7,12,1))
 
   
@@ -75,15 +137,17 @@ sm_reg <- sm %>%
 #---------------#
 # Set variables #
 
-
-indep_vars_dd <- c("last_month_hit",
-                   "hit_month_l",
-                   "last_month",
-                   "policemen_aisp",
-                   "policemen_upp",
-                   "n_precinct",
-                   "max_prize",
-                   "population" )
+indep_vars_dd <- c(
+  # "last_month_hit",
+  # "hit_month_l",
+  "hit_target2",
+  "last_month_hit2",
+  "last_month",
+  "policemen_aisp",
+  "policemen_upp",
+  "n_precinct",
+  "max_prize",
+  "population" )
 
 # Since there are only 4 months in this analysis I'm removing month
 # fixed effects to avoid collinearity
@@ -213,7 +277,7 @@ tab_gaming <-
 
 
 
-# sm_reg$y <- sm_reg$violent_death_sim
+# sm_reg$y <- sm_reg$street_robbery
 # 
 # 
 # felm(y ~ last_month_hit +  hit_month_l +  last_month  +
@@ -221,42 +285,75 @@ tab_gaming <-
 #     population | year + aisp | 0 | 0,
 #     data = sm_reg) %>% stargazer(type = 'text')
 # 
-# 
 
 
+
+
+
+# # Check it out
+sm[is.na(sm$target_vd_sem),] %>%
+  select("aisp",
+         "year",
+         "semester",
+         "month",
+         "violent_death_sim",
+         "violent_death_sim_cum",
+         "violent_death_sim_6",
+         "target_vd_sem",
+
+         "street_robbery",
+         "street_robbery_cum",
+         "street_robbery_6",
+         "target_sr_sem",
+
+         "vehicle_robbery",
+         "vehicle_robbery_cum",
+         "vehicle_robbery_6",
+         "target_vr_sem",
+
+         "hit_violent_death",
+         "hit_street_robbery",
+         "hit_vehicle_robbery",
+
+         # "target_vd_cum",
+         # "target_sr_cum",
+         # "target_vr_cum",
+         # 
+         # "on_target_vd",
+         # "on_target_sr",
+         # "on_target_vr",
+
+         "on_target",
+         # "lag1_on_target",
+         "hit_month",
+         "hit_month_l",
+         "last_month",
+         "last_month_hit"
+  ) %>% View
 
 
 # Check it out
-# sm %>%   subset(sem_year>100) %>% 
-# select("aisp",
-#               "year",
-#               "semester",
-#               "month",
-#               "violent_death_sim",
-#               "violent_death_sim_cum",
-#               "target_vd_sem",
-# 
-#               "street_robbery",
-#               "street_robbery_cum",
-#               "target_sr_sem",
-# 
-#               "vehicle_robbery",
-#               "vehicle_robbery_cum",
-#               "target_vr_sem",
-# 
-#               "on_target_vd",
-#               "on_target_sr",
-#               "on_target_vr",
-# 
-#               "on_target",
-#               # "lag1_on_target",
-#               "hit_month",
-#               "hit_month_l"
-# ) %>% View
-
-
-
-
+# sm_reg %>%   
+# sm %>%   
+#   subset(sem_year>100) %>%
+#   select("aisp",
+#          "year",
+#          "month",
+#          "semester",
+#          "violent_death_sim",
+#          "violent_death_sim_cum",
+#          "violent_death_sim_6",
+#          "target_vd_sem",
+#          "hit_violent_death",
+#          # "street_robbery",
+#          # "street_robbery_cum",
+#          # "target_sr_sem",
+#          # 
+#          # "vehicle_robbery",
+#          # "vehicle_robbery_cum",
+#          # "target_vr_sem",
+#          "hit_month",
+#          "hit_month_l" ) %>% View
 
 
 
