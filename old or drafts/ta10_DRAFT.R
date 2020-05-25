@@ -32,7 +32,6 @@ sm <-
     # Create award variables
     award_violent_death = as.integer(violent_death_sim_6<=target_vd_6), 
     award_street_robbery = as.integer(street_robbery_6<= target_sr_6),
-    # Petential error in original code this was not using the sum var
     award_vehicle_robbery = as.integer(vehicle_robbery_6 <= target_vr_6),
     
     # If awarded in either crime varaible
