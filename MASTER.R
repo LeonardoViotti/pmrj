@@ -73,7 +73,7 @@ RjProj_unp <- CRS("+init=epsg:4326")
 # Leonardo WBG laptop
 if (Sys.getenv("USERNAME") == "wb519128" | Sys.getenv("USERNAME") == "WB519128"){
   DROPBOX <- file.path("C:/Users/wb519128/Dropbox/Work/Insper/PMRJ")
-  GITHUB  <- file.path("C:/Users/wb519128/Documents/GitHub/pmrj")
+  GITHUB  <- file.path("C:/Users/wb519128/GitHub/pmrj")
 }
 
 
