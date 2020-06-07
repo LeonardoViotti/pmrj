@@ -20,9 +20,9 @@
 # Load data
 
 sm <- raw_data %>%
-  # Also removig from 2016 just to be sure I'm doing the cleanest
-  # exercise
-  subset(year < 2016)
+  # Removing lower and upper bounds we don't have data on batallion sizes after
+  # 2015 and the system begun in the second semmester of 2009
+  subset(year < 2016 & (year*10 + semester > 20091))
 
 
 # source(file.path(GITHUB, 'old or drafts/add_target_for_recent_years_DRAFT.R'))
@@ -77,7 +77,7 @@ sm %<>%
     hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_sem_adjusted),
     hit_street_robbery = as.integer(street_robbery_cum2 <= target_sr_sem_adjusted),
     hit_vehicle_robbery = as.integer(vehicle_robbery_cum2 <= target_vr_sem_adjusted),
-    
+
     # Still within the cum monthly target for each crime 
     # hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_cum2),
     # hit_street_robbery = as.integer(street_robbery_cum2  <= target_sr_cum2),
@@ -123,13 +123,15 @@ sm %<>%
 # Create a data set with only target months
 sm_reg <- sm %>%
   # Keep only regression months
-  subset(month %in% c(6,7,12,1)) %>% 
+  subset(month %in% c(6,7,12,1)) #%>% 
+  # subset(sem_year > 100) %>% 
+  # subset(year < 2013) %>% 
   
   # Create phase 1 (2009 to 2012 varaibles)
-  mutate(phase1 = ifelse(year < 2013,
-                         1,
-                         0) ,
-         last_month_hit_phase1 = last_month_hit*phase1)
+  # mutate(phase1 = ifelse(year < 2013,
+  #                        1,
+  #                        0) ,
+  #        last_month_hit_phase1 = last_month_hit*phase1)
 
 # sm_reg_phase1 <- sm_reg %>%
 #   # Keep only regression months
@@ -162,7 +164,7 @@ indep_vars_dd <- c(
 # fixed effects to avoid collinearity
 FE_vars_dd <- c("aisp",
                 "year", 
-                # "month",
+                #"month",
                 "id_cmt")
 
 # Set cluster SE level
@@ -286,8 +288,8 @@ stargazer(
     feRegSim('street_theft', model = 1),
     feRegSim('street_theft', model = 2),
     # feRegSim('street_theft', model = 3),
-    feRegSim('dpolice_killing', model = 1),
-    feRegSim('dpolice_killing', model = 2),
+    # feRegSim('dpolice_killing', model = 1),
+    # feRegSim('dpolice_killing', model = 2),
     title = "Full period: 2019-2015",
     keep = c("last_month_hit",
              "hit_month_l",
@@ -317,7 +319,7 @@ stargazer(
 
 # 
 # 
-# # # Check it out
+# # Check it out
 sm %>%
   # subset(year == 2014 & aisp == 2) %>%
   select("aisp",
@@ -329,7 +331,10 @@ sm %>%
          "violent_death_sim_cum2",
          "violent_death_sim_6",
          "target_vd_cum",
+         "target_vd_cum2",
+         
          "target_vd_sem",
+         
 
          "street_robbery",
          "street_robbery_cum",
@@ -361,7 +366,7 @@ sm %>%
          "last_month",
          "last_month_hit"
   ) %>% View
-# 
+# # 
 # 
 # # # Check it out
 # sm_reg %>%
@@ -388,17 +393,17 @@ sm %>%
 #          "hit_month_l",
 #          "hit_target2") %>% View
 
-sm %>% 
-  subset(sem_year>100) %>%
-  select(aisp,
-              year,
-              month,
-              target_vd,
-              target_vd_cum,
-              target_vd_cum2,
-              target_vd_sem,
-              hit_month,
-              hit_month_l) %>% View
+# sm %>% 
+#   subset(sem_year>100) %>%
+#   select(aisp,
+#               year,
+#               month,
+#               target_vd,
+#               target_vd_cum,
+#               target_vd_cum2,
+#               target_vd_sem,
+#               hit_month,
+#               hit_month_l) %>% View
 
 
 
