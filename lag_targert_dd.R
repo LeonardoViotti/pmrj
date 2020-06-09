@@ -22,7 +22,9 @@
 sm <- raw_data %>%
   # Removing lower and upper bounds we don't have data on batallion sizes after
   # 2015 and the system begun in the second semmester of 2009
-  subset(year < 2016 & (year*10 + semester > 20091))
+  # subset(year < 2016 & (year*10 + semester > 20091))
+  subset((year*10 + semester > 20091))
+
 
 
 # source(file.path(GITHUB, 'old or drafts/add_target_for_recent_years_DRAFT.R'))
@@ -154,8 +156,8 @@ indep_vars_dd <- c(
   # "hit_target2",
   # "last_month_hit2",
   "last_month",
-  "policemen_aisp",
-  "policemen_upp",
+  # "policemen_aisp",
+  # "policemen_upp",
   "n_precinct",
   "max_prize",
   "population" )
@@ -320,52 +322,52 @@ stargazer(
 # 
 # 
 # # Check it out
-sm %>%
-  # subset(year == 2014 & aisp == 2) %>%
-  select("aisp",
-         "year",
-         "semester",
-         "month",
-         "violent_death_sim",
-         "violent_death_sim_cum",
-         "violent_death_sim_cum2",
-         "violent_death_sim_6",
-         "target_vd_cum",
-         "target_vd_cum2",
-         
-         "target_vd_sem",
-         
-
-         "street_robbery",
-         "street_robbery_cum",
-         "street_robbery_cum2",
-         "street_robbery_6",
-         "target_sr_sem",
-
-         "vehicle_robbery",
-         "vehicle_robbery_cum",
-         "vehicle_robbery_6",
-         "target_vr_sem",
-
-         "hit_violent_death",
-         "hit_street_robbery",
-         "hit_vehicle_robbery",
-
-         "target_vd_cum",
-         "target_sr_cum",
-         "target_vr_cum",
-
-         "on_target_vd",
-         "on_target_sr",
-         "on_target_vr",
-
-         "on_target",
-         # "lag1_on_target",
-         "hit_month",
-         "hit_month_l",
-         "last_month",
-         "last_month_hit"
-  ) %>% View
+# sm %>%
+#   # subset(year == 2014 & aisp == 2) %>%
+#   select("aisp",
+#          "year",
+#          "semester",
+#          "month",
+#          "violent_death_sim",
+#          "violent_death_sim_cum",
+#          "violent_death_sim_cum2",
+#          "violent_death_sim_6",
+#          "target_vd_cum",
+#          "target_vd_cum2",
+#          
+#          "target_vd_sem",
+#          
+# 
+#          "street_robbery",
+#          "street_robbery_cum",
+#          "street_robbery_cum2",
+#          "street_robbery_6",
+#          "target_sr_sem",
+# 
+#          "vehicle_robbery",
+#          "vehicle_robbery_cum",
+#          "vehicle_robbery_6",
+#          "target_vr_sem",
+# 
+#          "hit_violent_death",
+#          "hit_street_robbery",
+#          "hit_vehicle_robbery",
+# 
+#          "target_vd_cum",
+#          "target_sr_cum",
+#          "target_vr_cum",
+# 
+#          "on_target_vd",
+#          "on_target_sr",
+#          "on_target_vr",
+# 
+#          "on_target",
+#          # "lag1_on_target",
+#          "hit_month",
+#          "hit_month_l",
+#          "last_month",
+#          "last_month_hit"
+#   ) %>% View
 # # 
 # 
 # # # Check it out
