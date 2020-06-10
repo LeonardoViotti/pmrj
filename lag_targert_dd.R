@@ -22,7 +22,7 @@
 sm <- raw_data %>%
   # Removing lower and upper bounds we don't have data on batallion sizes after
   # 2015 and the system begun in the second semmester of 2009
-  # subset(year < 2016 & (year*10 + semester > 20091))
+   # subset(year < 2016 & (year*10 + semester > 20091))
   subset((year*10 + semester > 20091))
 
 
@@ -91,11 +91,11 @@ sm %<>%
                            hit_vehicle_robbery==1),
     
     # Last month dummy
-    last_month = ifelse(month==6 | month==12, 
-                        1,0)
-    
-    
-    
+    last_month = ifelse(
+      cycle %in% c(5,6),
+      # cycle %in% c(6), 
+      1,
+      0)
     ) %>% 
   
   # Create lagged variable
@@ -125,15 +125,9 @@ sm %<>%
 # Create a data set with only target months
 sm_reg <- sm %>%
   # Keep only regression months
-  subset(month %in% c(6,7,12,1)) #%>% 
-  # subset(sem_year > 100) %>% 
-  # subset(year < 2013) %>% 
-  
-  # Create phase 1 (2009 to 2012 varaibles)
-  # mutate(phase1 = ifelse(year < 2013,
-  #                        1,
-  #                        0) ,
-  #        last_month_hit_phase1 = last_month_hit*phase1)
+  # subset(cycle %in% c(6,1))
+  subset(cycle %in% c(5,6,1,2))
+
 
 # sm_reg_phase1 <- sm_reg %>%
 #   # Keep only regression months
@@ -156,8 +150,8 @@ indep_vars_dd <- c(
   # "hit_target2",
   # "last_month_hit2",
   "last_month",
-  # "policemen_aisp",
-  # "policemen_upp",
+  "policemen_aisp",
+  "policemen_upp",
   "n_precinct",
   "max_prize",
   "population" )
@@ -278,7 +272,7 @@ stargazer(
              "hit_month_l",
              "phase1",
              "last_month"),
-    title = "Full period: 2019-2015",
+    title = "Full period: 2009-2017 1 sem",
     omit.stat=c("LL","ser","f"),
     type = 'text')
 
@@ -292,7 +286,7 @@ stargazer(
     # feRegSim('street_theft', model = 3),
     # feRegSim('dpolice_killing', model = 1),
     # feRegSim('dpolice_killing', model = 2),
-    title = "Full period: 2019-2015",
+    title = "Full period: 2009-2017 1 sem",
     keep = c("last_month_hit",
              "hit_month_l",
              "last_month"),
