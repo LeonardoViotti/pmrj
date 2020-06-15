@@ -76,14 +76,14 @@ sm %<>%
     # is, for June it sums up to the end of that month. The other variables
     # _cum are just until the start of the month, for June it would only
     # account to all May crime, but no June crime.
-    hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_sem_adjusted),
-    hit_street_robbery = as.integer(street_robbery_cum2 <= target_sr_sem_adjusted),
-    hit_vehicle_robbery = as.integer(vehicle_robbery_cum2 <= target_vr_sem_adjusted),
+    # hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_sem_adjusted),
+    # hit_street_robbery = as.integer(street_robbery_cum2 <= target_sr_sem_adjusted),
+    # hit_vehicle_robbery = as.integer(vehicle_robbery_cum2 <= target_vr_sem_adjusted),
 
-    # Still within the cum monthly target for each crime 
-    # hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_cum2),
-    # hit_street_robbery = as.integer(street_robbery_cum2  <= target_sr_cum2),
-    # hit_vehicle_robbery = as.integer(vehicle_robbery_cum2  <= target_vr_cum2),
+    # Still within the cum monthly target for each cr ime 
+    hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_cum2),
+    hit_street_robbery = as.integer(street_robbery_cum2  <= target_sr_cum2),
+    hit_vehicle_robbery = as.integer(vehicle_robbery_cum2  <= target_vr_cum2),
 
     # If within the semester target for all 3 crimes
     hit_month = as.integer(hit_violent_death==1 & 
@@ -102,7 +102,20 @@ sm %<>%
   group_by(aisp) %>%
   arrange(aisp, year, month) %>%
   mutate(hit_month_l = dplyr::lag(hit_month,
-                                  n = 1L)) %>%
+                                  n = 1L),
+         hit_month_l2 = dplyr::lag(hit_month,
+                                  n = 2L),
+         hit_month_l3 = dplyr::lag(hit_month,
+                                  n = 3L),
+         hit_month_l4 = dplyr::lag(hit_month,
+                                  n = 4L),
+         hit_month_l5 = dplyr::lag(hit_month,
+                                  n = 5L),
+         # Create lag target variable based if on target on the previous 4 months
+         hit_month_4 = hit_month_l*hit_month_l2*hit_month_l3*hit_month_l4
+         ) %>%
+  
+  
   
   # Hit target original pra comparar
   # mutate(hit_target2 = as.numeric(on_target == 1),
@@ -116,7 +129,7 @@ sm %<>%
   
   ungroup() %>% 
   # Interaction
-  mutate(last_month_hit = last_month*hit_month_l)
+  mutate(last_month_hit = last_month*hit_month_4)
   # mutate(last_month_hit2 = last_month*hit_target2)
   
 #------------------------------------------------------------------------------#
@@ -146,12 +159,12 @@ sm_reg <- sm %>%
 indep_vars_dd <- c(
   "last_month_hit_phase1",
   "last_month_hit",
-  "hit_month_l",
+  "hit_month_4",
   # "hit_target2",
   # "last_month_hit2",
   "last_month",
-  "policemen_aisp",
-  "policemen_upp",
+  # "policemen_aisp",
+  # "policemen_upp",
   "n_precinct",
   "max_prize",
   "population" )
@@ -269,7 +282,7 @@ stargazer(
     feRegSim('street_robbery', model = 2),
     # feRegSim('street_robbery', model = 3),
     keep = c("last_month_hit",
-             "hit_month_l",
+             "hit_month_4",
              "phase1",
              "last_month"),
     title = "Full period: 2009-2017 1 sem",
@@ -288,7 +301,7 @@ stargazer(
     # feRegSim('dpolice_killing', model = 2),
     title = "Full period: 2009-2017 1 sem",
     keep = c("last_month_hit",
-             "hit_month_l",
+             "hit_month_4",
              "last_month"),
     omit.stat=c("LL","ser","f"),
     type = 'text')
@@ -389,17 +402,20 @@ stargazer(
 #          "hit_month_l",
 #          "hit_target2") %>% View
 
-# sm %>% 
-#   subset(sem_year>100) %>%
+# sm %>%
 #   select(aisp,
-#               year,
-#               month,
-#               target_vd,
-#               target_vd_cum,
-#               target_vd_cum2,
-#               target_vd_sem,
-#               hit_month,
-#               hit_month_l) %>% View
+#          year,
+#          month,
+#          target_vd,
+#          target_vd_cum,
+#          target_vd_cum2,
+#          target_vd_sem,
+#          hit_month,
+#          hit_month_l,
+#          hit_month_l2,
+#          hit_month_l3,
+#          hit_month_l4,
+#          hit_month_l5) %>% View
 
 
 
