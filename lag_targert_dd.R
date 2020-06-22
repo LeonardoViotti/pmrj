@@ -91,11 +91,10 @@ sm %<>%
                            hit_vehicle_robbery==1),
     
     # Last month dummy
-    last_month = ifelse(
-      cycle %in% c(5,6),
-      # cycle %in% c(6), 
-      1,
-      0)
+    # last_month = ifelse(month==6 | month==12,
+    #                     1,0)
+    last_month = ifelse(month==5 | month==6 | month==11 | month==12,
+                        1,0)
     ) %>% 
   
   # Create lagged variable
@@ -113,23 +112,14 @@ sm %<>%
                                   n = 5L),
          # Create lag target variable based if on target on the previous 4 months
          hit_month_4 = hit_month_l*hit_month_l2*hit_month_l3*hit_month_l4
-         ) %>%
-  
-  
-  
-  # Hit target original pra comparar
-  # mutate(hit_target2 = as.numeric(on_target == 1),
-  #        hit_target2 = ifelse(cycle == 1,
-  #                             dplyr::lag(hit_month, 1),
-  #                             hit_target2),
-  #        # Replace NAs with zeros
-  #        hit_target2 = ifelse(is.na(hit_target2),
-  #                            0 ,
-  #                            hit_target2)) %>% 
-  
+         # hit_month_4 = hit_month_l
+         
+                           ) %>%
+
   ungroup() %>% 
   # Interaction
   mutate(last_month_hit = last_month*hit_month_4)
+  # mutate(last_month_hit = last_month*hit_month_l)
   # mutate(last_month_hit2 = last_month*hit_target2)
   
 #------------------------------------------------------------------------------#
@@ -138,9 +128,9 @@ sm %<>%
 # Create a data set with only target months
 sm_reg <- sm %>%
   # Keep only regression months
-  # subset(cycle %in% c(6,1))
-  subset(cycle %in% c(5,6,1,2))
-
+  # subset(month %in% c(6,7,12,1)) #%>%
+  subset(month %in% c(5,6,7,8,11,12,1,2)) #%>%
+  
 
 # sm_reg_phase1 <- sm_reg %>%
 #   # Keep only regression months
@@ -157,11 +147,9 @@ sm_reg <- sm %>%
 # Set variables #
 
 indep_vars_dd <- c(
-  "last_month_hit_phase1",
   "last_month_hit",
+  # "hit_month_l",
   "hit_month_4",
-  # "hit_target2",
-  # "last_month_hit2",
   "last_month",
   # "policemen_aisp",
   # "policemen_upp",
@@ -173,7 +161,7 @@ indep_vars_dd <- c(
 # fixed effects to avoid collinearity
 FE_vars_dd <- c("aisp",
                 "year", 
-                #"month",
+                "month",
                 "id_cmt")
 
 # Set cluster SE level
@@ -227,17 +215,11 @@ reg_formula <- function(dep_vars,
 # First model without chief FE
 dd_formulas_m1 <- 
   reg_formula(depVars,
-              indep_vars_dd[-1],
+              indep_vars_dd,
               FE_vars_dd[1:2])
 
 # Second model with chief FE
 dd_formulas_m2 <- 
-  reg_formula(depVars,
-              indep_vars_dd[-1],
-              FE_vars_dd)
-
-# Triple difference with chief FE
-dd_formulas_m3 <- 
   reg_formula(depVars,
               indep_vars_dd,
               FE_vars_dd)
@@ -280,11 +262,9 @@ stargazer(
     feRegSim('vehicle_robbery', model = 2),
     feRegSim('street_robbery', model = 1),
     feRegSim('street_robbery', model = 2),
-    # feRegSim('street_robbery', model = 3),
-    keep = c("last_month_hit",
-             "hit_month_4",
-             "phase1",
-             "last_month"),
+    # keep = c("last_month_hit",
+    #          "hit_month_l",
+    #          "last_month"),
     title = "Full period: 2009-2017 1 sem",
     omit.stat=c("LL","ser","f"),
     type = 'text')
@@ -296,20 +276,53 @@ stargazer(
     feRegSim('vehicle_theft', model = 2),
     feRegSim('street_theft', model = 1),
     feRegSim('street_theft', model = 2),
-    # feRegSim('street_theft', model = 3),
     # feRegSim('dpolice_killing', model = 1),
     # feRegSim('dpolice_killing', model = 2),
     title = "Full period: 2009-2017 1 sem",
-    keep = c("last_month_hit",
-             "hit_month_4",
-             "last_month"),
+    # keep = c("last_month_hit",
+    #          "hit_month_l",
+    #          "last_month"),
     omit.stat=c("LL","ser","f"),
     type = 'text')
+
+
+# stargazer(
+#   feRegSim('dpolice_killing', model = 1),
+#   feRegSim('dpolice_killing', model = 2),
+#   feRegSim('arrest2', model = 1),
+#   feRegSim('arrest', model = 2),
+#   feRegSim('drug_seizure', model = 1),
+#   feRegSim('drug_seizure', model = 2),
+#   # feRegSim('street_theft', model = 3),
+#   # feRegSim('dpolice_killing', model = 1),
+#   # feRegSim('dpolice_killing', model = 2),
+#   title = "Full period: 2009-2017 1 sem",
+#   keep = c("last_month_hit",
+#            "hit_month_l",
+#            "last_month"),
+#   omit.stat=c("LL","ser","f"),
+#   type = 'text')
 
 
 #------------------------------------------------------------------------------#
 # draft
 
+
+# sm %>%
+#   select(aisp,
+#          year,
+#          month,
+#          hit_violent_death,
+#          hit_street_robbery,
+#          hit_vehicle_robbery,
+#          hit_month,
+#          hit_month_l,
+#          hit_month_l2,
+#          hit_month_l3,
+#          hit_month_l4,
+#          hit_month_l5,
+#          hit_month_4,
+#          hit_month_42) %>% View
 
 
 # sm_reg$y <- sm_reg$street_theft
@@ -402,20 +415,7 @@ stargazer(
 #          "hit_month_l",
 #          "hit_target2") %>% View
 
-# sm %>%
-#   select(aisp,
-#          year,
-#          month,
-#          target_vd,
-#          target_vd_cum,
-#          target_vd_cum2,
-#          target_vd_sem,
-#          hit_month,
-#          hit_month_l,
-#          hit_month_l2,
-#          hit_month_l3,
-#          hit_month_l4,
-#          hit_month_l5) %>% View
+
 
 
 
