@@ -228,7 +228,11 @@ depVars <- c("violent_death_sim",
              "other_robberies",
              "cargo_robbery",
              "burglary",
-             "store_robbery")
+             "store_robbery",
+             "arrest",
+             "arrest2",
+             "drug_seizure")
+
 names(depVars) <- depVars
 
 
