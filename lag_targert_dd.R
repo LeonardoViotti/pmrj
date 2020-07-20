@@ -55,7 +55,6 @@ sm %<>%
          target_vr_cum2 = cumsum(target_vr),
          target_sr_cum2 = cumsum(target_sr)) %>% 
   ungroup() %>% 
-  
 
   # Create variables
   mutate(
@@ -71,19 +70,29 @@ sm %<>%
                                     target_vr_sem,
                                     target_vr_sem*1.1),
     
+    target_vd_cum2_adjusted = ifelse(year >= 2013,
+                                    target_vd_cum2,
+                                    target_vd_cum2*1.1),
+    target_sr_cum2_adjusted = ifelse(year >= 2013,
+                                    target_sr_cum2,
+                                    target_sr_cum2*1.1),
+    target_vr_cum2_adjusted = ifelse(year >= 2013,
+                                    target_vr_cum2,
+                                    target_vr_cum2*1.1),
+
     # Still within the semester target for each crime. Using _cum2 variables
     # because these are the cumulative sum until the end of the month, that
     # is, for June it sums up to the end of that month. The other variables
     # _cum are just until the start of the month, for June it would only
     # account to all May crime, but no June crime.
-    # hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_sem_adjusted),
-    # hit_street_robbery = as.integer(street_robbery_cum2 <= target_sr_sem_adjusted),
-    # hit_vehicle_robbery = as.integer(vehicle_robbery_cum2 <= target_vr_sem_adjusted),
+    hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_sem_adjusted),
+    hit_street_robbery = as.integer(street_robbery_cum2 <= target_sr_sem_adjusted),
+    hit_vehicle_robbery = as.integer(vehicle_robbery_cum2 <= target_vr_sem_adjusted),
 
     # Still within the cum monthly target for each cr ime 
-    hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_cum2),
-    hit_street_robbery = as.integer(street_robbery_cum2  <= target_sr_cum2),
-    hit_vehicle_robbery = as.integer(vehicle_robbery_cum2  <= target_vr_cum2),
+    # hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_cum2_adjusted),
+    # hit_street_robbery = as.integer(street_robbery_cum2  <= target_sr_cum2_adjusted),
+    # hit_vehicle_robbery = as.integer(vehicle_robbery_cum2  <= target_vr_cum2_adjusted),
 
     # If within the semester target for all 3 crimes
     hit_month = as.integer(hit_violent_death==1 & 
@@ -91,10 +100,10 @@ sm %<>%
                            hit_vehicle_robbery==1),
     
     # Last month dummy
-    # last_month = ifelse(month==6 | month==12,
-    #                     1,0)
-    last_month = ifelse(month==5 | month==6 | month==11 | month==12,
+    last_month = ifelse(month==6 | month==12,
                         1,0)
+    # last_month = ifelse(month==5 | month==6 | month==11 | month==12,
+    #                     1,0)
     ) %>% 
   
   # Create lagged variable
@@ -111,34 +120,24 @@ sm %<>%
          hit_month_l5 = dplyr::lag(hit_month,
                                   n = 5L),
          # Create lag target variable based if on target on the previous 4 months
-         hit_month_4 = hit_month_l*hit_month_l2*hit_month_l3*hit_month_l4
-         # hit_month_4 = hit_month_l
-         
+         #positive_shock = hit_month_l*hit_month_l2*hit_month_l3*hit_month_l4
+         positive_shock = hit_month_l
                            ) %>%
 
   ungroup() %>% 
   # Interaction
-  mutate(last_month_hit = last_month*hit_month_4)
+  mutate(last_month_shock = last_month*positive_shock)
   # mutate(last_month_hit = last_month*hit_month_l)
-  # mutate(last_month_hit2 = last_month*hit_target2)
-  
+
 #------------------------------------------------------------------------------#
 ##### Regression data set ### 
 
 # Create a data set with only target months
 sm_reg <- sm %>%
   # Keep only regression months
-  # subset(month %in% c(6,7,12,1)) #%>%
-  subset(month %in% c(5,6,7,8,11,12,1,2)) #%>%
+  subset(month %in% c(6,7,12,1)) #%>%
+  # subset(month %in% c(5,6,7,8,11,12,1,2)) #%>%
   
-
-# sm_reg_phase1 <- sm_reg %>%
-#   # Keep only regression months
-#   subset(year < 2013)
-# 
-# sm_reg_phase2 <- sm_reg %>%
-#   # Keep only regression months
-#   subset(year >= 2013)
 
 #------------------------------------------------------------------------------#
 #### Regression formulas ####
@@ -147,9 +146,9 @@ sm_reg <- sm %>%
 # Set variables #
 
 indep_vars_dd <- c(
-  "last_month_hit",
+  "last_month_shock",
   # "hit_month_l",
-  "hit_month_4",
+  "positive_shock",
   "last_month",
   # "policemen_aisp",
   # "policemen_upp",
@@ -161,7 +160,7 @@ indep_vars_dd <- c(
 # fixed effects to avoid collinearity
 FE_vars_dd <- c("aisp",
                 "year", 
-                "month",
+                # "month",
                 "id_cmt")
 
 # Set cluster SE level
@@ -216,7 +215,7 @@ reg_formula <- function(dep_vars,
 dd_formulas_m1 <- 
   reg_formula(depVars,
               indep_vars_dd,
-              FE_vars_dd[1:2])
+              FE_vars_dd[-length(FE_vars_dd)])
 
 # Second model with chief FE
 dd_formulas_m2 <- 
@@ -262,12 +261,12 @@ stargazer(
     feRegSim('vehicle_robbery', model = 2),
     feRegSim('street_robbery', model = 1),
     feRegSim('street_robbery', model = 2),
-    # keep = c("last_month_hit",
-    #          "hit_month_l",
-    #          "last_month"),
-    title = "Full period: 2009-2017 1 sem",
+    keep = c("last_month_shock",
+             "positive_shock",
+             "last_month"),
+    title = "Full period: 2009-2017 1 sem (no batallion size)",
     omit.stat=c("LL","ser","f"),
-    type = 'text')
+    type = 'html')
 
 stargazer(
     feRegSim('dbody_found', model = 1),
@@ -278,12 +277,12 @@ stargazer(
     feRegSim('street_theft', model = 2),
     # feRegSim('dpolice_killing', model = 1),
     # feRegSim('dpolice_killing', model = 2),
-    title = "Full period: 2009-2017 1 sem",
-    # keep = c("last_month_hit",
-    #          "hit_month_l",
-    #          "last_month"),
+    title = "Full period: 2009-2017 1 sem (no batallion size)",
+    keep = c("last_month_shock",
+             "positive_shock",
+             "last_month"),
     omit.stat=c("LL","ser","f"),
-    type = 'text')
+    type = 'html')
 
 
 # stargazer(
@@ -293,12 +292,9 @@ stargazer(
 #   feRegSim('arrest', model = 2),
 #   feRegSim('drug_seizure', model = 1),
 #   feRegSim('drug_seizure', model = 2),
-#   # feRegSim('street_theft', model = 3),
-#   # feRegSim('dpolice_killing', model = 1),
-#   # feRegSim('dpolice_killing', model = 2),
 #   title = "Full period: 2009-2017 1 sem",
 #   keep = c("last_month_hit",
-#            "hit_month_l",
+#            "positive_shock",
 #            "last_month"),
 #   omit.stat=c("LL","ser","f"),
 #   type = 'text')
@@ -307,6 +303,9 @@ stargazer(
 #------------------------------------------------------------------------------#
 # draft
 
+summary(sm$hit_month)
+
+# (sm$hit_month_4 != sm$hit_month_l) %>% sum(na.rm = T)
 
 # sm %>%
 #   select(aisp,
@@ -317,30 +316,13 @@ stargazer(
 #          hit_vehicle_robbery,
 #          hit_month,
 #          hit_month_l,
-#          hit_month_l2,
-#          hit_month_l3,
-#          hit_month_l4,
-#          hit_month_l5,
-#          hit_month_4,
-#          hit_month_42) %>% View
+#          # hit_month_l2,
+#          # hit_month_l3,
+#          # hit_month_l4,
+#          # hit_month_l5,
+#          hit_month_4) %>% View
 
 
-# sm_reg$y <- sm_reg$street_theft
-# 
-# 
-# felm(y ~ last_month_hit +  hit_month_l +  last_month  + phase1 + 
-#     policemen_aisp + policemen_upp + n_precinct + max_prize +
-#     population | aisp | 0 | 0,
-#     data = sm_reg) %>% stargazer(type = 'text')
-# 
-# 
-# lm(y ~ last_month_hit +  hit_month_l +  last_month  + phase1 + 
-#        policemen_aisp + policemen_upp + n_precinct + max_prize +
-#        population + factor(year) + factor(aisp),
-#      data = sm_reg) %>% stargazer(type = 'text')
-
-# 
-# 
 # # Check it out
 # sm %>%
 #   # subset(year == 2014 & aisp == 2) %>%
@@ -349,37 +331,39 @@ stargazer(
 #          "semester",
 #          "month",
 #          "violent_death_sim",
-#          "violent_death_sim_cum",
+#          # "violent_death_sim_cum",
 #          "violent_death_sim_cum2",
-#          "violent_death_sim_6",
-#          "target_vd_cum",
+#          # "violent_death_sim_6",
+#          # "target_vd_cum",
 #          "target_vd_cum2",
-#          
 #          "target_vd_sem",
-#          
 # 
-#          "street_robbery",
-#          "street_robbery_cum",
-#          "street_robbery_cum2",
-#          "street_robbery_6",
-#          "target_sr_sem",
-# 
-#          "vehicle_robbery",
-#          "vehicle_robbery_cum",
-#          "vehicle_robbery_6",
-#          "target_vr_sem",
+#          # "street_robbery",
+#          # "street_robbery_cum",
+#          # "street_robbery_cum2",
+#          # # "street_robbery_6",
+#          # "target_sr_cum",
+#          # "target_sr_cum2",
+#          # "target_sr_sem",
+#          # 
+#          # "vehicle_robbery",
+#          # "vehicle_robbery_cum",
+#          # # "vehicle_robbery_6",
+#          # "target_vr_cum",
+#          # "target_vr_cum2",
+#          # "target_vr_sem",
 # 
 #          "hit_violent_death",
 #          "hit_street_robbery",
 #          "hit_vehicle_robbery",
+#          
+#          "hit_month",
+#          "hit_month_l",
+#          "hit_month_4",
 # 
-#          "target_vd_cum",
-#          "target_sr_cum",
-#          "target_vr_cum",
-# 
-#          "on_target_vd",
-#          "on_target_sr",
-#          "on_target_vr",
+#          # "on_target_vd",
+#          # "on_target_sr",
+#          # "on_target_vr",
 # 
 #          "on_target",
 #          # "lag1_on_target",
@@ -417,7 +401,19 @@ stargazer(
 
 
 
-
+# sm_reg$y <- sm_reg$street_theft
+# 
+# 
+# felm(y ~ last_month_hit +  hit_month_l +  last_month  + phase1 + 
+#     policemen_aisp + policemen_upp + n_precinct + max_prize +
+#     population | aisp | 0 | 0,
+#     data = sm_reg) %>% stargazer(type = 'text')
+# 
+# 
+# lm(y ~ last_month_hit +  hit_month_l +  last_month  + phase1 + 
+#        policemen_aisp + policemen_upp + n_precinct + max_prize +
+#        population + factor(year) + factor(aisp),
+#      data = sm_reg) %>% stargazer(type = 'text')
 
 
 # # Phase 1

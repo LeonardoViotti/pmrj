@@ -235,6 +235,17 @@ stargazer(
 
 
 
+#------------------------------------------------------------------------------#
+
+sm_reg %>% select(aisp,
+                  year,
+                  month,
+                  semester, 
+                  on_target,
+                  on2,
+                  last_month, 
+                  last_month_on2) %>% 
+  View()
 
 
 
