@@ -3,7 +3,7 @@
 #	 SIM- Master script
 
 #------------------------------------------------------------------------------#
-
+  
 rm(list = ls())
 
 #------------------------------------------------------------------------------#
@@ -13,15 +13,15 @@ rm(list = ls())
 # Run differnt sections of analysis
 
 RUN_placebo_targets_construction = F
-RUN_main_analysis = F
-RUN_desc_analysis = F
-RUN_rnr_analysis = F
+RUN_main_analysis = T
+RUN_desc_analysis = T
+RUN_rnr_analysis = T
 
 # Settings switches
 
 EXPORT_data = F
-EXPORT_plots = F
-EXPORT_tables = F
+EXPORT_plots = T
+EXPORT_tables = T
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -237,8 +237,8 @@ names(depVars) <- depVars
 
 
 indepVars <- c("on_target",
-               "policemen_aisp",
-               "policemen_upp",
+               # "policemen_aisp",
+               # "policemen_upp",
                "n_precinct",
                "max_prize",
                "population" )
