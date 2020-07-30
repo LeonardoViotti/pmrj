@@ -13,15 +13,15 @@ rm(list = ls())
 # Run differnt sections of analysis
 
 RUN_placebo_targets_construction = F
-RUN_main_analysis = T
-RUN_desc_analysis = T
-RUN_rnr_analysis = T
+RUN_main_analysis = F
+RUN_desc_analysis = F
+RUN_rnr_analysis = F
 
 # Settings switches
 
 EXPORT_data = F
-EXPORT_plots = T
-EXPORT_tables = T
+EXPORT_plots = F
+EXPORT_tables = F
 
 #------------------------------------------------------------------------------#
 #### Packages ####

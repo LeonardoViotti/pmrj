@@ -360,32 +360,32 @@ models_labels <- c("Model 1" = "OLS",
                    "Model 9" = "2SLS")
 
 # Table 2 - placebo
-tab2_pla_regs <- 
-  list(p_vd_01,
-       p_vd_02,
-       p_vd_IV,
-       p_vr_01,
-       p_vr_02, 
-       p_vr_IV,
-       p_rr_01, 
-       p_rr_02, 
-       p_rr_IV)
+# tab2_pla_regs <- 
+#   list(p_vd_01,
+#        p_vd_02,
+#        p_vd_IV,
+#        p_vr_01,
+#        p_vr_02, 
+#        p_vr_IV,
+#        p_rr_01, 
+#        p_rr_02, 
+#        p_rr_IV)
 
 
-tab2_pla_addLines <- list(chifeFE_line_9,
-                      Ymean_row(tab2_pla_regs),
-                      n_aisp_line_9)
+# tab2_pla_addLines <- list(chifeFE_line_9,
+#                       Ymean_row(tab2_pla_regs),
+#                       n_aisp_line_9)
 
-
-createTable(reg_list = tab2_pla_regs,
-            add_lines_list = tab2_pla_addLines,
-            dep_var_labels = c("Violent deaths", 
-                               "Vehicle robbery (Carjacking)",	
-                               "Street robbery"),
-            title = "Table B1– Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2006 and 2008)",
-            outPath = file.path(OUTPUTS_final, "tabB1.html"))
-
-
+# tab2_pla <- 
+#   createTable(reg_list = tab2_pla_regs,
+#               add_lines_list = tab2_pla_addLines,
+#               dep_var_labels = c("Violent deaths", 
+#                                  "Vehicle robbery (Carjacking)",	
+#                                  "Street robbery"),
+#               title = "Table C1 Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2006 and 2008)",
+#               outPath = file.path(OUTPUTS_final, "tabB1.html"))
+#   
+#   
 
 
 #### Export spatial lag MANUALLY ####
@@ -558,50 +558,50 @@ editTables <- function(regTab,
 
 
 
-tab2_pla_preForm <- editTables(tab2_pla, 
-                                colTitles = c("Violent Death", "Vehicle robbery", "Street robbery"))
+# tab2_pla_preForm <- editTables(tab2_pla, 
+#                                 colTitles = c("Violent Death", "Vehicle robbery", "Street robbery"))
+# 
+# 
 
 
-
-
-# Add Y means
-Ymeans_pla <- 
-  c(p_vd_01_data$violent_death %>% mean,
-    p_vd_02_data$violent_death %>% mean,
-    p_vd_IV_data$violent_death %>% mean,
-    p_vr_01_data$vehicle_robbery %>% mean,
-    p_vr_02_data$vehicle_robbery %>% mean,
-    p_vr_IV_data$vehicle_robbery %>% mean,
-    p_rr_01_data$street_robbery %>% mean,
-    p_rr_02_data$street_robbery %>% mean,
-    p_rr_IV_data$street_robbery %>% mean
-  ) %>% round(2)
-Ymeans_pla <- c("Y mean", Ymeans_pla)
-
-nAisp_pla <- c("Number of aisp", rep(39,9))
-
-tab2_pla_formated <- rbind(tab2_pla_preForm[1:7,],
-                           nAisp_pla,
-                           Ymeans_pla,
-                           tab2_pla_preForm[8:9,])
-
-bottom_border(tab2_pla_formated[3]) <- c(0,rep(0.4, dim(tab2_pla_formated)[2]-1))
-
-
-caption(tab2_pla_formated) <- "Table XX – Effect of expectancy of receiving bonuses on crime rates (Placebo)"
-
-
-#### Spatial lag table
-bottom_border(slRegTable_hux)[1, ] <- 0.4
-bottom_border(slRegTable_hux)[2, ] <- c(0,rep(0.4, dim(slRegTable_hux)[2]-1))
-bottom_border(slRegTable_hux)[3, ] <- c(0,rep(0.4, dim(slRegTable_hux)[2]-1))
-bottom_border(slRegTable_hux)[5, ] <- 0.4
-bottom_border(slRegTable_hux)[9, ] <- 0.4
-
-
-caption(slRegTable_hux) <- "Table XX – Effect of expectancy of receiving bonuses on crime rates (Spatial Auto-corrlation)"
-
-colnames(slRegTable_hux) <- c(1:dim(slRegTable_hux)[2])
+# # Add Y means
+# Ymeans_pla <- 
+#   c(p_vd_01_data$violent_death %>% mean,
+#     p_vd_02_data$violent_death %>% mean,
+#     p_vd_IV_data$violent_death %>% mean,
+#     p_vr_01_data$vehicle_robbery %>% mean,
+#     p_vr_02_data$vehicle_robbery %>% mean,
+#     p_vr_IV_data$vehicle_robbery %>% mean,
+#     p_rr_01_data$street_robbery %>% mean,
+#     p_rr_02_data$street_robbery %>% mean,
+#     p_rr_IV_data$street_robbery %>% mean
+#   ) %>% round(2)
+# Ymeans_pla <- c("Y mean", Ymeans_pla)
+# 
+# nAisp_pla <- c("Number of aisp", rep(39,9))
+# 
+# tab2_pla_formated <- rbind(tab2_pla_preForm[1:7,],
+#                            nAisp_pla,
+#                            Ymeans_pla,
+#                            tab2_pla_preForm[8:9,])
+# 
+# bottom_border(tab2_pla_formated[3]) <- c(0,rep(0.4, dim(tab2_pla_formated)[2]-1))
+# 
+# 
+# caption(tab2_pla_formated) <- "Table XX – Effect of expectancy of receiving bonuses on crime rates (Placebo)"
+# 
+# 
+# #### Spatial lag table
+# bottom_border(slRegTable_hux)[1, ] <- 0.4
+# bottom_border(slRegTable_hux)[2, ] <- c(0,rep(0.4, dim(slRegTable_hux)[2]-1))
+# bottom_border(slRegTable_hux)[3, ] <- c(0,rep(0.4, dim(slRegTable_hux)[2]-1))
+# bottom_border(slRegTable_hux)[5, ] <- 0.4
+# bottom_border(slRegTable_hux)[9, ] <- 0.4
+# 
+# 
+# caption(slRegTable_hux) <- "Table XX – Effect of expectancy of receiving bonuses on crime rates (Spatial Auto-corrlation)"
+# 
+# colnames(slRegTable_hux) <- c(1:dim(slRegTable_hux)[2])
 
 
 #------------------------------------------------------------------------------#
