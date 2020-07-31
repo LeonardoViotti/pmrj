@@ -242,6 +242,7 @@ indepVars <- c("on_target",
                "n_precinct",
                "max_prize",
                "population" )
+
 names(indepVars) <- indepVars
 
 FEVars <- c("aisp",
@@ -256,6 +257,29 @@ ZVars <- c("lag12_dist_target_vr",
            "lag12_dist_target_vd")
 names(ZVars) <- ZVars
 
+#-----------------------------#
+# Diff in Diff (a.k.a Virada) #
+
+indep_vars_dd <- c(
+  "last_month_shock",
+  # "hit_month_l",
+  "positive_shock",
+  "last_month",
+  # "policemen_aisp",
+  # "policemen_upp",
+  "n_precinct",
+  "max_prize",
+  "population" )
+
+# Since there are only 4 months in this analysis I'm removing month
+# fixed effects to avoid collinearity
+FE_vars_dd <- c("aisp",
+                "year", 
+                # "month",
+                "id_cmt")
+
+# Set cluster SE level
+cluster_vars_dd= "0"
 
 
 
