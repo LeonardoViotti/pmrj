@@ -5,15 +5,13 @@
 #------------------------------------------------------------------------------#
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = F
+OVERWRITE_MASTER_SWITCHES = T
 
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = F
-  EXPORT_plots = F
-  EXPORT_tables = F
+  EXPORT_plots = T
+  EXPORT_tables = T
 }
-
-OUTPUTS_final <- "C:/Users/wb519128/Desktop/temp"
 
 
 #------------------------------------------------------------------------------#
@@ -24,6 +22,13 @@ sr <- final_data %>%
   # Removing lower and upper bounds we don't have data on batallion sizes after
   # 2015 and the system begun in the second semmester of 2009
   subset((year*10 + semester > 20091))
+
+
+placebo_data <- final_data %>%
+  # Removing lower and upper bounds we don't have data on batallion sizes after
+  # 2015 and the system begun in the second semmester of 2009
+  subset((year*10 + semester <= 20091))
+
 
 
 #------------------------------------------------------------------------------#
@@ -118,10 +123,10 @@ reg_formula <- function(dep_vars,
 
 
 # First model without chief FE
-dd_formulas_m1 <- 
-  reg_formula(depVars,
-              indep_vars_dd,
-              FE_vars_dd[-length(FE_vars_dd)])
+# dd_formulas_m1 <- 
+#   reg_formula(depVars,
+#               indep_vars_dd,
+#               FE_vars_dd[-length(FE_vars_dd)])
 
 # Second model with chief FE
 dd_formulas_m2 <- 
@@ -129,6 +134,12 @@ dd_formulas_m2 <-
               indep_vars_dd,
               FE_vars_dd)
 
+# Placebo formulas
+
+p_dd_formulas_m2 <-
+  reg_formula(depVars,
+              indepVars_pla_dd,
+              FE_vars_dd)
 
 #------------------------------------------------------------------------------#
 #### Poisson formulas ####
@@ -340,19 +351,28 @@ dd_df <- sr %>%
   subset(month %in% c(6,7,12,1)) #%>%
 
 
+# Create a data set with only target months
+dd_df_pla <- placebo_data %>%
+  # Keep only regression months
+  subset(month %in% c(6,7,12,1)) #%>%
+
+
+# Create a data set with only target months
+
+
 # Set regressions model formula
 ddRegSim <- function(dep_var,
                      model = 2,
                      formula_vector1 = dd_formulas_m1,
                      formula_vector2 = dd_formulas_m2,
-                     formula_vector3 = dd_formulas_m3,
+                     formula_vector_pla = p_dd_formulas_m2,
                      data = dd_df){
   if(model ==1){
     form <- formula_vector1[dep_var]
   } else if(model == 2){
     form <- formula_vector2[dep_var]
   } else{
-    form <- formula_vector3[dep_var]
+    form <- p_dd_formulas_m2[dep_var]
     
   }
   
@@ -400,6 +420,8 @@ s_dd_bu_02_data <-  regData(s_dd_bu_02, regdf = sr)
 
 s_dd_sr_02 <- ddRegSim("store_robbery")
 s_dd_sr_02_data <-  regData(s_dd_sr_02, regdf = sr)
+
+
 
 
 #------------------------------------------------------------------------------#
@@ -463,8 +485,14 @@ createTable <- function(reg_list,
                         dep_var_labels,
                         outPath){
   stargazer(reg_list,
-            keep = c("on_target", "last_month_shock", "positive_shock", "last_month"),
-            covariate.labels = "On target",
+            keep = c("on_target", 
+                     "last_month_shock", 
+                     "positive_shock", 
+                     "last_month"),
+            covariate.labels = c("On target",
+                                 "On target' * last month",
+                                 "On target'",
+                                 "Last month"),
             dep.var.labels = dep_var_labels,
             title = title,
             dep.var.caption  = "Number  of  occurrences",
@@ -495,26 +523,18 @@ tab2_addLines <- list(chifeFE_line_9,
                       n_aisp_line_9)
 
 
-createTable(reg_list = tab2_regs,
-            add_lines_list = tab2_addLines,
-            dep_var_labels = c("Violent deaths", 
-                               "Vehicle robbery (Carjacking)",	
-                               "Street robbery"),
-            title = "Table 2 - Effect of expectancy of receiving bonuses on crime rates",
-            outPath = file.path(OUTPUTS_final, "tab2.html"))
-
 
 # Table 3
 tab3_regs <- 
   list(g_cf_01, 
        g_cf_02, 
-       g_cf_IV, 
+       g_dd_cf_02, 
        g_vt_01, 
        g_vt_02,
-       g_vt_IV,
+       g_dd_vt_02,
        g_st_01, 
        g_st_02,
-       g_st_IV)
+       g_dd_st_02)
 
 
 tab3_addLines <- list(chifeFE_line_9,
@@ -522,44 +542,27 @@ tab3_addLines <- list(chifeFE_line_9,
                       n_aisp_line_9)
 
 
-createTable(reg_list = tab3_regs,
-            add_lines_list = tab3_addLines,
-            dep_var_labels = c("Cadavers Found (dummy)", 
-                               "Car theft",	
-                               "Street theft"),
-            title = "Table A1 - Expectancy of receiving bonuses and gaming",
-            outPath = file.path(OUTPUTS_final, "tabA1.html"))
-
 
 
 # Table 4
 tab4_regs <- 
   list(s_or_01, 
        s_or_02, 
-       s_or_IV, 
+       s_dd_or_02, 
        s_cr_01, 
        s_cr_02,
-       s_cr_IV,
+       s_dd_cr_02,
        s_bu_01, 
        s_bu_02,
-       s_bu_IV,
+       s_dd_bu_02,
        s_sr_01,
        s_sr_02,
-       s_sr_IV)
+       s_dd_sr_02)
 
 tab4_addLines <- list(chifeFE_line_12,
                       Ymean_row(tab4_regs),
                       n_aisp_line_12)
 
-
-createTable(reg_list = tab4_regs,
-            add_lines_list = tab4_addLines,
-            dep_var_labels = c("Robberies not included in the target", 
-                               "Cargo robbery	",	
-                               "Burglary",
-                               "Robbery of commercial stores"),
-            title = "Table 3 - Expectancy of receiving bonuses and positive spill overs on other crimes",
-            outPath = file.path(OUTPUTS_final, "tab3.html")) # Order changed in paper
 
 
 
@@ -575,13 +578,86 @@ tab5_addLines <- list(c("Chief FE", "Yes", "Yes", "Yes"),
                       c("Number of aisp", rep("39", 3)))
 
 
-createTable(reg_list = tab5_regs,
-            add_lines_list = tab5_addLines,
-            dep_var_labels = c("Violent deaths", 
-                               "Vehicle robbery (Carjacking)",	
-                               "Street robbery"),
+
+#------------------------------------------------------------------------------#
+#### Saving ####
+
+
+if(EXPORT_tables){
+  # Main crimes
+  createTable(reg_list = tab2_regs,
+              add_lines_list = tab2_addLines,
+              dep_var_labels = c("Violent deaths", 
+                                 "Vehicle robbery (Carjacking)",	
+                                 "Street robbery"),
+              title = "Table 2 - Effect of expectancy of receiving bonuses on crime rates",
+              outPath = file.path(OUTPUTS_final, "tab2.html"))
+  
+  
+  
+  # Gaming
+  createTable(reg_list = tab3_regs,
+              add_lines_list = tab3_addLines,
+              dep_var_labels = c("Cadavers Found (dummy)", 
+                                 "Car theft",	
+                                 "Street theft"),
+              title = "Table A1 - Expectancy of receiving bonuses and gaming",
+              outPath = file.path(OUTPUTS_final, "tabA1.html"))
+  
+  
+  
+  # Spillovers 
+  createTable(reg_list = tab4_regs,
+              add_lines_list = tab4_addLines,
+              dep_var_labels = c("Robberies not included in the target", 
+                                 "Cargo robbery	",	
+                                 "Burglary",
+                                 "Robbery of commercial stores"),
+              title = "Table 3 - Expectancy of receiving bonuses and positive spill overs on other crimes",
+              outPath = file.path(OUTPUTS_final, "tab3.html")) # Order changed in paper
+  
+  
+  
+  
+  # Poisson
+  
+  # createTable(reg_list = tab5_regs,
+  #             add_lines_list = tab5_addLines,
+  #             dep_var_labels = c("Violent deaths", 
+  #                                "Vehicle robbery (Carjacking)",	
+  #                                "Street robbery"),
+  #             title = "Table B4 Robustness: Poisson Regressions",
+  #             outPath = file.path(OUTPUTS_final, "tabB4.html"))
+  
+  
+  
+  # Since it requires a bit of customizatation, not using function
+  stargazer(tab5_regs,
+            keep = c("on_target", 
+                     "last_month_shock", 
+                     "positive_shock", 
+                     "last_month"),
+            dep.var.labels = "",
+            covariate.labels = c("On target",
+                                 "On target' * last month",
+                                 "On target'",
+                                 "Last month"),
+            column.labels = c("Violent deaths", 
+                              "Vehicle robbery (Carjacking)",	
+                              "Street robbery"),
             title = "Table B4 Robustness: Poisson Regressions",
-            outPath = file.path(OUTPUTS_final, "tabB4.html"))
+            dep.var.caption  = "Number  of  occurrences",
+            add.lines = tab5_addLines,
+            digits = 3,
+            omit.stat = c("rsq","ser", "f"),
+            out = file.path(OUTPUTS_final, "tabB4.html"),
+            type = 'text'
+  )
+  
+  
+}
+
+
 
 
 #------------------------------------------------------------------------------#
@@ -676,17 +752,17 @@ coefPlot_rr <-
 # Export plots
 if(EXPORT_plots){
   
-  coefPlot_vd + 
-    ggsave(filename = file.path(OUTPUTS_final, "coef_plot_violent_death_sim.png"),
+  coefPlot_vd  %>% print()
+  ggsave(filename = file.path(OUTPUTS_final, "coef_plot_violent_death_sim.png"),
            width = 6,
            height = 4)
   
-  coefPlot_rr + 
+  coefPlot_rr  %>% print() 
     ggsave(filename = file.path(OUTPUTS_final, "coef_plot_street_robbery.png"),
            width = 6,
            height = 4)
   
-  coefPlot_vr + 
+  coefPlot_vr  %>% print()
     ggsave(filename = file.path(OUTPUTS_final, "coef_plot_vehicle_robbery.png"),
            width = 6,
            height = 4)

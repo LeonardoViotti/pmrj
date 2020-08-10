@@ -1,6 +1,6 @@
 #------------------------------------------------------------------------------#
 
-#	 SIM - Robustness Spatial
+#	 SIM - Robustness Placebo
 
 #------------------------------------------------------------------------------#
 
@@ -28,6 +28,9 @@ aisp <- spTransform(aisp, RjProj_unp)
 #------------------------------------------------------------------------------#
 #### Process data ####
 
+#### Placebo
+sr_pl <- sr[sr$year < 2009,]
+
 #### Spatial analysis
 
 # Keep only analysis years
@@ -52,8 +55,8 @@ depVars <- c("violent_death_sim",
              "street_robbery")
 
 indepVars <- c("on_target",
-               # "policemen_aisp",
-               # "policemen_upp",
+               "policemen_aisp",
+               "policemen_upp",
                "n_precinct",
                "max_prize",
                "population" )
@@ -84,6 +87,66 @@ ZVars_pla <- c("lag12_dist_target_vr_plapre",
                "lag12_dist_target_vd_plapre")
 
 
+#------------------------------------------------------------------------------#
+### OLS formulas ####
+
+# Right hand side without FE
+rFormula <- paste(indepVars, collapse = " + ") 
+rFormula_pla <- paste(indepVars_pla, collapse = " + ") 
+
+rFormula_iv <- paste(indepVars[-1], collapse = " + ") 
+rFormula_iv_pla <- paste(indepVars_pla[-1], collapse = " + ") 
+
+# Add FE, cluster and instruments
+
+#clusterVars = c("aisp")
+clusterVars= "0"
+
+clusterVars_form <- paste(clusterVars, collapse =  " + ")
+
+FeForumala1 <- paste(FEVars[1:3], collapse = " + ")
+config1 <- paste("|", FeForumala1, "| 0 | ", clusterVars_form )
+
+FeForumala2 <- paste(FEVars, collapse = " + ") # with cmd FE
+config2 <- paste("|", FeForumala2, "| 0 |  ", clusterVars_form)
+
+FeForumala2_pla <- paste(FEVars_pla, collapse = " + ") # with cmd FE
+config2_pla <- paste("|", FeForumala2_pla, "| 0 |  ", clusterVars_form)
+
+
+# IV formula
+first_stage_left <- "on_target"
+first_stage_left_pla <- "on_target_plapre"
+
+first_stage_right <- paste(ZVars, collapse = " + ")
+first_stage_right_pla <- paste(ZVars_pla, collapse = " + ")
+
+
+formula_1st <-  paste("(", first_stage_left, " ~ ", first_stage_right, " )")
+formula_1st_pla <-  paste("(", first_stage_left_pla, " ~ ", first_stage_right_pla, " )")
+
+config_iv <- paste("|", FeForumala2, "|" ,  formula_1st,  "| ", clusterVars_form)
+config_iv_pla <- paste("|", FeForumala2_pla, "|" ,  formula_1st_pla,  "| ", clusterVars_form)
+
+
+#### Final formulas
+
+Formulas01_str <- paste(depVars, paste(rFormula, config1), sep = " ~ ")
+Formulas02_str <- paste(depVars, paste(rFormula, config2), sep = " ~ ")
+FormulasIV_str <- paste(depVars, paste(rFormula_iv, config_iv), sep = " ~ ")
+
+# Placebo
+Formulas01_pla_str <- paste(depVars, paste(rFormula_pla, config1), sep = " ~ ")
+Formulas02_pla_str <- paste(depVars, paste(rFormula_pla, config2_pla), sep = " ~ ")
+FormulasIV_pla_str <- paste(depVars, paste(rFormula_iv_pla, config_iv_pla), sep = " ~ ")
+
+# So it's easier to refernce to elements
+names(Formulas01_str) <- depVars
+names(Formulas02_str) <- depVars
+names(FormulasIV_str) <- depVars
+names(Formulas01_pla_str) <- depVars
+names(Formulas02_pla_str) <- depVars
+names(FormulasIV_pla_str) <- depVars
 
 #------------------------------------------------------------------------------#
 ### Spatial lag formulas ####
@@ -98,6 +161,66 @@ Formulas02_sl_str <- paste(depVars, sFormula2, sep = " ~ ")
 
 names(Formulas01_sl_str) <- depVars
 names(Formulas02_sl_str) <- depVars
+
+
+#------------------------------------------------------------------------------#
+#### Placebo analysis ####
+
+
+# Regressions and Consley SEs - placebo
+feRegSim_placebo <- function(form){
+  form <- as.formula(form)
+  model <- felm(form, data = sr_pl, keepCX = T)
+  
+  # Rename Dep var for IV just for exporting
+  if (!is.null(model$endovars)){
+    rownames(model$coefficients)[grep("`on_", rownames(model$coefficients))] <- "on_target_plapre"
+    rownames(model$beta)[grep("`on_", rownames(model$beta))] <- "on_target_plapre"
+    colnames(model$cX)[grep("`on_", colnames(model$cX))] <- "on_target_plapre"
+  }
+  
+  # Return regression object
+  return(model)
+  
+}
+
+
+#### Placebo OLS
+# Tabble 2
+p_vd_01 <- feRegSim_placebo(Formulas01_pla_str["violent_death_sim"])
+p_vd_01_data <- regData(p_vd_01, sr_pl)
+
+p_vr_01 <- feRegSim_placebo(Formulas01_pla_str["vehicle_robbery"])
+p_vr_01_data <- regData(p_vr_01, sr_pl)
+
+p_rr_01 <- feRegSim_placebo(Formulas01_pla_str["street_robbery"])
+p_rr_01_data <- regData(p_rr_01, sr_pl)
+
+
+### Model 2 whith cmnd FE - placebo
+
+# Tabble 2
+p_vd_02 <- feRegSim_placebo(Formulas02_pla_str["violent_death_sim"])
+p_vd_02_data <- regData(p_vd_02, sr_pl)
+
+p_vr_02 <- feRegSim_placebo(Formulas02_pla_str["vehicle_robbery"])
+p_vr_02_data <- regData(p_vr_02, sr_pl)
+
+p_rr_02 <- feRegSim_placebo(Formulas02_pla_str["street_robbery"])
+p_rr_02_data <- regData(p_rr_02, sr_pl)
+
+
+#### Placebo 2SLS
+
+# Tabble 2
+# p_vd_IV <- feRegSim_placebo(FormulasIV_pla_str["violent_death_sim"])
+# p_vd_IV_data <- regData(p_vd_IV, sr_pl)
+# 
+# p_vr_IV <- feRegSim_placebo(FormulasIV_pla_str["vehicle_robbery"])
+# p_vr_IV_data <- regData(p_vr_IV, sr_pl)
+# 
+# p_rr_IV <- feRegSim_placebo(FormulasIV_pla_str["street_robbery"])
+# p_rr_IV_data <- regData(p_rr_IV, sr_pl)
 
 
 #------------------------------------------------------------------------------#
@@ -212,194 +335,50 @@ moran_rv_02 <- lm(rv_pop_d_slag ~ rv_pop_d + factor(year) + factor(month), data 
 moran_rr_02 <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data = ps_semJJ)
 
 #------------------------------------------------------------------------------#
-##### Initial Exporting tables ####
+##### Placebo exporting ####
 
 
+#### Export placebo table ####
 
-#### Export spatial lag MANUALLY ####
+indepVar_label <- c("On target" = "on_target")
+indepVar_label_pla <- c("On target" = "on_target_plapre")
 
-# Regression variables
-regVars <- c("violent_death_sim",
-             "vehicle_robbery",
-             "street_robbery",
-             "on_target",
-             "policemen_aisp",
-             "policemen_upp",
-             "n_precinct",
-             "max_prize",
-             "population",
-             "aisp",
-             "year",
-             "month")
+stats_labels <- c("Observations" = "nobs",  
+                  "R2 adjusted" = "adj.r.squared")
 
-# Regression data
-ps_complete_bol <- complete.cases(ps[,regVars])
-slregData <- ps[ps_complete_bol,]
-
-coefs <- 
-  c(sl_vd_01$coefficients['on_target'],
-    sl_vr_01$coefficients['on_target'],
-    sl_rr_01$coefficients['on_target'])
+#models_labels <- c("Violent Death", "Violent Death", "Carjacking", "Carjacking")
 
 
-ses <- 
-  c(sl_vd_01$vcov['on_target','on_target'] %>% sqrt(),
-    sl_vr_01$vcov['on_target','on_target'] %>% sqrt(),
-    sl_rr_01$vcov['on_target','on_target'] %>% sqrt())
+# models_labels <- c("Model 1" = "OLS", 
+#                    "Model 2" = "OLS", 
+#                    "Model 4" = "OLS",
+#                    "Model 5" = "OLS", 
+#                    "Model 7" = "OLS", 
+#                    "Model 8" = "OLS")
+
+# Table 2 - placebo
+tab2_pla_regs <-
+  list(p_vd_01,
+       p_vd_02,
+       p_vr_01,
+       p_vr_02,
+       p_rr_01,
+       p_rr_02)
 
 
-# N obs
-n_obs <- c(sl_vd_01$residuals %>% length(),
-           sl_vr_01$residuals %>% length(),
-           sl_rr_01$residuals %>% length())
-
-# Number of AISPs
-n_aisp <- c(37,37,37)
-
-
-# Y mean
-Ymean <- c(mean(slregData$violent_death_sim),
-           mean(slregData$vehicle_robbery),
-           mean(slregData$street_robbery))
-
-# Adjusted R squared
-arsq <- 
-  function(model,data, depVar){
-    n <- nrow(data)
-    k <- length(model) -1
-    sse <- sum(model$residuals^2)
-    sst <- var( data[,depVar] ) * (n-1)
-    rsq <- 1-(sse/sst)
-    
-    arsq <- 1 -(1-rsq)*((n-1)/(n-k-1))
-    return(arsq)
-  }
-
-adjus_Rsq <- 
-  c(arsq(sl_vd_01, slregData, "violent_death_sim"),
-    arsq(sl_vr_01, slregData, "vehicle_robbery"),
-    arsq(sl_rr_01, slregData, "street_robbery"))
-
-
-#### Create the table ####
-#sl_vd_01
-
-slRegTable <- 
-  rbind(c("Violent  deaths",
-          "Vehicle  robbery  (Carjacking)", 
-          "Street  robbery"),
-        c("SAR", "SAR", "SAR"),
-        c("(1)", "(2)", "(3)"),
-        coefs %>% round(2),
-        ses %>% round(2) ,
-        n_obs,
-        n_aisp,
-        Ymean %>% round(2),
-        adjus_Rsq %>% round(2)
-  )
-
-#colnames(slRegTable) <- c("violent_death_sim", "vehicle_robbery", "street_robbery")
-
-
-# add stars
-slRegTable[5,] <- paste0("(",slRegTable[5,],")***")
-
-# Add row names
-rows <- c("",
-          "",
-          "",
-          "On target",
-          "",
-          "Observations",
-          "Number of aisp",
-          "Y mean",
-          "R2 adjusted")
-
-rownames(slRegTable) <- (1:dim(slRegTable)[1])
-
-slRegTable <- slRegTable %>%
-  as.data.frame(stringsAsFactors = F)
-
-slRegTable <- 
-  cbind(rows,
-        slRegTable) 
-
-slRegTable_hux <- huxtable(slRegTable)
-
-
-#------------------------------------------------------------------------------#
-##### Processing tables ####
-
-#------------------------------------------------------------------------------#
-##### Moran's I plots ####
-
-# Graphics formatting definition
-moran_plot <- function(reg, label, data){
-  moranI <- reg$coefficients[2] %>% round(4)
-  pVal <- summary(reg)$coefficients[regIndepVars(reg)
-                                    ,"Pr(>|t|)"] %>% round(4)
-  title <- paste("Moran's I =",
-                 moranI,
-                 "\n",
-                 "P value ~",
-                 pVal)
-  with(data, 
-       plot(regIndepVars(reg)%>% get(), 
-            regDepVars(reg)%>% get(),
-            xlab = label,
-            ylab = paste("W", label),
-            cex.lab=2,
-            cex.axis=1.5))
-  abline(reg)
-  title(main=title, 
-        cex.main=2 )
-  
-}
-
-
-#### Export graphs
-if(EXPORT_plots){
-  
-  # Violent death  
-  png(file = file.path(OUTPUTS_final, 
-                       "moran_lv_01.png"),
-      width = 600, 
-      height = 600)
-  par(mar = c(5, 5, 5, 5))
-  moran_plot(moran_lv_01, 
-             "Violent Death",
-             ps_semJJ)
-  dev.off()
-  
-  # Vehicle rob
-  png(file = file.path(OUTPUTS_final, 
-                       "moran_rv_01.png"),
-      width = 600, 
-      height = 600)
-  par(mar = c(5, 5, 5, 5))
-  moran_plot(moran_rv_01, 
-             "Vehicle robbery",
-             ps_semJJ)
-  dev.off()
-  
-  # Street rob
-  png(file = file.path(OUTPUTS_final, 
-                       "moran_rr_01.png"),
-      width = 600, 
-      height = 600)
-  par(mar = c(5, 5, 5, 5))
-  moran_plot(moran_rr_01, 
-             "Street robbery",
-             ps_semJJ)
-  dev.off()
-  
-}
-#------------------------------------------------------------------------------#
-##### Actually exporting ####
-
-if(EXPORT_tables){
-  # huxtable::quick_xlsx(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_formated.xlsx"))
-  huxtable::quick_html(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_formated.html"))
-  
-  }
+stargazer(tab2_pla_regs,
+          keep = c("on_target_plapre"),
+          dep.var.labels = "",
+          covariate.labels = c("On target"),
+          column.labels = c("Violent deaths", 
+                            "Vehicle robbery (Carjacking)",	
+                            "Street robbery"),
+          title = "Foo",
+          dep.var.caption  = "Number  of  occurrences",
+          add.lines = tab5_addLines,
+          digits = 3,
+          omit.stat = c("rsq","ser", "f"),
+          # out = file.path(OUTPUTS_final, "tabB4.html"),
+          type = 'text'
+)
 

@@ -120,14 +120,6 @@ sim %<>%
   arrange(aisp, year, month) %>%
   mutate(hit_month_l = dplyr::lag(hit_month,
                                   n = 1L),
-         hit_month_l2 = dplyr::lag(hit_month,
-                                   n = 2L),
-         hit_month_l3 = dplyr::lag(hit_month,
-                                   n = 3L),
-         hit_month_l4 = dplyr::lag(hit_month,
-                                   n = 4L),
-         hit_month_l5 = dplyr::lag(hit_month,
-                                   n = 5L),
          # Create lag target variable based if on target on the previous 4 months
          #positive_shock = hit_month_l*hit_month_l2*hit_month_l3*hit_month_l4
          positive_shock = hit_month_l
@@ -201,8 +193,6 @@ sim <- merge(sim,
 
 #------------------------------------------------------------------------------#
 #### Condstrucao do Dataset por semestre ####
-
-
 
 # Base semestral
 simSem <- sim %>%
@@ -337,7 +327,7 @@ sim$plaTar_sr[Qbol(4, "sr")] <- round(sim$sr_l[Qbol(4, "sr")]*(1-reduQ4_sr))
 sim <- sim %>% 
   group_by(aisp, year, semester) %>% 
   mutate(plaTar_vd_sem = sum(plaTar_vd),
-         plaTar_vr_sem = sum(plaTar_vr),
+           plaTar_vr_sem = sum(plaTar_vr),
          plaTar_sr_sem = sum(plaTar_sr))
 
 
@@ -409,6 +399,53 @@ sim <- sim %>%
 #                            lag12_dist_target_vd_plapre,
 #                            dist_target_vd_plapre)
 #             )
+
+
+#------------------------------------------------------------------------------#
+#### End of semester placebo ####
+
+# Create regression variables
+sim %<>%
+  group_by(aisp, sem_year) %>% 
+  # Create cumulative sum of monthly target until the end of the month.
+  # the original one represents what's the expected target up to the
+  # start of the month, hence Jan and Jul have NAs.
+  mutate(target_vd_cum2_pla = cumsum(plaTar_vd),
+         target_vr_cum2_pla = cumsum(plaTar_vr),
+         target_sr_cum2_pla = cumsum(plaTar_sr)) %>% 
+  ungroup() %>% 
+  
+  # Create variables
+  mutate(
+    # Still within the semester target for each crime. Using _cum2 variables
+    # because these are the cumulative sum until the end of the month, that
+    # is, for June it sums up to the end of that month. The other variables
+    # _cum are just until the start of the month, for June it would only
+    # account to all May crime, but no June crime.
+    hit_violent_death_pla = as.integer(target_vd_cum2_pla <= plaTar_vd_sem),
+    hit_street_robbery_pla = as.integer(target_sr_cum2_pla <= plaTar_sr_sem),
+    hit_vehicle_robbery_pla = as.integer(target_vr_cum2_pla <= plaTar_vr_sem),
+    
+    # If within the semester target for all 3 crimes
+    hit_month_pla = as.integer(hit_violent_death_pla==1 & 
+                                 hit_street_robbery_pla==1 & 
+                                 hit_vehicle_robbery_pla==1)
+  ) %>% 
+  
+  # Create lagged variable
+  group_by(aisp) %>%
+  arrange(aisp, year, month) %>%
+  mutate(hit_month_pla_l = dplyr::lag(hit_month_pla,
+                                      n = 1L),
+         # Create lag target variable based if on target on the previous 4 months
+         #positive_shock = hit_month_l*hit_month_l2*hit_month_l3*hit_month_l4
+         positive_shock_pla = hit_month_pla_l
+  ) %>%
+  
+  ungroup() %>% 
+  # Interaction
+  mutate(last_month_shock_pla = last_month*positive_shock_pla)
+# mutate(last_month_hit = last_month*hit_month_l)
 
 
 #------------------------------------------------------------------------------#
