@@ -11,10 +11,10 @@
 
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = F
+OVERWRITE_MASTER_SWITCHES = T
 
 if(OVERWRITE_MASTER_SWITCHES){
-  EXPORT_data = F
+  EXPORT_data = T
   EXPORT_plots = F
   EXPORT_tables = F
 }
@@ -44,13 +44,13 @@ cmd <- fread(file = file.path(DATA, "ComandantesBatalhao.csv"),
 #------------------------------------------------------------------------------#
 #### End of semester model variables ####
 
-# Since on_target variable is if the AISP is wihtin the expeceted target 
-# for that month, regardless if it still has any perspective of being awarded
-# in that semester, create a variable (to be lagged) that means the aisp is still within the semester
-# target for all three crimes.
 
 # Create regression variables
 sim %<>%
+  # Remove original on_target variable
+  mutate(on_target_deprecated = on_target) %>% 
+  dplyr::select(-on_target) %>% 
+  
   # Create semester sums of all crime variables adding suffix 6. This are
   # used in the orignal model
   group_by(aisp, sem_year) %>% 
@@ -89,24 +89,34 @@ sim %<>%
                                      target_vr_cum2,
                                      target_vr_cum2*1.1),
     
+    
+    # Since on_target variable is if the AISP is wihtin the expeceted target 
+    # for that month, regardless if it still has any perspective of being awarded
+    # in that semester, create a variable (to be lagged) that means the aisp is still
+    # within the semestertarget for all three crimes.
+    
     # Still within the semester target for each crime. Using _cum2 variables
     # because these are the cumulative sum until the end of the month, that
     # is, for June it sums up to the end of that month. The other variables
     # _cum are just until the start of the month, for June it would only
     # account to all May crime, but no June crime.
-    hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_sem_adjusted),
-    hit_street_robbery = as.integer(street_robbery_cum2 <= target_sr_sem_adjusted),
-    hit_vehicle_robbery = as.integer(vehicle_robbery_cum2 <= target_vr_sem_adjusted),
+    hit_violent_death_sem = as.integer(violent_death_sim_cum2 <= target_vd_sem_adjusted),
+    hit_street_robbery_sem = as.integer(street_robbery_cum2 <= target_sr_sem_adjusted),
+    hit_vehicle_robbery_sem = as.integer(vehicle_robbery_cum2 <= target_vr_sem_adjusted),
     
     # Still within the cum monthly target for each cr ime 
-    # hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_cum2_adjusted),
-    # hit_street_robbery = as.integer(street_robbery_cum2  <= target_sr_cum2_adjusted),
-    # hit_vehicle_robbery = as.integer(vehicle_robbery_cum2  <= target_vr_cum2_adjusted),
+    hit_violent_death = as.integer(violent_death_sim_cum2 <= target_vd_cum2_adjusted),
+    hit_street_robbery = as.integer(street_robbery_cum2  <= target_sr_cum2_adjusted),
+    hit_vehicle_robbery = as.integer(vehicle_robbery_cum2  <= target_vr_cum2_adjusted),
     
-    # If within the semester target for all 3 crimes
+    # If within the month target for all 3 crimes
     hit_month = as.integer(hit_violent_death==1 & 
                              hit_street_robbery==1 & 
                              hit_vehicle_robbery==1),
+    # If within the semester target for all 3 crimes
+    hit_sem = as.integer(hit_violent_death_sem==1 & 
+                             hit_street_robbery_sem==1 & 
+                             hit_vehicle_robbery_sem==1),
     
     # Last month dummy
     last_month = ifelse(month==6 | month==12,
@@ -120,14 +130,16 @@ sim %<>%
   arrange(aisp, year, month) %>%
   mutate(hit_month_l = dplyr::lag(hit_month,
                                   n = 1L),
+         hit_sem_l = dplyr::lag(hit_sem,
+                                  n = 1L),
          # Create lag target variable based if on target on the previous 4 months
          #positive_shock = hit_month_l*hit_month_l2*hit_month_l3*hit_month_l4
-         positive_shock = hit_month_l
+         on_target = hit_month_l
   ) %>%
   
   ungroup() %>% 
   # Interaction
-  mutate(last_month_shock = last_month*positive_shock)
+  mutate(last_month_on_target = last_month*hit_sem_l)
 # mutate(last_month_hit = last_month*hit_month_l)
 
 #------------------------------------------------------------------------------#
@@ -357,14 +369,19 @@ sim$plaTar_sr_cum[bol04] <- NA
 
 
 # Fix this so dist is not divided by zero
-sim$plaTar_vr_sem <- ifelse(sim$plaTar_vr_sem == 0, NA, sim$plaTar_vr_sem)
+sim$plaTar_vr_sem <- ifelse(sim$plaTar_vr_sem == 0, 
+                            NA, 
+                            sim$plaTar_vr_sem)
 
 
 # Create target per crime
 # First month of semester on target is always NA
-sim$on_target_vd_plapre <- (sim$violent_death_sim_cum <=  sim$plaTar_vd_cum) %>% as.numeric()
-sim$on_target_vr_plapre <- (sim$vehicle_robbery_cum <=  sim$plaTar_vr_cum) %>% as.numeric()
-sim$on_target_sr_plapre <- (sim$street_robbery_cum <=  sim$plaTar_sr_cum) %>% as.numeric()
+sim$on_target_vd_plapre <- 
+  (sim$violent_death_sim_cum <=  sim$plaTar_vd_cum) %>% as.numeric()
+sim$on_target_vr_plapre <- 
+  (sim$vehicle_robbery_cum <=  sim$plaTar_vr_cum) %>% as.numeric()
+sim$on_target_sr_plapre <- 
+  (sim$street_robbery_cum <=  sim$plaTar_sr_cum) %>% as.numeric()
 
 # Create overall target
 sim$on_target_plapre <-  (sim$on_target_vd_plapre==1 &
@@ -515,4 +532,17 @@ if (EXPORT_data){
             na = "")
   
 }
+
+
+
+View(sim %>% 
+       dplyr::select(
+         aisp,
+         month,
+         year,
+         on_target,
+         on_target_deprecated
+       ))
+
+
 

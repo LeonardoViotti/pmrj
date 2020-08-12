@@ -4,6 +4,13 @@
 
 #------------------------------------------------------------------------------#
 
+
+# Add lines in table
+# Add DD models
+
+
+
+
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
 OVERWRITE_MASTER_SWITCHES = F
 
@@ -16,14 +23,8 @@ if(OVERWRITE_MASTER_SWITCHES){
 #------------------------------------------------------------------------------#
 #### Load data ####
 
-
-
 # Loading data into a new object to be processed
 sr <- final_data
-
-# Load aisps shapefile
-aisp <- readOGR(dsn = GIS, layer = "lm_aisp_2019")
-aisp <- spTransform(aisp, RjProj_unp)
 
 #------------------------------------------------------------------------------#
 #### Process data ####
@@ -38,11 +39,6 @@ sr_pl <- sr[sr$year < 2009,]
 sr_sl <- sr %>% subset(sem_year > 100)
 
 
-# Remove ilha do governador and keep balanced panel
-sr_sl <- sr_sl[!(sr_sl$aisp %in% c(17,41))]
-aisp <- aisp[!(aisp@data$aisp %in% c(17,41)),]
-
-
 #------------------------------------------------------------------------------#
 #### Global objects ####
 
@@ -54,12 +50,6 @@ depVars <- c("violent_death_sim",
              "vehicle_robbery",
              "street_robbery")
 
-indepVars <- c("on_target",
-               "policemen_aisp",
-               "policemen_upp",
-               "n_precinct",
-               "max_prize",
-               "population" )
 
 indepVars_pla <- c("on_target_plapre",
                    #"policemen_aisp",
@@ -68,19 +58,10 @@ indepVars_pla <- c("on_target_plapre",
                    #"max_prize",
                    "population" )
 
-FEVars <- c("aisp",
-            "year", 
-            "month", 
-            "id_cmt")
-
 FEVars_pla <- c("aisp",
                 "year", 
                 "month", 
                 "cmd_name")
-
-ZVars <- c("lag12_dist_target_vr",
-           "lag12_dist_target_sr",
-           "lag12_dist_target_vd")
 
 ZVars_pla <- c("lag12_dist_target_vr_plapre",
                "lag12_dist_target_sr_plapre",
@@ -210,129 +191,7 @@ p_rr_02 <- feRegSim_placebo(Formulas02_pla_str["street_robbery"])
 p_rr_02_data <- regData(p_rr_02, sr_pl)
 
 
-#### Placebo 2SLS
-
-# Tabble 2
-# p_vd_IV <- feRegSim_placebo(FormulasIV_pla_str["violent_death_sim"])
-# p_vd_IV_data <- regData(p_vd_IV, sr_pl)
-# 
-# p_vr_IV <- feRegSim_placebo(FormulasIV_pla_str["vehicle_robbery"])
-# p_vr_IV_data <- regData(p_vr_IV, sr_pl)
-# 
-# p_rr_IV <- feRegSim_placebo(FormulasIV_pla_str["street_robbery"])
-# p_rr_IV_data <- regData(p_rr_IV, sr_pl)
-
-
-#------------------------------------------------------------------------------#
-#### Spatial analysis ####
-
-
-#------------------------#
-#### Create variables ####
-
-
-# Year and month
-#sr_sl$year_month <- sr_sl$year*100 + sr_sl$month
-
-# Deaths per 100 thousand
-sr_sl$lv_pop <- sr_sl$violent_death_sim/(sr_sl$population/100000)
-
-# Carjack per 100 thousand
-sr_sl$rv_pop <- sr_sl$vehicle_robbery /(sr_sl$population/100000)
-
-# Street robbery per 100 thousand
-sr_sl$rr_pop <- sr_sl$street_robbery/(sr_sl$population/100000)
-
-# Montly variation - current month minus previous
-sr_sl <- sr_sl %>% 
-  group_by(aisp) %>% 
-  arrange(aisp, year_month) %>% 
-  mutate(lv_pop_d = lv_pop - dplyr::lag(lv_pop, n = 1),
-         rv_pop_d = rv_pop - dplyr::lag(rv_pop, n = 1),
-         rr_pop_d = rr_pop - dplyr::lag(rr_pop, n = 1),
-         # Replace inf values
-         lv_pop_d = ifelse(!is.finite(lv_pop_d),NA, lv_pop_d),
-         rv_pop_d = ifelse(!is.finite(rv_pop_d),NA, rv_pop_d),
-         rr_pop_d = ifelse(!is.finite(rr_pop_d),NA, rr_pop_d))
-
-
-# Set panel data indexes
-ps <- pdata.frame(sr_sl, index = c("aisp", "year_month"))
-
-
-#### Spatial Variables
-
-# Neighbourhood definition
-nb <- poly2nb(aisp, queen = T)
-
-# Neighbour weights
-lw <- nb2listw(nb,
-               style = "W",
-               zero.policy = TRUE)
-
-# Calculate spatial lagged values level
-ps$lv_pop_slag <- slag(ps$lv_pop, lw)
-ps$rv_pop_slag <- slag(ps$rv_pop, lw)
-ps$rr_pop_slag <- slag(ps$rr_pop, lw)
-
-
-
-#------------------------------------------------------------------------------#
-#### Spatial lag models ####
-
-#### Regressions
-
-# SAR model function
-SARlag_reg <- function(formula, data, nbW ){
-  spml(formula = as.formula(formula), 
-       data=data, 
-       model = "pooling",
-       lag = T,
-       listw = nbW)
-}
-
-
-
-# Column 1
-sl_vd_01 <- SARlag_reg(Formulas01_sl_str["violent_death_sim"],
-                       data = ps,
-                       nbW = lw)
-sl_vr_01 <- SARlag_reg(Formulas01_sl_str["vehicle_robbery"],
-                       data = ps,
-                       nbW = lw)
-sl_rr_01 <- SARlag_reg(Formulas01_sl_str["street_robbery"],
-                       data = ps,
-                       nbW = lw)
-
-#------------------------------------------------------------------------------#
-#### Moran's I ####
-
-# Moran's I level
-# moran_lv <- lm(lv_pop_lag ~ lv_pop, data = ps)
-# moran_rv <- lm(rv_pop_lag ~ rv_pop, data = ps) %>% summary
-# moran_rr <- lm(rr_pop_lag ~ rr_pop, data = ps) %>% summary
-
-
-# Moran's I delta
-#can't have NAs, so I'm removing all obs where the
-#monthly crime difference is NA
-
-ps_semJJ <- ps %>% subset(!(month %in% c(1,7)))
-
-
-# Calculate spatial lagged values for on_target
-ps_semJJ$lv_pop_d_slag <- slag(ps_semJJ$lv_pop_d, lw)
-ps_semJJ$rv_pop_d_slag <- slag(ps_semJJ$rv_pop_d, lw)
-ps_semJJ$rr_pop_d_slag <- slag(ps_semJJ$rr_pop_d, lw)
-
-
-moran_lv_01 <- lm(lv_pop_d_slag ~ lv_pop_d, data = ps_semJJ)
-moran_rv_01 <- lm(rv_pop_d_slag ~ rv_pop_d, data = ps_semJJ)
-moran_rr_01 <- lm(rr_pop_d_slag ~ rr_pop_d, data = ps_semJJ)
-
-moran_lv_02 <- lm(lv_pop_d_slag ~ lv_pop_d + factor(year) + factor(month), data = ps_semJJ)
-moran_rv_02 <- lm(rv_pop_d_slag ~ rv_pop_d + factor(year) + factor(month), data = ps_semJJ)
-moran_rr_02 <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data = ps_semJJ)
+#### Placebo DD
 
 #------------------------------------------------------------------------------#
 ##### Placebo exporting ####
@@ -375,7 +234,7 @@ stargazer(tab2_pla_regs,
                             "Street robbery"),
           title = "Foo",
           dep.var.caption  = "Number  of  occurrences",
-          add.lines = tab5_addLines,
+          # add.lines = tab5_addLines,
           digits = 3,
           omit.stat = c("rsq","ser", "f"),
           # out = file.path(OUTPUTS_final, "tabB4.html"),

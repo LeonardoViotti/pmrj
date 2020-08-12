@@ -238,12 +238,22 @@ depVars <- c("violent_death_sim",
 names(depVars) <- depVars
 
 
-indepVars <- c("on_target",
-               # "policemen_aisp",
-               # "policemen_upp",
-               "n_precinct",
-               "max_prize",
-               "population" )
+# indepVars <- c(
+#   "on_target",
+#   # "policemen_aisp",
+#   # "policemen_upp",
+#   "n_precinct",
+#   "max_prize",
+#   "population" )
+
+
+indepVars <- c(
+  "hit_month_l",
+  # "policemen_aisp",
+  # "policemen_upp",
+  "n_precinct",
+  "max_prize",
+  "population" )
 
 names(indepVars) <- indepVars
 
@@ -263,9 +273,8 @@ names(ZVars) <- ZVars
 # Diff in Diff (a.k.a Virada) #
 
 indep_vars_dd <- c(
-  "last_month_shock",
-  # "hit_month_l",
-  "positive_shock",
+  "hit_sem_l",
+  "last_month_on_target",
   "last_month",
   # "policemen_aisp",
   # "policemen_upp",
