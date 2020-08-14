@@ -4,7 +4,9 @@
 
 #------------------------------------------------------------------------------#
 
+# TO DO:
 
+# Checar se definicao e a mesma
 # Add lines in table
 # Add DD models
 
@@ -58,14 +60,27 @@ indepVars_pla <- c("on_target_plapre",
                    #"max_prize",
                    "population" )
 
+indepVars_pla_dd <- c(
+  "last_month_on_target_plapre",
+  # "hit_month_l",
+  "hit_sem_pla_l",
+  "last_month",
+  # "policemen_aisp",
+  # "policemen_upp",
+  "n_precinct",
+  # "max_prize",
+  "population" )
+
+
 FEVars_pla <- c("aisp",
                 "year", 
                 "month", 
                 "cmd_name")
 
-ZVars_pla <- c("lag12_dist_target_vr_plapre",
-               "lag12_dist_target_sr_plapre",
-               "lag12_dist_target_vd_plapre")
+FEVars_pla_dd <- c("aisp",
+                "year", 
+                # "month", 
+                "cmd_name")
 
 
 #------------------------------------------------------------------------------#
@@ -95,54 +110,70 @@ FeForumala2_pla <- paste(FEVars_pla, collapse = " + ") # with cmd FE
 config2_pla <- paste("|", FeForumala2_pla, "| 0 |  ", clusterVars_form)
 
 
-# IV formula
-first_stage_left <- "on_target"
-first_stage_left_pla <- "on_target_plapre"
-
-first_stage_right <- paste(ZVars, collapse = " + ")
-first_stage_right_pla <- paste(ZVars_pla, collapse = " + ")
-
-
-formula_1st <-  paste("(", first_stage_left, " ~ ", first_stage_right, " )")
-formula_1st_pla <-  paste("(", first_stage_left_pla, " ~ ", first_stage_right_pla, " )")
-
-config_iv <- paste("|", FeForumala2, "|" ,  formula_1st,  "| ", clusterVars_form)
-config_iv_pla <- paste("|", FeForumala2_pla, "|" ,  formula_1st_pla,  "| ", clusterVars_form)
-
-
 #### Final formulas
 
 Formulas01_str <- paste(depVars, paste(rFormula, config1), sep = " ~ ")
 Formulas02_str <- paste(depVars, paste(rFormula, config2), sep = " ~ ")
-FormulasIV_str <- paste(depVars, paste(rFormula_iv, config_iv), sep = " ~ ")
 
 # Placebo
 Formulas01_pla_str <- paste(depVars, paste(rFormula_pla, config1), sep = " ~ ")
 Formulas02_pla_str <- paste(depVars, paste(rFormula_pla, config2_pla), sep = " ~ ")
-FormulasIV_pla_str <- paste(depVars, paste(rFormula_iv_pla, config_iv_pla), sep = " ~ ")
 
 # So it's easier to refernce to elements
 names(Formulas01_str) <- depVars
 names(Formulas02_str) <- depVars
-names(FormulasIV_str) <- depVars
 names(Formulas01_pla_str) <- depVars
 names(Formulas02_pla_str) <- depVars
-names(FormulasIV_pla_str) <- depVars
 
 #------------------------------------------------------------------------------#
-### Spatial lag formulas ####
+#### End of semster formulas ####
 
-# Add FEs
-sFormulaFE <- paste0("factor(",FEVars,")")
-sFormula1 <- paste(c(indepVars, sFormulaFE[1:3]), collapse = " + ")
-sFormula2 <- paste(c(indepVars, sFormulaFE), collapse = " + ")
+# Function to create formulas
+reg_formula <- function(dep_vars,
+                        indep_vars,
+                        FE_vars,
+                        instr_vars = 0,
+                        custer_vars = 0){
+  
+  paste_plus <- function(x){
+    paste(x, collapse =  " + ")
+  }
+  
+  # Set regression, FEs, cluster SEs and IV
+  paste_config <- function(FE_vars,
+                           custer_vars,
+                           instr_vars){
+    paste(" ", 
+          paste_plus(FE_vars), 
+          paste_plus(instr_vars), 
+          paste_plus(custer_vars),
+          sep = " | ")
+  }
+  
+  # Combine all elements
+  final_formula <- paste(dep_vars, 
+                         paste(paste_plus(indep_vars),
+                               paste_config(FE_vars,
+                                            custer_vars,
+                                            instr_vars)), 
+                         sep = " ~ ")
+  
+  
+  # Named vector with the dependent variables
+  names(final_formula) <- dep_vars
+  
+  
+  # Return named vector of formulas
+  return(final_formula)
+}
 
-Formulas01_sl_str <- paste(depVars, sFormula1, sep = " ~ ")
-Formulas02_sl_str <- paste(depVars, sFormula2, sep = " ~ ")
 
-names(Formulas01_sl_str) <- depVars
-names(Formulas02_sl_str) <- depVars
+# Placebo formulas
 
+p_dd_formulas_m2 <-
+  reg_formula(depVars,
+              indepVars_pla_dd,
+              FE_vars_dd)
 
 #------------------------------------------------------------------------------#
 #### Placebo analysis ####
@@ -193,6 +224,48 @@ p_rr_02_data <- regData(p_rr_02, sr_pl)
 
 #### Placebo DD
 
+
+
+# Create a data set with only target months
+dd_df_pla <- sr_pl %>%
+  # Keep only regression months
+  subset(month %in% c(6,7,12,1)) #%>%
+
+
+# Create a data set with only target months
+
+
+# Set regressions model formula
+ddRegSim <- function(dep_var,
+                     model = 2,
+                     formula_vector1 = p_dd_formulas_m2,
+                     data = dd_df_pla){
+
+  form <- formula_vector1[dep_var]
+
+  
+  form <- as.formula(form)
+  model <- felm(form, data = data, keepCX = T)
+  
+  # Return regression object
+  return(model)
+  
+}
+
+# Tablev 2
+p_dd_vd_02 <- ddRegSim('violent_death_sim')
+p_dd_vd_02_data <-  regData(r_dd_vd_02, regdf = dd_df_pla)
+
+p_dd_vr_02 <- ddRegSim('vehicle_robbery')
+p_dd_vr_02_data <-  regData(r_dd_vr_02, regdf = dd_df_pla)
+
+p_dd_sr_02 <- ddRegSim('street_robbery')
+p_dd_sr_02_data <-  regData(r_dd_sr_02, regdf = dd_df_pla)
+
+
+
+
+
 #------------------------------------------------------------------------------#
 ##### Placebo exporting ####
 
@@ -219,10 +292,13 @@ stats_labels <- c("Observations" = "nobs",
 tab2_pla_regs <-
   list(p_vd_01,
        p_vd_02,
+       p_dd_vd_02,
        p_vr_01,
        p_vr_02,
+       p_dd_vr_02,
        p_rr_01,
-       p_rr_02)
+       p_rr_02,
+       p_dd_rr_02)
 
 
 stargazer(tab2_pla_regs,

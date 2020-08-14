@@ -15,7 +15,7 @@ OVERWRITE_MASTER_SWITCHES = T
 
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = T
-  EXPORT_plots = F
+  EXPORT_plots = T
   EXPORT_tables = F
 }
 
@@ -339,7 +339,7 @@ sim$plaTar_sr[Qbol(4, "sr")] <- round(sim$sr_l[Qbol(4, "sr")]*(1-reduQ4_sr))
 sim <- sim %>% 
   group_by(aisp, year, semester) %>% 
   mutate(plaTar_vd_sem = sum(plaTar_vd),
-           plaTar_vr_sem = sum(plaTar_vr),
+         plaTar_vr_sem = sum(plaTar_vr),
          plaTar_sr_sem = sum(plaTar_sr))
 
 
@@ -349,15 +349,22 @@ sim <- sim %>%
 #placebo_PRE_bol <- sim$year <2009 | (sim$year == 2009 & sim$semester == 1)
 
 
-#### Create cummulative targets
+#### Create cummulative targets both to the start of the month and end of
+# the month. The original one represents what's the expected target up to the
+#   # start of the month, hence Jan and Jul have NAs.
+
+
 sim <- sim %>%
   group_by(aisp, year, semester) %>%
   mutate(plaTar_vd_l = Lag(plaTar_vd, +1),
          plaTar_vd_cum = cumsum(replace_na(plaTar_vd_l,0)),
+         plaTar_vd_cum2 = cumsum(replace_na(plaTar_vd,0)),
          plaTar_vr_l = Lag(plaTar_vr, +1),
          plaTar_vr_cum = cumsum(replace_na(plaTar_vr_l,0)),
+         plaTar_vr_cum2 = cumsum(replace_na(plaTar_vr,0)),
          plaTar_sr_l = Lag(plaTar_sr, +1),
-         plaTar_sr_cum = cumsum(replace_na(plaTar_sr_l,0))) %>% 
+         plaTar_sr_cum = cumsum(replace_na(plaTar_sr_l,0)),
+         plaTar_sr_cum2 = cumsum(replace_na(plaTar_sr,0))) %>% 
   dplyr::select(-c(plaTar_vd_l, plaTar_vr_l, plaTar_sr_l)) # remove lagged variables
 
 # Change zeros to NA if year is 2004
@@ -391,20 +398,18 @@ sim$on_target_plapre <-  (sim$on_target_vd_plapre==1 &
 #### Create IV vars
 
 # Distance variable
-sim$dist_target_vd_plapre <- (sim$violent_death_sim_cum /sim$plaTar_vd_sem) -1 
-sim$dist_target_vr_plapre <- (sim$vehicle_robbery_cum /sim$plaTar_vr_sem) -1 
-sim$dist_target_sr_plapre <- (sim$street_robbery_cum /sim$plaTar_sr_sem) -1 
-
-
+# sim$dist_target_vd_plapre <- (sim$violent_death_sim_cum /sim$plaTar_vd_sem) -1 
+# sim$dist_target_vr_plapre <- (sim$vehicle_robbery_cum /sim$plaTar_vr_sem) -1 
+# sim$dist_target_sr_plapre <- (sim$street_robbery_cum /sim$plaTar_sr_sem) -1 
 
 
 # Instrumental variable, one year lagged
-sim <- sim %>% 
-  group_by(aisp) %>%
-  arrange(aisp, year, month) %>% 
-  mutate(lag12_dist_target_vd_plapre=Lag(dist_target_vd_plapre, +12),
-         lag12_dist_target_vr_plapre=Lag(dist_target_vr_plapre, +12),
-         lag12_dist_target_sr_plapre=Lag(dist_target_sr_plapre, +12))
+# sim <- sim %>% 
+#   group_by(aisp) %>%
+#   arrange(aisp, year, month) %>% 
+#   mutate(lag12_dist_target_vd_plapre=Lag(dist_target_vd_plapre, +12),
+#          lag12_dist_target_vr_plapre=Lag(dist_target_vr_plapre, +12),
+#          lag12_dist_target_sr_plapre=Lag(dist_target_sr_plapre, +12))
 
 
 # utils::View(foo %>% select(aisp,
@@ -423,15 +428,8 @@ sim <- sim %>%
 
 # Create regression variables
 sim %<>%
-  group_by(aisp, sem_year) %>% 
-  # Create cumulative sum of monthly target until the end of the month.
-  # the original one represents what's the expected target up to the
-  # start of the month, hence Jan and Jul have NAs.
-  mutate(target_vd_cum2_pla = cumsum(plaTar_vd),
-         target_vr_cum2_pla = cumsum(plaTar_vr),
-         target_sr_cum2_pla = cumsum(plaTar_sr)) %>% 
-  ungroup() %>% 
-  
+
+
   # Create variables
   mutate(
     # Still within the semester target for each crime. Using _cum2 variables
@@ -439,29 +437,44 @@ sim %<>%
     # is, for June it sums up to the end of that month. The other variables
     # _cum are just until the start of the month, for June it would only
     # account to all May crime, but no June crime.
-    hit_violent_death_pla = as.integer(target_vd_cum2_pla <= plaTar_vd_sem),
-    hit_street_robbery_pla = as.integer(target_sr_cum2_pla <= plaTar_sr_sem),
-    hit_vehicle_robbery_pla = as.integer(target_vr_cum2_pla <= plaTar_vr_sem),
+    hit_violent_death_pla_sem = as.integer(violent_death_sim_cum2 <= plaTar_vd_sem),
+    hit_street_robbery_pla_sem = as.integer(street_robbery_cum2 <= plaTar_sr_sem),
+    hit_vehicle_robbery_pla_sem = as.integer(vehicle_robbery_cum2 <= plaTar_vr_sem),
+
+
+    # Within monthly target
+    hit_violent_death_pla = as.integer(violent_death_sim_cum2 <= plaTar_vd_cum2),
+    hit_street_robbery_pla = as.integer(street_robbery_cum2 <= plaTar_sr_cum2),
+    hit_vehicle_robbery_pla = as.integer(vehicle_robbery_cum2 <= plaTar_vr_cum2),
+
+
+    # If within the month target for all 3 crimes
+    hit_month_pla = as.integer(hit_violent_death_pla==1 &
+                                 hit_street_robbery_pla==1 &
+                                 hit_vehicle_robbery_pla==1),
+
     
     # If within the semester target for all 3 crimes
-    hit_month_pla = as.integer(hit_violent_death_pla==1 & 
-                                 hit_street_robbery_pla==1 & 
-                                 hit_vehicle_robbery_pla==1)
-  ) %>% 
-  
+    hit_sem_pla = as.integer(hit_violent_death_pla_sem==1 &
+                                 hit_street_robbery_pla_sem==1 &
+                                 hit_vehicle_robbery_pla_sem==1)
+
+
+  ) %>%
+
   # Create lagged variable
   group_by(aisp) %>%
   arrange(aisp, year, month) %>%
   mutate(hit_month_pla_l = dplyr::lag(hit_month_pla,
-                                      n = 1L),
-         # Create lag target variable based if on target on the previous 4 months
-         #positive_shock = hit_month_l*hit_month_l2*hit_month_l3*hit_month_l4
-         positive_shock_pla = hit_month_pla_l
+                                  n = 1L),
+         hit_sem_pla_l = dplyr::lag(hit_sem_pla,
+                                n = 1L),
+         on_target_plapre = hit_month_pla_l
   ) %>%
-  
-  ungroup() %>% 
+
+  ungroup() %>%
   # Interaction
-  mutate(last_month_shock_pla = last_month*positive_shock_pla)
+  mutate(last_month_on_target_plapre = last_month*hit_sem_pla_l)
 # mutate(last_month_hit = last_month*hit_month_l)
 
 
@@ -471,10 +484,9 @@ sim %<>%
 simp <- sim[sim$year>2010,]
 
 
-
 if (EXPORT_plots){
   # Letalidade Violenta
-  png("Results/lv_placebo_fit.png",
+  png(file.path(DATA, "lv_placebo_fit.png"),
       width = 730, height = 480)
   
   slope_vd <- 1 + (reduQ1_vd + reduQ2_vd + reduQ3_vd + reduQ4_vd)/4
@@ -488,7 +500,7 @@ if (EXPORT_plots){
   dev.off()
   
   # Roubo de veiculos
-  png("Results/rv_placebo_fit.png",
+  png(file.path(DATA, "rv_placebo_fit.png"),
       width = 730, height = 480)
   slope_vr <- 1 + (reduQ1_vr + reduQ2_vr + reduQ3_vr + reduQ4_vr)/4
   plot(simp$target_vr, simp$vr_l,
@@ -499,7 +511,7 @@ if (EXPORT_plots){
   dev.off()
   
   # Roubo de rua
-  png("Results/rv_placebo_fit.png",
+  png(file.path(DATA, "rv_placebo_fit.png"),
       width = 730, height = 480)
   slope_sr <- 1 + (reduQ1_sr + reduQ2_sr + reduQ3_sr + reduQ4_sr)/4
   plot(simp$target_sr, simp$sr_l,
@@ -532,17 +544,6 @@ if (EXPORT_data){
             na = "")
   
 }
-
-
-
-View(sim %>% 
-       dplyr::select(
-         aisp,
-         month,
-         year,
-         on_target,
-         on_target_deprecated
-       ))
 
 
 

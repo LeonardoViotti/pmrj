@@ -293,37 +293,6 @@ FE_vars_dd <- c("aisp",
 cluster_vars_dd= "0"
 
 
-
-#---------------#
-# Placebo model #
-
-indepVars_pla <- c("on_target_plapre",
-                   #"policemen_aisp",
-                   #"policemen_upp",
-                   "n_precinct",
-                   #"max_prize",
-                   "population" )
-
-
-indepVars_pla_dd <- c(
-  "last_month_shock_pla",
-  # "hit_month_l",
-  "positive_shock_pla",
-  "last_month",
-  # "policemen_aisp",
-  # "policemen_upp",
-  "n_precinct",
-  # "max_prize",
-  "population" )
-
-
-
-FEVars_pla <- c("aisp",
-                "year", 
-                "month", 
-                "cmd_name")
-
-
 #------------------------------------------------------------------------------#
 #### Sections ####
 
