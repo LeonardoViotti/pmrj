@@ -254,13 +254,13 @@ ddRegSim <- function(dep_var,
 
 # Tablev 2
 p_dd_vd_02 <- ddRegSim('violent_death_sim')
-p_dd_vd_02_data <-  regData(r_dd_vd_02, regdf = dd_df_pla)
+p_dd_vd_02_data <-  regData(p_dd_vd_02, regdf = dd_df_pla)
 
 p_dd_vr_02 <- ddRegSim('vehicle_robbery')
-p_dd_vr_02_data <-  regData(r_dd_vr_02, regdf = dd_df_pla)
+p_dd_vr_02_data <-  regData(p_dd_vr_02, regdf = dd_df_pla)
 
-p_dd_sr_02 <- ddRegSim('street_robbery')
-p_dd_sr_02_data <-  regData(r_dd_sr_02, regdf = dd_df_pla)
+p_dd_rr_02 <- ddRegSim('street_robbery')
+p_dd_rr_02_data <-  regData(p_dd_sr_02, regdf = dd_df_pla)
 
 
 
@@ -292,13 +292,14 @@ stats_labels <- c("Observations" = "nobs",
 tab2_pla_regs <-
   list(p_vd_01,
        p_vd_02,
-       p_dd_vd_02,
+       # p_dd_vd_02,
        p_vr_01,
        p_vr_02,
-       p_dd_vr_02,
+       # p_dd_vr_02,
        p_rr_01,
-       p_rr_02,
-       p_dd_rr_02)
+       p_rr_02 #,
+       # p_dd_rr_02
+       )
 
 
 stargazer(tab2_pla_regs,
