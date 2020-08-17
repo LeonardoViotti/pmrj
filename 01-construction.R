@@ -134,7 +134,9 @@ sim %<>%
                                   n = 1L),
          # Create lag target variable based if on target on the previous 4 months
          #positive_shock = hit_month_l*hit_month_l2*hit_month_l3*hit_month_l4
-         on_target = hit_month_l
+         # on_target = hit_month_l
+         on_target = hit_sem_l
+         
   ) %>%
   
   ungroup() %>% 
@@ -469,7 +471,7 @@ sim %<>%
                                   n = 1L),
          hit_sem_pla_l = dplyr::lag(hit_sem_pla,
                                 n = 1L),
-         on_target_plapre = hit_month_pla_l
+         on_target_plapre = hit_sem_pla_l
   ) %>%
 
   ungroup() %>%

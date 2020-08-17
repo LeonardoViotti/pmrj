@@ -248,7 +248,8 @@ names(depVars) <- depVars
 
 
 indepVars <- c(
-  "hit_month_l",
+  # "hit_month_l",
+  "hit_sem_l",
   # "policemen_aisp",
   # "policemen_upp",
   "n_precinct",

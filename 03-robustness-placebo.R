@@ -14,12 +14,12 @@
 
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = F
+OVERWRITE_MASTER_SWITCHES = T
 
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = F
-  EXPORT_plots = F
-  EXPORT_tables = F
+  EXPORT_plots = T
+  EXPORT_tables = T
 }
 
 #------------------------------------------------------------------------------#
@@ -34,13 +34,6 @@ sr <- final_data
 #### Placebo
 sr_pl <- sr[sr$year < 2009,]
 
-#### Spatial analysis
-
-# Keep only analysis years
-# sr_sl <- sr %>% subset(year_month > 200912 & year_month < 201507)
-sr_sl <- sr %>% subset(sem_year > 100)
-
-
 #------------------------------------------------------------------------------#
 #### Global objects ####
 
@@ -53,17 +46,16 @@ depVars <- c("violent_death_sim",
              "street_robbery")
 
 
-indepVars_pla <- c("on_target_plapre",
-                   #"policemen_aisp",
-                   #"policemen_upp",
+indepVars_pla <- c("hit_sem_pla_l",
+                   # "policemen_aisp",
+                   # "policemen_upp",
                    "n_precinct",
                    #"max_prize",
                    "population" )
 
 indepVars_pla_dd <- c(
-  "last_month_on_target_plapre",
-  # "hit_month_l",
   "hit_sem_pla_l",
+  "last_month_on_target_plapre",
   "last_month",
   # "policemen_aisp",
   # "policemen_upp",
@@ -260,9 +252,7 @@ p_dd_vr_02 <- ddRegSim('vehicle_robbery')
 p_dd_vr_02_data <-  regData(p_dd_vr_02, regdf = dd_df_pla)
 
 p_dd_rr_02 <- ddRegSim('street_robbery')
-p_dd_rr_02_data <-  regData(p_dd_sr_02, regdf = dd_df_pla)
-
-
+p_dd_rr_02_data <-  regData(p_dd_rr_02, regdf = dd_df_pla)
 
 
 
@@ -292,29 +282,70 @@ stats_labels <- c("Observations" = "nobs",
 tab2_pla_regs <-
   list(p_vd_01,
        p_vd_02,
-       # p_dd_vd_02,
+       p_dd_vd_02,
        p_vr_01,
        p_vr_02,
-       # p_dd_vr_02,
+       p_dd_vr_02,
        p_rr_01,
-       p_rr_02 #,
-       # p_dd_rr_02
+       p_rr_02,
+       p_dd_rr_02
        )
 
+# Function to find dep var means of regressions
+Ymean <- function(x){
+  mean(regData(x, sr)[,regDepVars(x)])
+}
 
-stargazer(tab2_pla_regs,
-          keep = c("on_target_plapre"),
-          dep.var.labels = "",
-          covariate.labels = c("On target"),
-          column.labels = c("Violent deaths", 
-                            "Vehicle robbery (Carjacking)",	
-                            "Street robbery"),
-          title = "Foo",
-          dep.var.caption  = "Number  of  occurrences",
-          # add.lines = tab5_addLines,
-          digits = 3,
-          omit.stat = c("rsq","ser", "f"),
-          # out = file.path(OUTPUTS_final, "tabB4.html"),
-          type = 'text'
-)
+# Function to create the row for regression tables
+Ymean_row <- function(list){
+  c("Y mean", sapply(list, Ymean) %>% round(2))
+}
+
+
+n_aisp_line_9 <- c("Number of aisp", rep("39", 9))
+chifeFE_line_9 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 3))
+tab2_pla_addLines <- list(chifeFE_line_9,
+                      Ymean_row(tab2_pla_regs),
+                      n_aisp_line_9)
+
+
+# Export function
+createTable <- function(reg_list, 
+                        add_lines_list,
+                        title,
+                        dep_var_labels,
+                        outPath){
+  stargazer(reg_list,
+            keep = c(  "hit_sem_pla_l",
+                       "last_month_on_target_plapre",
+                       "last_month"),
+            covariate.labels = c("On target",
+                                 "On target * last month",
+                                 "Last month"),
+            dep.var.labels = dep_var_labels,
+            title = title,
+            dep.var.caption  = "Number  of  occurrences",
+            column.labels   = col_labels_9,
+            add.lines = add_lines_list,
+            digits = 3,
+            omit.stat = c("rsq","ser", "f"),
+            out = outPath,
+            type = "html"
+  )
+}
+
+
+
+
+
+if(EXPORT_tables){
+  createTable(reg_list = tab2_pla_regs,
+              add_lines_list = tab2_pla_addLines,
+              dep_var_labels = c("Violent deaths", 
+                                 "Vehicle robbery (Carjacking)",	
+                                 "Street robbery"),
+              title = "Table C1 - Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2005 and 2008)",
+              outPath = file.path(OUTPUTS_final, "tabC1.html"))
+  
+}
 

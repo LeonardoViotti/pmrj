@@ -5,12 +5,12 @@
 #------------------------------------------------------------------------------#
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = F
+OVERWRITE_MASTER_SWITCHES = T
 
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = F
-  EXPORT_plots = F
-  EXPORT_tables = F
+  EXPORT_plots = T
+  EXPORT_tables = T
 }
 
 #------------------------------------------------------------------------------#
@@ -51,19 +51,13 @@ depVars <- c("violent_death_sim",
              "vehicle_robbery",
              "street_robbery")
 
-indepVars <- c("on_target",
+indepVars <- c("hit_sem_l",
                # "policemen_aisp",
                # "policemen_upp",
                "n_precinct",
                "max_prize",
                "population" )
 
-indepVars_pla <- c("on_target_plapre",
-                   #"policemen_aisp",
-                   #"policemen_upp",
-                   "n_precinct",
-                   #"max_prize",
-                   "population" )
 
 FEVars <- c("aisp",
             "year", 
@@ -222,7 +216,7 @@ moran_rr_02 <- lm(rr_pop_d_slag ~ rr_pop_d + factor(year) + factor(month), data 
 regVars <- c("violent_death_sim",
              "vehicle_robbery",
              "street_robbery",
-             "on_target",
+             "hit_sem_l",
              "policemen_aisp",
              "policemen_upp",
              "n_precinct",
@@ -237,15 +231,60 @@ ps_complete_bol <- complete.cases(ps[,regVars])
 slregData <- ps[ps_complete_bol,]
 
 coefs <- 
-  c(sl_vd_01$coefficients['on_target'],
-    sl_vr_01$coefficients['on_target'],
-    sl_rr_01$coefficients['on_target'])
+  c(sl_vd_01$coefficients['hit_sem_l'],
+    sl_vr_01$coefficients['hit_sem_l'],
+    sl_rr_01$coefficients['hit_sem_l'])
+
+# Spatial leg coeff lambda
+
+coefs_lambda <- 
+  c(sl_vd_01$arcoef,
+    sl_vr_01$arcoef,
+    sl_rr_01$arcoef)
+
+
+# Formatted SEs
+seFormatFun <- function(model, var = NULL){
+  
+  if (is.null(var)){
+    se <- abs(model$vcov.arcoef) %>% sqrt()
+    coef <- model$arcoef
+    
+  } else{
+    coef <- model$coefficients[var]
+    se <- model$vcov[var,var] %>% sqrt()
+  }
+  
+  
+  # Calculate pvalue
+  if(abs(coef) > 2.576*se){
+    star <- "***"
+  } else if(abs(coef) > 1.96*se){
+    star <- "**"
+  } else if (abs(coef) > 1.645*se){
+    star <- "*"
+  } else{
+    star <- ""
+  }
+  
+  result <- paste0( "(", round(se,3), ")", star)
+  
+  return(result)
+  
+}
+
 
 
 ses <- 
-  c(sl_vd_01$vcov['on_target','on_target'] %>% sqrt(),
-    sl_vr_01$vcov['on_target','on_target'] %>% sqrt(),
-    sl_rr_01$vcov['on_target','on_target'] %>% sqrt())
+  c(seFormatFun(sl_vd_01, 'hit_sem_l'),
+    seFormatFun(sl_vr_01, 'hit_sem_l'),
+    seFormatFun(sl_rr_01, 'hit_sem_l'))
+
+
+ses_lambda <- 
+  c(seFormatFun(sl_vd_01,),
+    seFormatFun(sl_vr_01,),
+    seFormatFun(sl_rr_01,))
 
 
 # N obs
@@ -281,6 +320,11 @@ adjus_Rsq <-
     arsq(sl_rr_01, slregData, "street_robbery"))
 
 
+# Add significance level placeholder
+
+
+
+
 #### Create the table ####
 #sl_vd_01
 
@@ -291,7 +335,9 @@ slRegTable <-
         c("SAR", "SAR", "SAR"),
         c("(1)", "(2)", "(3)"),
         coefs %>% round(2),
-        ses %>% round(2) ,
+        ses ,
+        coefs_lambda %>% round(3),
+        ses_lambda,
         n_obs,
         n_aisp,
         Ymean %>% round(2),
@@ -301,8 +347,12 @@ slRegTable <-
 #colnames(slRegTable) <- c("violent_death_sim", "vehicle_robbery", "street_robbery")
 
 
-# add stars
-slRegTable[5,] <- paste0("(",slRegTable[5,],")***")
+# Add parenthesis to  SE
+# slRegTable[5,] <- paste0("(",slRegTable[5,],")")
+# slRegTable[7,] <- paste0("(",slRegTable[7,],")")
+
+# Add stars
+
 
 # Add row names
 rows <- c("",
@@ -310,12 +360,16 @@ rows <- c("",
           "",
           "On target",
           "",
+          "Lamda",
+          "",
           "Observations",
           "Number of aisp",
           "Y mean",
           "R2 adjusted")
 
+# Remove column and row names
 rownames(slRegTable) <- (1:dim(slRegTable)[1])
+
 
 slRegTable <- slRegTable %>%
   as.data.frame(stringsAsFactors = F)
@@ -323,6 +377,8 @@ slRegTable <- slRegTable %>%
 slRegTable <- 
   cbind(rows,
         slRegTable) 
+names(slRegTable) <- NA
+
 
 slRegTable_hux <- huxtable(slRegTable)
 
@@ -394,12 +450,13 @@ if(EXPORT_plots){
   dev.off()
   
 }
+
 #------------------------------------------------------------------------------#
 ##### Actually exporting ####
 
 if(EXPORT_tables){
   # huxtable::quick_xlsx(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_formated.xlsx"))
-  huxtable::quick_html(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_formated.html"))
+  huxtable::quick_html(slRegTable_hux, file = file.path(OUTPUTS_final, "tabC2.html"))
   
   }
 

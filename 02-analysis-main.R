@@ -14,7 +14,7 @@ if(OVERWRITE_MASTER_SWITCHES){
 }
 
 
-OUTPUTS_final <- file.path(OUTPUTS_final, "test")
+# OUTPUTS_final <- file.path(OUTPUTS_final, "test")
 
 #------------------------------------------------------------------------------#
 # Load data
@@ -136,12 +136,6 @@ dd_formulas_m2 <-
               indep_vars_dd,
               FE_vars_dd)
 
-# Placebo formulas
-
-p_dd_formulas_m2 <-
-  reg_formula(depVars,
-              indepVars_pla_dd,
-              FE_vars_dd)
 
 #------------------------------------------------------------------------------#
 #### Poisson formulas ####
@@ -487,14 +481,12 @@ createTable <- function(reg_list,
                         dep_var_labels,
                         outPath){
   stargazer(reg_list,
-            # keep = c("on_target", 
-            #          "last_month_shock", 
-            #          "positive_shock", 
-            #          "last_month"),
-            # covariate.labels = c("On target",
-            #                      "On target' * last month",
-            #                      "On target'",
-            #                      "Last month"),
+            keep = c("hit_sem_l",
+                     "last_month_on_target",
+                     "last_month"),
+            covariate.labels = c("On target",
+                                 "On target * last month",
+                                 "Last month"),
             dep.var.labels = dep_var_labels,
             title = title,
             dep.var.caption  = "Number  of  occurrences",
@@ -623,37 +615,35 @@ if(EXPORT_tables){
   
   # Poisson
   
-  createTable(reg_list = tab5_regs,
-              add_lines_list = tab5_addLines,
-              dep_var_labels = c("Violent deaths",
-                                 "Vehicle robbery (Carjacking)",
-                                 "Street robbery"),
-              title = "Table B4 Robustness: Poisson Regressions",
-              outPath = file.path(OUTPUTS_final, "tabB4.html"))
-
+  # createTable(reg_list = tab5_regs,
+  #             add_lines_list = tab5_addLines,
+  #             dep_var_labels = c("Violent deaths",
+  #                                "Vehicle robbery (Carjacking)",
+  #                                "Street robbery"),
+  #             title = "Table B4 Robustness: Poisson Regressions",
+  #             outPath = file.path(OUTPUTS_final, "tabB4.html"))
+  # 
 
   
   # Since it requires a bit of customizatation, not using function
   stargazer(tab5_regs,
-            keep = c("on_target", 
-                     "last_month_shock", 
-                     "positive_shock", 
+            keep = c("hit_sem_l",
+                     "last_month_on_target",
                      "last_month"),
-            dep.var.labels = "",
             covariate.labels = c("On target",
-                                 "On target' * last month",
-                                 "On target'",
+                                 "On target * last month",
                                  "Last month"),
             column.labels = c("Violent deaths", 
                               "Vehicle robbery (Carjacking)",	
                               "Street robbery"),
+            dep.var.labels = "",
             title = "Table B4 Robustness: Poisson Regressions",
             dep.var.caption  = "Number  of  occurrences",
             add.lines = tab5_addLines,
             digits = 3,
             omit.stat = c("rsq","ser", "f"),
-            out = file.path(OUTPUTS_final, "tabB4.html"),
-            type = 'text'
+            out = file.path(OUTPUTS_final, "tabC4.html"),
+            type = 'html'
   )
   
   
