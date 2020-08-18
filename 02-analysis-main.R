@@ -455,6 +455,10 @@ chifeFE_line_3 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 1))
 chifeFE_line_9 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 3))
 chifeFE_line_12 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 4))
 
+monthFE_line_3 <- c("Month FE", rep(c("Yes", "Yes", "No"), 1))
+monthFE_line_9 <- c("Month FE", rep(c("Yes", "Yes", "No"), 3))
+monthFE_line_12 <- c("Month FE", rep(c("Yes", "Yes", "No"), 4))
+
 indepVar_label <- "On target"
 col_labels_9 <- rep(c("OLS",	"OLS",	"DD"), 3)
 col_labels_12 <- rep(c("OLS",	"OLS",	"DD"), 4)
@@ -513,6 +517,7 @@ tab2_regs <-
        r_dd_sr_02)
 
 tab2_addLines <- list(chifeFE_line_9,
+                      monthFE_line_9,
                       Ymean_row(tab2_regs),
                       n_aisp_line_9)
 
@@ -532,6 +537,7 @@ tab3_regs <-
 
 
 tab3_addLines <- list(chifeFE_line_9,
+                      monthFE_line_9,
                       Ymean_row(tab3_regs),
                       n_aisp_line_9)
 
@@ -554,6 +560,7 @@ tab4_regs <-
        s_dd_sr_02)
 
 tab4_addLines <- list(chifeFE_line_12,
+                      monthFE_line_12,
                       Ymean_row(tab4_regs),
                       n_aisp_line_12)
 
@@ -568,6 +575,7 @@ tab5_regs <-
 
 
 tab5_addLines <- list(c("Chief FE", "Yes", "Yes", "Yes"),
+                      c("Month FE", "Yes", "Yes", "Yes"),
                       Ymean_row(tab5_regs),
                       c("Number of aisp", rep("39", 3)))
 
@@ -655,8 +663,8 @@ if(EXPORT_tables){
 #------------------------------------------------------------------------------#
 #### Monthly coef graphs ####
 
-cpsr <- sr %>% subset(year > 2009 & year < 2016)
-
+cpsr <- sr
+  
 
 
 #### Create Variables
@@ -669,11 +677,11 @@ cpsr$m5 <- ifelse(cpsr$month %in% c(5,11), 1, 0)
 cpsr$m6 <- ifelse(cpsr$month %in% c(6,12), 1, 0)
 
 # Create on_target X mN interaction
-cpsr$month2 <- cpsr$m2*cpsr$on_target
-cpsr$month3 <- cpsr$m3*cpsr$on_target
-cpsr$month4 <- cpsr$m4*cpsr$on_target
-cpsr$month5 <- cpsr$m5*cpsr$on_target
-cpsr$month6 <- cpsr$m6*cpsr$on_target
+cpsr$month2 <- cpsr$m2*cpsr$hit_sem_l
+cpsr$month3 <- cpsr$m3*cpsr$hit_sem_l
+cpsr$month4 <- cpsr$m4*cpsr$hit_sem_l
+cpsr$month5 <- cpsr$m5*cpsr$hit_sem_l
+cpsr$month6 <- cpsr$m6*cpsr$hit_sem_l
 
 
 #### Construct monthly regression formulas

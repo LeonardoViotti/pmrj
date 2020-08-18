@@ -304,7 +304,9 @@ Ymean_row <- function(list){
 
 n_aisp_line_9 <- c("Number of aisp", rep("39", 9))
 chifeFE_line_9 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 3))
+monthFE_line_9 <- c("Month FE", rep(c("Yes", "Yes", "No"), 3))
 tab2_pla_addLines <- list(chifeFE_line_9,
+                          monthFE_line_9,
                       Ymean_row(tab2_pla_regs),
                       n_aisp_line_9)
 
