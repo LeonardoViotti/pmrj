@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------#
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = T
+OVERWRITE_MASTER_SWITCHES = F
 
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = F
@@ -249,6 +249,10 @@ s_sr_01 <- feRegSim(Formulas01_str["store_robbery"])
 s_sr_01_data <-  regData(s_sr_01, regdf = sr)
 
 
+# Table 6 - Spillovers 2
+s_pk_01 <- feRegSim(Formulas01_str["police_killing"])
+s_pk_01_data <-  regData(s_pk_01, regdf = sr)
+
 
 ### Model 2 whith cmnd FE
 
@@ -294,48 +298,12 @@ s_bu_02_data <-  regData(s_bu_02, regdf = sr)
 s_sr_02 <- feRegSim(Formulas02_str["store_robbery"])
 s_sr_02_data <-  regData(s_sr_02, regdf = sr)
 
-#### Model 3 2SLS
 
-# Tabble 2
-r_vd_IV <- feRegSim(FormulasIV_str["violent_death_sim"])
-r_vd_IV_data <-  regData(r_vd_IV, regdf = sr)
-
-r_vr_IV <- feRegSim(FormulasIV_str["vehicle_robbery"])
-r_vr_IV_data <-  regData(r_vr_IV, regdf = sr)
-
-r_rr_IV <- feRegSim(FormulasIV_str["street_robbery"])
-r_rr_IV_data <-  regData(r_rr_IV, regdf = sr)
-
-r_hm_IV <- feRegSim(FormulasIV_str["homicide"])
-r_hm_IV_data <-  regData(r_hm_IV, regdf = sr)
-
-r_pk_IV <- feRegSim(FormulasIV_str["dpolice_killing"])
-r_pk_IV_data <-  regData(r_pk_IV, regdf = sr)
+# Table 6 - Spillovers 2
+s_pk_02 <- feRegSim(Formulas02_str["police_killing"])
+s_pk_02_data <-  regData(s_pk_02, regdf = sr)
 
 
-# Table 3 - Gaming 
-g_cf_IV <- feRegSim(FormulasIV_str["dbody_found"])
-g_cf_IV_data <-  regData(g_cf_IV, regdf = sr)
-
-g_vt_IV <- feRegSim(FormulasIV_str["vehicle_theft"])
-g_vt_IV_data <-  regData(g_vt_IV, regdf = sr)
-
-g_st_IV <- feRegSim(FormulasIV_str["street_theft"])
-g_st_IV_data <-  regData(g_st_IV, regdf = sr)
-
-
-# Table 4 - Spillovers
-s_or_IV <- feRegSim(FormulasIV_str["other_robberies"])
-s_or_IV_data <-  regData(s_or_IV, regdf = sr)
-
-s_cr_IV <- feRegSim(FormulasIV_str["cargo_robbery"])
-s_cr_IV_data <-  regData(s_cr_IV, regdf = sr)
-
-s_bu_IV <- feRegSim(FormulasIV_str["burglary"])
-s_bu_IV_data <-  regData(s_bu_IV, regdf = sr)
-
-s_sr_IV <- feRegSim(FormulasIV_str["store_robbery"])
-s_sr_IV1_data <-  regData(s_sr_IV, regdf = sr)
 
 #------------------------------------------------------------------------------#
 #### Diff in Diff ####
@@ -418,6 +386,18 @@ s_dd_sr_02 <- ddRegSim("store_robbery")
 s_dd_sr_02_data <-  regData(s_dd_sr_02, regdf = sr)
 
 
+# Table 6 - Spillovers 2 
+s_dd_pk_02 <- ddRegSim("police_killing")
+s_dd_pk_02_data <-  regData(s_dd_pk_02, regdf = sr)
+
+# s_dd_cr_02 <- ddRegSim("cargo_robbery")
+# s_dd_cr_02_data <-  regData(s_dd_cr_02, regdf = sr)
+# 
+# s_dd_bu_02 <- ddRegSim("burglary")
+# s_dd_bu_02_data <-  regData(s_dd_bu_02, regdf = sr)
+# 
+# s_dd_sr_02 <- ddRegSim("store_robbery")
+# s_dd_sr_02_data <-  regData(s_dd_sr_02, regdf = sr)
 
 
 #------------------------------------------------------------------------------#
@@ -483,7 +463,8 @@ createTable <- function(reg_list,
                         add_lines_list,
                         title,
                         dep_var_labels,
-                        outPath){
+                        outPath,
+                        type = 'html'){
   stargazer(reg_list,
             keep = c("hit_sem_l",
                      "last_month_on_target",
@@ -499,7 +480,7 @@ createTable <- function(reg_list,
             digits = 3,
             omit.stat = c("rsq","ser", "f"),
             out = outPath,
-            type = "html"
+            type = type
   )
 }
 
@@ -566,6 +547,15 @@ tab4_addLines <- list(chifeFE_line_12,
 
 
 
+# Extra table
+tab6_regs <- list(s_pk_01, 
+                  s_pk_02, 
+                  s_dd_pk_02)
+
+stargazer(tab6_regs,
+          type = 'text')
+
+
 
 # Poisson model
 tab5_regs <-
@@ -579,7 +569,7 @@ tab5_addLines <- list(c("Chief FE", "Yes", "Yes", "Yes"),
                       Ymean_row(tab5_regs),
                       c("Number of aisp", rep("39", 3)))
 
-
+# Table with other crimes
 
 #------------------------------------------------------------------------------#
 #### Saving ####
@@ -617,9 +607,6 @@ if(EXPORT_tables){
                                  "Robbery of commercial stores"),
               title = "Table 3 - Expectancy of receiving bonuses and positive spill overs on other crimes",
               outPath = file.path(OUTPUTS_final, "tab3.html")) # Order changed in paper
-  
-  
-  
   
   # Poisson
   
@@ -769,5 +756,21 @@ if(EXPORT_plots){
   
   
 }
+
+
+# stargazer(tab6_regs,
+#           keep = c("hit_sem_l",
+#                    "last_month_on_target",
+#                    "last_month"),
+#           covariate.labels = c("On target",
+#                                "On target * last month",
+#                                "Last month"),
+#           type = 'html',
+#           # out = file.path(OUTPUTS_final, 'pkilling_draft.html')
+#           out = NULL
+#           # type = 'text'
+#           )
+
+
 
 
