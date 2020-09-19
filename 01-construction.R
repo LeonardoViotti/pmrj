@@ -11,11 +11,11 @@
 
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = T
+OVERWRITE_MASTER_SWITCHES = F
 
 if(OVERWRITE_MASTER_SWITCHES){
-  EXPORT_data = T
-  EXPORT_plots = T
+  EXPORT_data = F
+  EXPORT_plots = F
   EXPORT_tables = F
 }
 
