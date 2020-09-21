@@ -112,8 +112,14 @@ export_data <-org_data %>%
 
 
 # Construct dummy variables
+dummy_fun <- function(x){
+  return(ifelse(x > 0, 1, 0))
+}
 
-
+export_data$dfraud <- dummy_fun(export_data$fraud)
+export_data$dviolent_death_fla <- dummy_fun(export_data$violent_death_fla)
+export_data$dassaut_death <- dummy_fun(export_data$assaut_death)
+export_data$dpolice_killing_tot <- dummy_fun(export_data$police_killing_tot)
 
 # Export
 if (EXPORT_data){
