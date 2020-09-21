@@ -203,11 +203,13 @@ regData <- function(reg, regdf){
 # Load raw data to construct placebo targets
 raw_data <- read.dta13(file.path(DATA,"data_SIM_2019-07.dta"))
 
-
 # Load final data created by construct_placebo_targets.R
 if(file.exists(file.path(DATA, "data_SIM_2019_constructed.csv"))){
-  final_data <- fread(file = file.path(DATA, "data_SIM_2019_constructed.csv"),
+  org_data <- fread(file = file.path(DATA, "data_SIM_2019_constructed.csv"),
                       encoding = "UTF-8")
+  final_data <- fread(file = file.path(DATA, "data_SIM_2019_constructed_extra.csv"),
+                      encoding = "UTF-8")
+  
 }else{
   print("Please, turn RUN_placebo_targets_construction to TRUE and run again.")
 }
@@ -234,7 +236,15 @@ depVars <- c("violent_death_sim",
              "store_robbery",
              "arrest",
              "arrest2",
-             "drug_seizure")
+             "drug_seizure",
+             "violent_death_fla",
+             "assaut_death",
+             "police_killing_tot",
+             "fraud",
+             "dviolent_death_fla",
+             "dassaut_death",
+             "dpolice_killing_tot",
+             "dfraud")
 
 names(depVars) <- depVars
 

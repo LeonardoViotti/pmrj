@@ -1,7 +1,12 @@
+# This code processes raw data on crimes not originally included in
+# our data. It also merges these into the data.
+# NEEDS TO BE ORGANIZED AND INCORPORATED INTO 01-construction.R 
 
+# Load constructed data
+org_data <- fread(file = file.path(DATA, "data_SIM_2019_constructed.csv"),
+                    encoding = "UTF-8")
 
 # Load raw data
-
 other_crimes <- read.csv(
   file.path(DATA, 'BaseDPEvolucaoMensalCisp.csv'),
   sep = ';', 
@@ -31,10 +36,10 @@ hom_simp <- hom_fla %>%
                values_to = 'count') %>% 
   # Recode
   mutate(crime = recode(crime, 
-    "HomicÃ­dio doloso" = "hom_doloso",
-    "Morte por intervenÃ§Ã£o de agente do Estado" = "hom_por_interv_policial",
-    "LesÃ£o corporal seguida de morte" = "lesao_corp_mort",
-    "Roubo seguido de morte - vÃ­timas" = 'latrocinio') ) %>% 
+    "Homicídio doloso" = "hom_doloso",
+    "Morte por intervenção de agente do Estado" = "hom_por_interv_policial",
+    "Lesão corporal seguida de morte" = "lesao_corp_mort",
+    "Roubo seguido de morte - vítimas" = 'latrocinio') ) %>% 
   # Combine columns to reshape
   mutate(crime = paste(crime, flagr, sep = "_")) %>% 
   dplyr::select(-flagr) %>% 
@@ -54,7 +59,7 @@ hom_simp <- hom_fla %>%
   # Rename vars
   rename("violent_death_fla" = "hom_doloso_com_flagrante",
          "assaut_death" = "lesao_corp_mort_total",
-         "police_killing" = "hom_por_interv_policial_total")
+         "police_killing_tot" = "hom_por_interv_policial_total")
   
 
 #------------------------------------------------------------------------------#
@@ -93,17 +98,38 @@ final_agg <- final %>% group_by(aisp, year, month) %>%
   summarise(fraud = sum(fraud %>% as.integer()),
             violent_death_fla = sum(violent_death_fla %>% as.integer()),
             assaut_death = sum(assaut_death %>% as.integer()),
-            police_killing = sum(police_killing %>% as.integer()) ) %>% 
-  ungroup()
+            police_killing_tot = sum(police_killing_tot %>% as.integer()) ) %>% 
+  ungroup() %>% 
+  # Just make sure types are compatible
+  mutate(year = as.integer(year))
 
+
+#------------------------------------------------------------------------------#
+#### Merge to paper data ####
+
+export_data <-org_data %>% 
+  left_join(final_agg, by = c("aisp", "year", "month"))
+
+
+# Construct dummy variables
+
+
+
+# Export
+if (EXPORT_data){
+  export_data %>% write.csv(
+    file = file.path(DATA, 
+                     "data_SIM_2019_constructed_extra.csv"))
+  
+}
 
 #------------------------------------------------------------------------------#
 ####
 
 
-a <- unique(paste(oth_simp$cisp, oth_simp$year, oth_simp$month))
-b <- unique(paste(hom_simp$cisp, hom_simp$year, hom_simp$month))
-setdiff(a,b)
-setdiff(b,a)
+# a <- unique(paste(oth_simp$cisp, oth_simp$year, oth_simp$month))
+# b <- unique(paste(hom_simp$cisp, hom_simp$year, hom_simp$month))
+# setdiff(a,b)
+# setdiff(b,a)
 
 

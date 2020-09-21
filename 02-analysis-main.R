@@ -21,6 +21,7 @@ if(OVERWRITE_MASTER_SWITCHES){
 
 # sr <- raw_data %>%
 sr <- final_data %>%
+# sr <- org_data %>%
   # Removing lower and upper bounds we don't have data on batallion sizes after
   # 2015 and the system begun in the second semmester of 2009
   subset((year*10 + semester > 20091))
@@ -254,6 +255,21 @@ s_pk_01 <- feRegSim(Formulas01_str["police_killing"])
 s_pk_01_data <-  regData(s_pk_01, regdf = sr)
 
 
+# Extra table
+s_vf_01 <- feRegSim(Formulas01_str["dviolent_death_fla"])
+s_vf_01_data <-  regData(s_vf_01, regdf = sr)
+
+s_ad_01 <- feRegSim(Formulas01_str["assaut_death"])
+s_ad_01_data <-  regData(s_ad_01, regdf = sr)
+
+s_fr_01 <- feRegSim(Formulas01_str["fraud"])
+s_fr_01_data <-  regData(s_fr_01, regdf = sr)
+
+s_pk_01 <- feRegSim(Formulas01_str["police_killing_tot"])
+s_pk_01_data <-  regData(s_pk_01, regdf = sr)
+
+
+
 ### Model 2 whith cmnd FE
 
 # Tabble 2
@@ -300,9 +316,21 @@ s_sr_02_data <-  regData(s_sr_02, regdf = sr)
 
 
 # Table 6 - Spillovers 2
-s_pk_02 <- feRegSim(Formulas02_str["police_killing"])
+s_pk_02 <- feRegSim(Formulas02_str["dpolice_killing"])
 s_pk_02_data <-  regData(s_pk_02, regdf = sr)
 
+# Extra table
+s_vf_02 <- feRegSim(Formulas02_str["dviolent_death_fla"])
+s_vf_02_data <-  regData(s_vf_02, regdf = sr)
+
+s_ad_02 <- feRegSim(Formulas02_str["assaut_death"])
+s_ad_02_data <-  regData(s_ad_02, regdf = sr)
+
+s_fr_02 <- feRegSim(Formulas02_str["fraud"])
+s_fr_02_data <-  regData(s_fr_02, regdf = sr)
+
+s_pk_02 <- feRegSim(Formulas02_str["police_killing_tot"])
+s_pk_02_data <-  regData(s_pk_02, regdf = sr)
 
 
 #------------------------------------------------------------------------------#
@@ -316,9 +344,9 @@ dd_df <- sr %>%
 
 
 # Create a data set with only target months
-dd_df_pla <- placebo_data %>%
-  # Keep only regression months
-  subset(month %in% c(6,7,12,1)) #%>%
+# dd_df_pla <- placebo_data %>%
+#   # Keep only regression months
+#   subset(month %in% c(6,7,12,1)) #%>%
 
 
 # Create a data set with only target months
@@ -398,6 +426,20 @@ s_dd_pk_02_data <-  regData(s_dd_pk_02, regdf = sr)
 # 
 # s_dd_sr_02 <- ddRegSim("store_robbery")
 # s_dd_sr_02_data <-  regData(s_dd_sr_02, regdf = sr)
+
+# Extra table
+s_dd_vf_02 <- ddRegSim("dviolent_death_fla")
+s_dd_vf_02_data <-  regData(s_dd_vf_02, regdf = sr)
+
+s_dd_ad_02 <- ddRegSim("assaut_death")
+s_dd_ad_02_data <-  regData(s_dd_ad_02, regdf = sr)
+
+s_dd_fr_02 <- ddRegSim("fraud")
+s_dd_fr_02_data <-  regData(s_dd_fr_02, regdf = sr)
+
+s_dd_pk_02 <- ddRegSim("police_killing_tot")
+s_dd_pk_02_data <-  regData(s_dd_pk_02, regdf = sr)
+
 
 
 #------------------------------------------------------------------------------#
@@ -548,12 +590,23 @@ tab4_addLines <- list(chifeFE_line_12,
 
 
 # Extra table
-tab6_regs <- list(s_pk_01, 
+tab6_regs <- list(s_vf_01,
+                  s_vf_02,
+                  s_dd_vf_02,
+                  s_ad_01,
+                  s_ad_02,
+                  s_dd_ad_02,
+                  s_fr_01,
+                  s_fr_02,
+                  s_dd_fr_02,
+                  s_pk_01, 
                   s_pk_02, 
                   s_dd_pk_02)
 
-stargazer(tab6_regs,
-          type = 'text')
+
+
+# stargazer(tab6_regs,
+#           type = 'text')
 
 
 
