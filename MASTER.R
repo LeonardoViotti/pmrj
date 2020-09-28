@@ -168,7 +168,7 @@ regData <- function(reg, regdf){
     
   } else{ # Already in regIndepVars()
     feVars <- NULL
-    #clusterVars <- NULL
+    clusterVars <- NULL
     instrumentVars <- NULL
   }
   
@@ -180,9 +180,11 @@ regData <- function(reg, regdf){
                   feVars,
                   #clusterVars,
                   instrumentVars)
-  if(clusterVars != 0){
-    regVarsAll <- c(regVarsAll,
-                    clusterVars)
+  if(class(reg) == "felm"){
+    if(clusterVars != 0){
+      regVarsAll <- c(regVarsAll,
+                      clusterVars)
+    }
   }
   
   
@@ -193,6 +195,47 @@ regData <- function(reg, regdf){
   
   return(completeData)
   
+}
+
+
+
+#### Define formatting functions
+
+# Function to find dep var means of regressions
+Ymean <- function(x){
+  mean(regData(x, sr)[,regDepVars(x)])
+}
+
+# Function to create the row for regression tables
+Ymean_row <- function(list){
+  c("Y mean", sapply(list, Ymean) %>% round(2))
+}
+
+
+# Export function
+createTable <- function(reg_list, 
+                        add_lines_list,
+                        title,
+                        dep_var_labels,
+                        outPath,
+                        type = 'html'){
+  stargazer(reg_list,
+            keep = c("hit_sem_l",
+                     "last_month_on_target",
+                     "last_month"),
+            covariate.labels = c("On target",
+                                 "On target * last month",
+                                 "Last month"),
+            dep.var.labels = dep_var_labels,
+            title = title,
+            dep.var.caption  = "Number  of  occurrences",
+            column.labels   = col_labels_9,
+            add.lines = add_lines_list,
+            digits = 3,
+            omit.stat = c("rsq","ser", "f"),
+            out = outPath,
+            type = type
+  )
 }
 
 

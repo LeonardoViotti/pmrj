@@ -139,48 +139,6 @@ dd_formulas_m2 <-
 
 
 #------------------------------------------------------------------------------#
-#### Poisson formulas ####
-
-
-form1 <- vehicle_robbery ~ on_target + 
-  factor(year) +  factor( month) + factor(aisp) +factor(id_cmt) +
-  policemen_aisp + policemen_upp + n_precinct+ offset(log(population))
-
-
-# Remove max prize for some reason
-poisson_indepVars <- indepVars[!(names(indepVars) %in% c("max_prize", "population"))]
-
-
-# Fixed effects
-sFormulaFE_poi <- paste(paste0("factor(",FEVars,")"), collapse = " + ") 
-
-# Construct right hand sied fo eq.
-rFormula_poi_0 <- paste(poisson_indepVars, collapse = " + ") 
-
-# Add FEs
-rFormula_poi_1 <-  paste(rFormula_poi_0, "+", sFormulaFE_poi)
-
-# Add Exposure variable
-
-# Exposure Variable
-exposure_variable <- "population"
-
-paste0(" offset(log(", exposure_variable, ")")
-
-rFormula_poi <-  paste(rFormula_poi_1,
-                       "+", 
-                       paste0(" offset(log(", 
-                              exposure_variable, 
-                              "))"
-                       )
-)
-
-
-# Final formula
-Formulas_poi_str <- paste(depVars, rFormula_poi, sep = " ~ ")
-names(Formulas_poi_str) <- depVars
-
-#------------------------------------------------------------------------------#
 #### OLS models ####
 
 
@@ -443,29 +401,6 @@ s_dd_pk_02_data <-  regData(s_dd_pk_02, regdf = sr)
 
 
 #------------------------------------------------------------------------------#
-#### Poisson models ####
-
-
-RegPoisson <- function(form){
-  model <- 
-    glm(as.formula(form),
-        family = poisson,
-        data = sr)
-  return(model)
-  
-}
-
-p_vd <- RegPoisson(Formulas_poi_str["violent_death_sim"])
-p_vd_data <-  regData(p_vd, regdf = sr)
-
-p_vr <- RegPoisson(Formulas_poi_str["vehicle_robbery"])
-p_vr_data <-  regData(p_vr, regdf = sr)
-
-p_rr <- RegPoisson(Formulas_poi_str["street_robbery"])
-p_rr_data <-  regData(p_rr, regdf = sr)
-
-
-#------------------------------------------------------------------------------#
 ##### Export ####
 
 #### Define commun elements
@@ -486,45 +421,6 @@ col_labels_9 <- rep(c("OLS",	"OLS",	"DD"), 3)
 col_labels_12 <- rep(c("OLS",	"OLS",	"DD"), 4)
 
 
-
-#### Define formatting functions
-
-# Function to find dep var means of regressions
-Ymean <- function(x){
-  mean(regData(x, sr)[,regDepVars(x)])
-}
-
-# Function to create the row for regression tables
-Ymean_row <- function(list){
-  c("Y mean", sapply(list, Ymean) %>% round(2))
-}
-
-
-# Export function
-createTable <- function(reg_list, 
-                        add_lines_list,
-                        title,
-                        dep_var_labels,
-                        outPath,
-                        type = 'html'){
-  stargazer(reg_list,
-            keep = c("hit_sem_l",
-                     "last_month_on_target",
-                     "last_month"),
-            covariate.labels = c("On target",
-                                 "On target * last month",
-                                 "Last month"),
-            dep.var.labels = dep_var_labels,
-            title = title,
-            dep.var.caption  = "Number  of  occurrences",
-            column.labels   = col_labels_9,
-            add.lines = add_lines_list,
-            digits = 3,
-            omit.stat = c("rsq","ser", "f"),
-            out = outPath,
-            type = type
-  )
-}
 
 
 # Table 2
@@ -605,24 +501,7 @@ tab6_regs <- list(s_vf_01,
 
 
 
-# stargazer(tab6_regs,
-#           type = 'text')
 
-
-
-# Poisson model
-tab5_regs <-
-  list(p_vd,
-       p_vr,
-       p_rr)
-
-
-tab5_addLines <- list(c("Chief FE", "Yes", "Yes", "Yes"),
-                      c("Month FE", "Yes", "Yes", "Yes"),
-                      Ymean_row(tab5_regs),
-                      c("Number of aisp", rep("39", 3)))
-
-# Table with other crimes
 
 #------------------------------------------------------------------------------#
 #### Saving ####
@@ -661,38 +540,6 @@ if(EXPORT_tables){
               title = "Table 3 - Expectancy of receiving bonuses and positive spill overs on other crimes",
               outPath = file.path(OUTPUTS_final, "tab3.html")) # Order changed in paper
   
-  # Poisson
-  
-  # createTable(reg_list = tab5_regs,
-  #             add_lines_list = tab5_addLines,
-  #             dep_var_labels = c("Violent deaths",
-  #                                "Vehicle robbery (Carjacking)",
-  #                                "Street robbery"),
-  #             title = "Table B4 Robustness: Poisson Regressions",
-  #             outPath = file.path(OUTPUTS_final, "tabB4.html"))
-  # 
-
-  
-  # Since it requires a bit of customizatation, not using function
-  stargazer(tab5_regs,
-            keep = c("hit_sem_l",
-                     "last_month_on_target",
-                     "last_month"),
-            covariate.labels = c("On target",
-                                 "On target * last month",
-                                 "Last month"),
-            column.labels = c("Violent deaths", 
-                              "Vehicle robbery (Carjacking)",	
-                              "Street robbery"),
-            dep.var.labels = "",
-            title = "Table B4 Robustness: Poisson Regressions",
-            dep.var.caption  = "Number  of  occurrences",
-            add.lines = tab5_addLines,
-            digits = 3,
-            omit.stat = c("rsq","ser", "f"),
-            out = file.path(OUTPUTS_final, "tabC4.html"),
-            type = 'html'
-  )
   
   
 }
