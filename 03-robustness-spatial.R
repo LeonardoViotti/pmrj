@@ -5,7 +5,7 @@
 #------------------------------------------------------------------------------#
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = T
+OVERWRITE_MASTER_SWITCHES = F
 
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = F
@@ -267,7 +267,9 @@ seFormatFun <- function(model, var = NULL){
     star <- ""
   }
   
-  result <- paste0( "(", round(se,3), ")", star)
+  # result <- paste0( "(", round(se,3), ")", star)
+  result <- rbind( paste0( round(coef,3),star),
+                   paste0( "(", round(se,3), ")"))
   
   return(result)
   
@@ -275,16 +277,16 @@ seFormatFun <- function(model, var = NULL){
 
 
 
-ses <- 
-  c(seFormatFun(sl_vd_01, 'hit_sem_l'),
-    seFormatFun(sl_vr_01, 'hit_sem_l'),
-    seFormatFun(sl_rr_01, 'hit_sem_l'))
+coefs <-
+  cbind(seFormatFun(sl_vd_01, 'hit_sem_l'),
+        seFormatFun(sl_vr_01, 'hit_sem_l'),
+        seFormatFun(sl_rr_01, 'hit_sem_l'))
 
 
-ses_lambda <- 
-  c(seFormatFun(sl_vd_01,),
-    seFormatFun(sl_vr_01,),
-    seFormatFun(sl_rr_01,))
+coefs_lambda <- 
+  cbind(seFormatFun(sl_vd_01,),
+        seFormatFun(sl_vr_01,),
+        seFormatFun(sl_rr_01,))
 
 
 # N obs
@@ -329,20 +331,18 @@ adjus_Rsq <-
 #sl_vd_01
 
 slRegTable <- 
-  rbind(c("Violent  deaths",
+  rbind(c("", "Number of occurrences", ""),
+        c("Violent  deaths",
           "Vehicle  robbery  (Carjacking)", 
           "Street  robbery"),
         c("SAR", "SAR", "SAR"),
         c("(1)", "(2)", "(3)"),
-        coefs %>% round(2),
-        ses ,
-        coefs_lambda %>% round(3),
-        ses_lambda,
+        coefs,
+        coefs_lambda,
         n_obs,
         n_aisp,
         Ymean %>% round(2),
-        adjus_Rsq %>% round(2)
-  )
+        adjus_Rsq %>% round(2))
 
 #colnames(slRegTable) <- c("violent_death_sim", "vehicle_robbery", "street_robbery")
 
@@ -354,14 +354,15 @@ slRegTable <-
 # Add stars
 
 
-# Add row names
-rows <- c("",
+# Add row names (gambiarra da porra)
+rows <- c("     ",
           "",
-          "",
+          " ",
+          "  ",
           "On target",
-          "",
+          "   ",
           "Lamda",
-          "",
+          "    ",
           "Observations",
           "Number of aisp",
           "Y mean",
@@ -374,17 +375,24 @@ rownames(slRegTable) <- (1:dim(slRegTable)[1])
 slRegTable <- slRegTable %>%
   as.data.frame(stringsAsFactors = F)
 
-slRegTable <- 
-  cbind(rows,
-        slRegTable) 
+# slRegTable <- 
+#   cbind(rows,
+#         slRegTable) 
 names(slRegTable) <- NA
-
-
-slRegTable_hux <- huxtable(slRegTable)
-
+rownames(slRegTable) <- rows
 
 #------------------------------------------------------------------------------#
 ##### Processing tables ####
+
+slRegTable_hux <-
+  huxtable(slRegTable, add_colnames = F, add_rownames = T) %>%
+  set_tb_padding(2) %>% 
+  set_top_border(1, everywhere) %>% 
+  set_bottom_border(1, 2:4) %>% 
+  set_bottom_border(4, everywhere) %>% 
+  set_bottom_border(8, everywhere) %>% 
+  set_bottom_border(12, everywhere)
+  
 
 #------------------------------------------------------------------------------#
 ##### Moran's I plots ####
@@ -455,8 +463,7 @@ if(EXPORT_plots){
 ##### Actually exporting ####
 
 if(EXPORT_tables){
-  # huxtable::quick_xlsx(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_formated.xlsx"))
-  huxtable::quick_html(slRegTable_hux, file = file.path(OUTPUTS_final, "tabC2.html"))
-  
+  huxtable::quick_xlsx(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_formated.xlsx"))
+
   }
 
