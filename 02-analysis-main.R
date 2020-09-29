@@ -213,19 +213,6 @@ s_pk_01 <- feRegSim(Formulas01_str["police_killing"])
 s_pk_01_data <-  regData(s_pk_01, regdf = sr)
 
 
-# Extra table
-s_vf_01 <- feRegSim(Formulas01_str["dviolent_death_fla"])
-s_vf_01_data <-  regData(s_vf_01, regdf = sr)
-
-s_ad_01 <- feRegSim(Formulas01_str["assaut_death"])
-s_ad_01_data <-  regData(s_ad_01, regdf = sr)
-
-s_fr_01 <- feRegSim(Formulas01_str["fraud"])
-s_fr_01_data <-  regData(s_fr_01, regdf = sr)
-
-s_pk_01 <- feRegSim(Formulas01_str["police_killing_tot"])
-s_pk_01_data <-  regData(s_pk_01, regdf = sr)
-
 
 
 ### Model 2 whith cmnd FE
@@ -278,8 +265,6 @@ s_pk_02 <- feRegSim(Formulas02_str["dpolice_killing"])
 s_pk_02_data <-  regData(s_pk_02, regdf = sr)
 
 # Extra table
-s_vf_02 <- feRegSim(Formulas02_str["dviolent_death_fla"])
-s_vf_02_data <-  regData(s_vf_02, regdf = sr)
 
 s_ad_02 <- feRegSim(Formulas02_str["assaut_death"])
 s_ad_02_data <-  regData(s_ad_02, regdf = sr)
@@ -485,19 +470,19 @@ tab4_addLines <- list(chifeFE_line_12,
 
 
 
-# Extra table
-tab6_regs <- list(s_vf_01,
-                  s_vf_02,
-                  s_dd_vf_02,
-                  s_ad_01,
-                  s_ad_02,
-                  s_dd_ad_02,
-                  s_fr_01,
-                  s_fr_02,
-                  s_dd_fr_02,
-                  s_pk_01, 
-                  s_pk_02, 
-                  s_dd_pk_02)
+# # Extra table
+# tab6_regs <- list(s_vf_01,
+#                   s_vf_02,
+#                   s_dd_vf_02,
+#                   s_ad_01,
+#                   s_ad_02,
+#                   s_dd_ad_02,
+#                   s_fr_01,
+#                   s_fr_02,
+#                   s_dd_fr_02,
+#                   s_pk_01, 
+#                   s_pk_02, 
+#                   s_dd_pk_02)
 
 
 
