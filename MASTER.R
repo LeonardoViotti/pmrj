@@ -13,15 +13,21 @@ rm(list = ls())
 # Run differnt sections of analysis
 
 RUN_placebo_targets_construction = F
-RUN_main_analysis = F
-RUN_desc_analysis = F
-RUN_rnr_analysis = F
+
+# Main analysis
+RUN_main_analysis = T
+RUN_desc_analysis = T
+
+# Robustness checks
+RUN_placebo_analysis = F
+RUN_poisson_analysis = F
+RUN_spatial_analysis = F
 
 # Settings switches
 
 EXPORT_data = F
-EXPORT_plots = F
-EXPORT_tables = F
+EXPORT_plots = T
+EXPORT_tables = T
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -227,7 +233,7 @@ if(RUN_placebo_targets_construction){
 #### Main Analysis ####
 
 if(RUN_main_analysis){
-  source(file.path(GITHUB, "analysis_main.R"))
+  source(file.path(GITHUB, "02-analysis-main.R"))
 }
 
 
@@ -239,17 +245,23 @@ if(RUN_main_analysis){
 
 
 if(RUN_desc_analysis){
-  source(file.path(GITHUB, "analysis_descriptives.R"))
+  source(file.path(GITHUB, "02-analysis-descriptives.R"))
 }
 
 
 #------------------------------------------------------------------------------#
-#### R&R Analysis ####
+#### Robustuness Analysis ####
 
-if(RUN_rnr_analysis){
-  source(file.path(GITHUB, "analysis_rnr.R"))
+if(RUN_poisson_analysis){
+  source(file.path(GITHUB, "03-robustness-poisson.R"))
 }
 
+if(RUN_spatial_analysis){
+  source(file.path(GITHUB, "03-robustness-spatial.R"))
+}
 
+if(RUN_placebo_analysis){
+  source(file.path(GITHUB, "03-robustness-placebo.R"))
+}
 
 
