@@ -30,7 +30,7 @@ if(OVERWRITE_MASTER_SWITCHES){
 #sd <- final_data
 
 # Keep same sample for as regressions
-sd <- regData(reg = r_vd_01, regdf = sr)
+sd <- feRegSim('violent_death_sim') %>% regData(regdf = sr)
 
 
 #------------------------------------------------------------------------------#
@@ -41,7 +41,7 @@ sd <- regData(reg = r_vd_01, regdf = sr)
 sd$pop1000 <- sd$population/1000
 
 # Select variables
-tab1Vars <- c(indepVars["on_target"],
+tab1Vars <- c(indepVars["hit_sem_l"],
               depVars[1:3], 
               ZVars,
               "other_robberies",
@@ -125,19 +125,19 @@ bplot_vr <-
 
 if(EXPORT_plots){
   
-  bplot_vd +
+  bplot_vd %>% print()
     ggsave(filename = file.path(OUTPUTS_final, "Boxplot_violent_death_sim.png"),
            width = 6,
            height = 4)
   dev.off()
   
-  bplot_rr + 
+  bplot_rr %>% print()
     ggsave(filename = file.path(OUTPUTS_final, "Boxplot_street_robbery.png"),
            width = 6,
            height = 4)
   dev.off()
   
-  bplot_vr + 
+  bplot_vr %>% print() 
     ggsave(filename = file.path(OUTPUTS_final, "Boxplot_vehicle_robbery.png"),
            width = 6,
            height = 4)
@@ -203,7 +203,7 @@ p_awards <-
 
 if(EXPORT_plots){
   
-  p_awards +
+  p_awards %>% print()
     ggsave(filename = file.path(OUTPUTS_final, "awards_graph.png"),
            width = 6,
            height = 4)
@@ -232,7 +232,7 @@ p_months_plot <-
 
 if(EXPORT_plots){
   
-  p_months_plot +
+  p_months_plot  %>% print()
     ggsave(filename = file.path(OUTPUTS_final, "percentage_months_on_target.png"),
            width = 6,
            height = 4)
