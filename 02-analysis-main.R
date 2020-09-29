@@ -148,16 +148,39 @@ dd_formulas_m2 <-
 #------------------------------------------------------------------------------#
 #### Regression tables ####
 
-# Table 2
+# Table main
 table_fun(c('violent_death_sim',
             'vehicle_robbery',
             'street_robbery'),
+          dep_var_labels = c("Violent deaths", 
+                             "Vehicle robbery (Carjacking)",	
+                             "Street robbery"),
+          title = "Table 2 - Effect of expectancy of receiving bonuses on crime rates",
+          # outPath = file.path(OUTPUTS_final, "tab2.html"),
           type = 'text')
 
-# Table 3 - Gaming 
+# Table gaming 
 table_fun(c('dbody_found',
             'vehicle_theft',
             'street_theft'),
+          dep_var_labels = c("Cadavers Found (dummy)", 
+                             "Car theft",	
+                             "Street theft"),
+          title = "Table A1 - Expectancy of receiving bonuses and gaming",
+          # outPath = file.path(OUTPUTS_final, "tabA1.html"),
+          type = 'text')
+
+# Table spillovers
+table_fun(c('other_robberies',
+          'cargo_robbery',
+          'burglary',
+          'store_robbery'),
+          dep_var_labels = c("Robberies not included in the target", 
+                             "Cargo robbery	",	
+                             "Burglary",
+                             "Robbery of commercial stores"),
+          title = "Table 3 - Expectancy of receiving bonuses and positive spill overs on other crimes",
+          # outPath = file.path(OUTPUTS_final, "tab3.html"),
           type = 'text')
 
 
@@ -166,7 +189,6 @@ table_fun(c('dbody_found',
 
 cpsr <- sr
   
-
 
 #### Create Variables
 
