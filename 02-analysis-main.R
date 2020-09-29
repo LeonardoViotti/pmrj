@@ -33,6 +33,13 @@ placebo_data <- final_data %>%
   subset((year*10 + semester <= 20091))
 
 
+# Diff in diff, a.k.a virada
+
+# Create a data set with only target months
+dd_df <- sr %>%
+  # Keep only regression months
+  subset(month %in% c(6,7,12,1))
+
 
 #------------------------------------------------------------------------------#
 #### OLS formulas ####
@@ -139,397 +146,19 @@ dd_formulas_m2 <-
 
 
 #------------------------------------------------------------------------------#
-#### OLS models ####
-
-
-# Original regressions and Consley SEs
-feRegSim <- function(form, data = sr){
-  form <- as.formula(form)
-  #model <- felm(form, data = sr[year_month > 200906 & year_month < 201501,], keepCX = T)
-  model <- felm(form, data = data, keepCX = T)
-  
-  
-  # Rename Dep var for IV just for exporting
-  if (!is.null(model$endovars)){
-    rownames(model$coefficients)[grep("`on_", rownames(model$coefficients))] <- "on_target"
-    rownames(model$beta)[grep("`on_", rownames(model$beta))] <- "on_target"
-    colnames(model$cX)[grep("`on_", colnames(model$cX))] <- "on_target"
-    
-  }
-  
-  
-  # Return regression object
-  return(model)
-  
-}
-
-
-### Model 1 whithout cmnd FE
-
-# Tabble 2
-r_vd_01 <- feRegSim(Formulas01_str["violent_death_sim"])
-r_vd_01_data <-  regData(r_vd_01, regdf = sr)
-
-r_vr_01 <- feRegSim(Formulas01_str["vehicle_robbery"])
-r_vr_01_data <-  regData(r_vr_01, regdf = sr)
-
-r_rr_01 <- feRegSim(Formulas01_str["street_robbery"])
-r_rr_01_data <-  regData(r_rr_01, regdf = sr)
-
-r_hm_01 <- feRegSim(Formulas01_str["homicide"])
-r_hm_01_data <-  regData(r_hm_01, regdf = sr)
-
-r_pk_01 <- feRegSim(Formulas01_str["dpolice_killing"])
-r_pk_01_data <-  regData(r_pk_01, regdf = sr)
-
-
-# Table 3 - Gaming 
-g_cf_01 <- feRegSim(Formulas01_str["dbody_found"])
-g_cf_01_data <-  regData(g_cf_01, regdf = sr)
-
-g_vt_01 <- feRegSim(Formulas01_str["vehicle_theft"])
-g_vt_01_data <-  regData(g_vt_01, regdf = sr)
-
-g_st_01 <- feRegSim(Formulas01_str["street_theft"])
-g_st_01_data <-  regData(g_st_01, regdf = sr)
-
-
-# Table 4 - Spillovers
-s_or_01 <- feRegSim(Formulas01_str["other_robberies"])
-s_or_01_data <-  regData(s_or_01, regdf = sr)
-
-s_cr_01 <- feRegSim(Formulas01_str["cargo_robbery"])
-s_cr_01_data <-  regData(s_cr_01, regdf = sr)
-
-s_bu_01 <- feRegSim(Formulas01_str["burglary"])
-s_bu_01_data <-  regData(s_bu_01, regdf = sr)
-
-s_sr_01 <- feRegSim(Formulas01_str["store_robbery"])
-s_sr_01_data <-  regData(s_sr_01, regdf = sr)
-
-
-# Table 6 - Spillovers 2
-s_pk_01 <- feRegSim(Formulas01_str["police_killing"])
-s_pk_01_data <-  regData(s_pk_01, regdf = sr)
-
-
-
-
-### Model 2 whith cmnd FE
-
-# Tabble 2
-r_vd_02 <- feRegSim(Formulas02_str["violent_death_sim"])
-r_vd_02_data <-  regData(r_vd_02, regdf = sr)
-
-r_vr_02 <- feRegSim(Formulas02_str["vehicle_robbery"])
-r_vr_02_data <-  regData(r_vr_02, regdf = sr)
-
-r_rr_02 <- feRegSim(Formulas02_str["street_robbery"])
-r_rr_02_data <-  regData(r_rr_02, regdf = sr)
-
-r_hm_02 <- feRegSim(Formulas02_str["homicide"])
-r_hm_02_data <-  regData(r_hm_02, regdf = sr)
-
-r_pk_02 <- feRegSim(Formulas02_str["dpolice_killing"])
-r_pk_02_data <-  regData(r_pk_02, regdf = sr)
-
-
-
-# Table 3 - Gaming 
-g_cf_02 <- feRegSim(Formulas02_str["dbody_found"])
-g_cf_02_data <-  regData(g_cf_02, regdf = sr)
-
-g_vt_02 <- feRegSim(Formulas02_str["vehicle_theft"])
-g_vt_02_data <-  regData(g_vt_02, regdf = sr)
-
-g_st_02 <- feRegSim(Formulas02_str["street_theft"])
-g_st_02_data <-  regData(g_st_02, regdf = sr)
-
-
-# Table 4 - Spillovers
-s_or_02 <- feRegSim(Formulas02_str["other_robberies"])
-s_or_02_data <-  regData(s_or_02, regdf = sr)
-
-s_cr_02 <- feRegSim(Formulas02_str["cargo_robbery"])
-s_cr_02_data <-  regData(s_cr_02, regdf = sr)
-
-s_bu_02 <- feRegSim(Formulas02_str["burglary"])
-s_bu_02_data <-  regData(s_bu_02, regdf = sr)
-
-s_sr_02 <- feRegSim(Formulas02_str["store_robbery"])
-s_sr_02_data <-  regData(s_sr_02, regdf = sr)
-
-
-# Table 6 - Spillovers 2
-s_pk_02 <- feRegSim(Formulas02_str["dpolice_killing"])
-s_pk_02_data <-  regData(s_pk_02, regdf = sr)
-
-# Extra table
-
-s_ad_02 <- feRegSim(Formulas02_str["assaut_death"])
-s_ad_02_data <-  regData(s_ad_02, regdf = sr)
-
-s_fr_02 <- feRegSim(Formulas02_str["fraud"])
-s_fr_02_data <-  regData(s_fr_02, regdf = sr)
-
-s_pk_02 <- feRegSim(Formulas02_str["police_killing_tot"])
-s_pk_02_data <-  regData(s_pk_02, regdf = sr)
-
-
-#------------------------------------------------------------------------------#
-#### Diff in Diff ####
-# A.k.a virada
-
-# Create a data set with only target months
-dd_df <- sr %>%
-  # Keep only regression months
-  subset(month %in% c(6,7,12,1)) #%>%
-
-
-# Create a data set with only target months
-# dd_df_pla <- placebo_data %>%
-#   # Keep only regression months
-#   subset(month %in% c(6,7,12,1)) #%>%
-
-
-# Create a data set with only target months
-
-
-# Set regressions model formula
-ddRegSim <- function(dep_var,
-                     model = 2,
-                     formula_vector1 = dd_formulas_m1,
-                     formula_vector2 = dd_formulas_m2,
-                     formula_vector_pla = p_dd_formulas_m2,
-                     data = dd_df){
-  if(model ==1){
-    form <- formula_vector1[dep_var]
-  } else if(model == 2){
-    form <- formula_vector2[dep_var]
-  } else{
-    form <- p_dd_formulas_m2[dep_var]
-    
-  }
-  
-  
-  form <- as.formula(form)
-  model <- felm(form, data = data, keepCX = T)
-  
-  # Return regression object
-  return(model)
-  
-}
-
-
-# Tablev 2
-r_dd_vd_02 <- ddRegSim('violent_death_sim')
-r_dd_vd_02_data <-  regData(r_dd_vd_02, regdf = dd_df)
-
-r_dd_vr_02 <- ddRegSim('vehicle_robbery')
-r_dd_vr_02_data <-  regData(r_dd_vr_02, regdf = dd_df)
-
-r_dd_sr_02 <- ddRegSim('street_robbery')
-r_dd_sr_02_data <-  regData(r_dd_sr_02, regdf = dd_df)
-
-
-# Table 3 - Gaming 
-g_dd_cf_02 <- ddRegSim("dbody_found")
-g_dd_cf_02_data <-  regData(g_dd_cf_02, regdf = sr)
-
-g_dd_vt_02 <- ddRegSim("vehicle_theft")
-g_dd_vt_02_data <-  regData(g_dd_vt_02, regdf = sr)
-
-g_dd_st_02 <- ddRegSim("street_theft")
-g_dd_st_02_data <-  regData(g_dd_st_02, regdf = sr)
-
-
-# Table 4 - Spillovers
-s_dd_or_02 <- ddRegSim("other_robberies")
-s_dd_or_02_data <-  regData(s_dd_or_02, regdf = sr)
-
-s_dd_cr_02 <- ddRegSim("cargo_robbery")
-s_dd_cr_02_data <-  regData(s_dd_cr_02, regdf = sr)
-
-s_dd_bu_02 <- ddRegSim("burglary")
-s_dd_bu_02_data <-  regData(s_dd_bu_02, regdf = sr)
-
-s_dd_sr_02 <- ddRegSim("store_robbery")
-s_dd_sr_02_data <-  regData(s_dd_sr_02, regdf = sr)
-
-
-# Table 6 - Spillovers 2 
-s_dd_pk_02 <- ddRegSim("police_killing")
-s_dd_pk_02_data <-  regData(s_dd_pk_02, regdf = sr)
-
-# s_dd_cr_02 <- ddRegSim("cargo_robbery")
-# s_dd_cr_02_data <-  regData(s_dd_cr_02, regdf = sr)
-# 
-# s_dd_bu_02 <- ddRegSim("burglary")
-# s_dd_bu_02_data <-  regData(s_dd_bu_02, regdf = sr)
-# 
-# s_dd_sr_02 <- ddRegSim("store_robbery")
-# s_dd_sr_02_data <-  regData(s_dd_sr_02, regdf = sr)
-
-# Extra table
-s_dd_vf_02 <- ddRegSim("dviolent_death_fla")
-s_dd_vf_02_data <-  regData(s_dd_vf_02, regdf = sr)
-
-s_dd_ad_02 <- ddRegSim("assaut_death")
-s_dd_ad_02_data <-  regData(s_dd_ad_02, regdf = sr)
-
-s_dd_fr_02 <- ddRegSim("fraud")
-s_dd_fr_02_data <-  regData(s_dd_fr_02, regdf = sr)
-
-s_dd_pk_02 <- ddRegSim("police_killing_tot")
-s_dd_pk_02_data <-  regData(s_dd_pk_02, regdf = sr)
-
-
-
-#------------------------------------------------------------------------------#
-##### Export ####
-
-#### Define commun elements
-n_aisp_line_3 <- c("Number of aisp", rep("39", 3))
-n_aisp_line_9 <- c("Number of aisp", rep("39", 9))
-n_aisp_line_12 <- c("Number of aisp", rep("39", 12))
-
-chifeFE_line_3 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 1))
-chifeFE_line_9 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 3))
-chifeFE_line_12 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 4))
-
-monthFE_line_3 <- c("Month FE", rep(c("Yes", "Yes", "No"), 1))
-monthFE_line_9 <- c("Month FE", rep(c("Yes", "Yes", "No"), 3))
-monthFE_line_12 <- c("Month FE", rep(c("Yes", "Yes", "No"), 4))
-
-indepVar_label <- "On target"
-col_labels_9 <- rep(c("OLS",	"OLS",	"DD"), 3)
-col_labels_12 <- rep(c("OLS",	"OLS",	"DD"), 4)
-
-
-
+#### Regression tables ####
 
 # Table 2
-tab2_regs <- 
-  list(r_vd_01, 
-       r_vd_02, 
-       r_dd_vd_02,
-       r_vr_01, 
-       r_vr_02,
-       r_dd_vr_02,
-       r_rr_01, 
-       r_rr_02,
-       r_dd_sr_02)
+table_fun(c('violent_death_sim',
+            'vehicle_robbery',
+            'street_robbery'),
+          type = 'text')
 
-tab2_addLines <- list(chifeFE_line_9,
-                      monthFE_line_9,
-                      Ymean_row(tab2_regs),
-                      n_aisp_line_9)
-
-
-
-# Table 3
-tab3_regs <- 
-  list(g_cf_01, 
-       g_cf_02, 
-       g_dd_cf_02, 
-       g_vt_01, 
-       g_vt_02,
-       g_dd_vt_02,
-       g_st_01, 
-       g_st_02,
-       g_dd_st_02)
-
-
-tab3_addLines <- list(chifeFE_line_9,
-                      monthFE_line_9,
-                      Ymean_row(tab3_regs),
-                      n_aisp_line_9)
-
-
-
-
-# Table 4
-tab4_regs <- 
-  list(s_or_01, 
-       s_or_02, 
-       s_dd_or_02, 
-       s_cr_01, 
-       s_cr_02,
-       s_dd_cr_02,
-       s_bu_01, 
-       s_bu_02,
-       s_dd_bu_02,
-       s_sr_01,
-       s_sr_02,
-       s_dd_sr_02)
-
-tab4_addLines <- list(chifeFE_line_12,
-                      monthFE_line_12,
-                      Ymean_row(tab4_regs),
-                      n_aisp_line_12)
-
-
-
-# # Extra table
-# tab6_regs <- list(s_vf_01,
-#                   s_vf_02,
-#                   s_dd_vf_02,
-#                   s_ad_01,
-#                   s_ad_02,
-#                   s_dd_ad_02,
-#                   s_fr_01,
-#                   s_fr_02,
-#                   s_dd_fr_02,
-#                   s_pk_01, 
-#                   s_pk_02, 
-#                   s_dd_pk_02)
-
-
-
-
-
-#------------------------------------------------------------------------------#
-#### Saving ####
-
-
-if(EXPORT_tables){
-  # Main crimes
-  createTable(reg_list = tab2_regs,
-              add_lines_list = tab2_addLines,
-              dep_var_labels = c("Violent deaths", 
-                                 "Vehicle robbery (Carjacking)",	
-                                 "Street robbery"),
-              title = "Table 2 - Effect of expectancy of receiving bonuses on crime rates",
-              outPath = file.path(OUTPUTS_final, "tab2.html"))
-  
-  
-  
-  # Gaming
-  createTable(reg_list = tab3_regs,
-              add_lines_list = tab3_addLines,
-              dep_var_labels = c("Cadavers Found (dummy)", 
-                                 "Car theft",	
-                                 "Street theft"),
-              title = "Table A1 - Expectancy of receiving bonuses and gaming",
-              outPath = file.path(OUTPUTS_final, "tabA1.html"))
-  
-  
-  
-  # Spillovers 
-  createTable(reg_list = tab4_regs,
-              add_lines_list = tab4_addLines,
-              dep_var_labels = c("Robberies not included in the target", 
-                                 "Cargo robbery	",	
-                                 "Burglary",
-                                 "Robbery of commercial stores"),
-              title = "Table 3 - Expectancy of receiving bonuses and positive spill overs on other crimes",
-              outPath = file.path(OUTPUTS_final, "tab3.html")) # Order changed in paper
-  
-  
-  
-}
-
-
+# Table 3 - Gaming 
+table_fun(c('dbody_found',
+            'vehicle_theft',
+            'street_theft'),
+          type = 'text')
 
 
 #------------------------------------------------------------------------------#
@@ -571,9 +200,9 @@ Formulas02_plot_str <- paste(depVars, paste(rFormula_plot, config2), sep = " ~ "
 names(Formulas02_plot_str) <- depVars
 
 #### Monthly regression
-rplot_vd <- feRegSim(Formulas02_plot_str["violent_death_sim"], data = cpsr)
-rplot_vr <- feRegSim(Formulas02_plot_str["vehicle_robbery"], data = cpsr)
-rplot_rr <- feRegSim(Formulas02_plot_str["street_robbery"], data = cpsr)
+rplot_vd <- feRegSim("violent_death_sim", model = Formulas02_plot_str, data = cpsr)
+rplot_vr <- feRegSim("vehicle_robbery",  model = Formulas02_plot_str, data = cpsr)
+rplot_rr <- feRegSim("street_robbery",  model = Formulas02_plot_str, data = cpsr)
 
 
 #### Actual plots
