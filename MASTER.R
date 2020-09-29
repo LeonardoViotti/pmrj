@@ -100,143 +100,7 @@ GIS <- file.path(DROPBOX, "GIS")
 #------------------------------------------------------------------------------#
 #### Function definition ####
 
-
-#### My own functions
-
-# Clean model names of formula functions, e.g. log() and factor()
-cleanFormulaName <- function(x){
-  if(any(grepl("(|)", x))){
-    x <- gsub(".*\\(", "", x)
-    x <- gsub("\\).*", "", x)
-    return(x)
-  }else{
-    return(x)
-  }
-}
-
-
-# Grab variable names from regressions
-regIndepVars <- function(x){
-  
-  # Work with felm and lm
-  if(class(x) == "felm"){
-    indepV <- rownames(x$coefficients)
-  }else if (class(x) %in% c("lm", "glm")){
-    indepV <- names(x$model)[-1]
-  }else{
-    warning("Not sure what that regression is")
-  }
-  
-  indepV <- cleanFormulaName(indepV)
-  
-  return(indepV)
-}
-
-regDepVars <- function(x){
-  
-  # Work with felm and lm
-  if(class(x) == "felm"){
-    depV <- colnames(x$coefficients)
-  }else if (class(x)  %in% c("lm", "glm")){
-    depV <- names(x$model)[1]
-  }else if (class(x) == "splm"){
-    depV <- names(x$coefficients)[-1]
-  }else{
-    warning("Not sure what that regression is")
-  }
-  
-  # Removes log() or simmilar
-  depV <- cleanFormulaName(depV)
-  
-  return(depV)
-  
-}
-
-
-# Get variable mean from the same data as regression
-
-regData <- function(reg, regdf){
-  if(class(reg) == "felm"){ # get FEs in case it is an felm model
-    feVars <- names(reg$fe)
-    #clusterVars <- names(reg$clustervar)
-    
-    if(!is.null(reg$stage1)){
-      instrumentVars <- reg$stage1$instruments
-    } else{
-      instrumentVars <- NULL
-    }
-    
-  } else{ # Already in regIndepVars()
-    feVars <- NULL
-    clusterVars <- NULL
-    instrumentVars <- NULL
-  }
-  
-  regdf <- as.data.frame(regdf)
-  
-  # Regression variables
-  regVarsAll <- c(regDepVars(reg), 
-                  regIndepVars(reg),
-                  feVars,
-                  #clusterVars,
-                  instrumentVars)
-  if(class(reg) == "felm"){
-    if(clusterVars != 0){
-      regVarsAll <- c(regVarsAll,
-                      clusterVars)
-    }
-  }
-  
-  
-  
-  # Make sure all observarions are the same
-  completeBol <- complete.cases(regdf[,regVarsAll])
-  completeData <- regdf[completeBol,]
-  
-  return(completeData)
-  
-}
-
-
-
-#### Define formatting functions
-
-# Function to find dep var means of regressions
-Ymean <- function(x){
-  mean(regData(x, sr)[,regDepVars(x)])
-}
-
-# Function to create the row for regression tables
-Ymean_row <- function(list){
-  c("Y mean", sapply(list, Ymean) %>% round(2))
-}
-
-
-# Export function
-createTable <- function(reg_list, 
-                        add_lines_list,
-                        title,
-                        dep_var_labels,
-                        outPath,
-                        type = 'html'){
-  stargazer(reg_list,
-            keep = c("hit_sem_l",
-                     "last_month_on_target",
-                     "last_month"),
-            covariate.labels = c("On target",
-                                 "On target * last month",
-                                 "Last month"),
-            dep.var.labels = dep_var_labels,
-            title = title,
-            dep.var.caption  = "Number  of  occurrences",
-            column.labels   = col_labels_9,
-            add.lines = add_lines_list,
-            digits = 3,
-            omit.stat = c("rsq","ser", "f"),
-            out = outPath,
-            type = type
-  )
-}
+source(file.path(GITHUB, "utils.R"))
 
 
 #------------------------------------------------------------------------------#
@@ -246,7 +110,7 @@ createTable <- function(reg_list,
 # Load raw data to construct placebo targets
 raw_data <- read.dta13(file.path(DATA,"data_SIM_2019-07.dta"))
 
-# Load final data created by construct_placebo_targets.R
+# Load final data created
 if(file.exists(file.path(DATA, "data_SIM_2019_constructed.csv"))){
   org_data <- fread(file = file.path(DATA, "data_SIM_2019_constructed.csv"),
                       encoding = "UTF-8")
