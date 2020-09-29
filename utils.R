@@ -135,9 +135,11 @@ feRegSim <- function(dep_var,
                      data = sr){
   if(model ==1){
     form <- formula_vector1[dep_var]
-  } else{
+  } else if (model == 2){
     form <- formula_vector2[dep_var]
     
+  } else{
+    form <- model[dep_var]
   }
   
   form <- as.formula(form)
@@ -149,11 +151,40 @@ feRegSim <- function(dep_var,
 }
 
 
+
+# DD linear regression
+ddRegSim <- function(dep_var,
+                     model = 2,
+                     formula_vector1 = dd_formulas_m1,
+                     formula_vector2 = dd_formulas_m2,
+                     formula_vector_pla = p_dd_formulas_m2,
+                     data = dd_df){
+  if(model ==1){
+    form <- formula_vector1[dep_var]
+  } else if(model == 2){
+    form <- formula_vector2[dep_var]
+  } else{
+    form <- p_dd_formulas_m2[dep_var]
+    
+  }
+  
+  
+  form <- as.formula(form)
+  model <- felm(form, data = data, keepCX = T)
+  
+  # Return regression object
+  return(model)
+  
+}
+
+
+
 # Export function
 createTable <- function(reg_list, 
                         add_lines_list,
                         title = NULL,
-                        dep_var_labels,
+                        dep_var_labels = NULL,
+                        col_labels = NULL,
                         outPath = NULL,
                         type = 'html'){
   stargazer(reg_list,
@@ -166,7 +197,7 @@ createTable <- function(reg_list,
             dep.var.labels = dep_var_labels,
             title = title,
             dep.var.caption  = "Number  of  occurrences",
-            column.labels   = col_labels_9,
+            column.labels   = col_labels,
             add.lines = add_lines_list,
             digits = 3,
             omit.stat = c("rsq","ser", "f"),
@@ -181,6 +212,7 @@ table_fun <- function(crime_vec,
                       out = NULL,
                       title = "",
                       dep_var_labels = NULL,
+                      col_labels = NULL,
                       add_lines_list = NULL,
                       outPath = NULL,
                       type = 'html'){
@@ -199,10 +231,15 @@ table_fun <- function(crime_vec,
     tab_list <- append(tab_list, table_list_fun(i))
   }
   
-  # Add lines function
+  # Add column labels
+  n_blocks <- length(crime_vec)
+
+  if (is.null(col_labels)){
+    col_labels <- rep(c("OLS",	"OLS",	"DD"), n_blocks)
+  }
+  
+  # Add lines at the bottom of the tablen
   if (is.null(add_lines_list)){
-    n_blocks <- length(crime_vec)
-    
     add_lines_list <- 
       list(c("Chief FE", rep(c( "No", "Yes", "Yes"), n_blocks)),
            c("Month FE", rep(c("Yes", "Yes", "No"), n_blocks)),
@@ -216,6 +253,9 @@ table_fun <- function(crime_vec,
   tab_list %>% createTable(add_lines_list = add_lines_list,
                            title = title,
                            dep_var_labels = dep_var_labels,
+                           col_labels = col_labels,
                            outPath = outPath,
                            type = type)
 }
+
+
