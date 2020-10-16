@@ -238,10 +238,10 @@ tab5_regs <-
        p_rr_dd)
 
 
-tab5_addLines <- list(chifeFE_line_9,
-                      monthFE_line_9,
+tab5_addLines <- list(c("Chief FE", rep(c( "No", "Yes", "Yes"), 3)),
+                      c("Month FE", rep(c("Yes", "Yes", "No"), 3)),
                       Ymean_row(tab5_regs),
-                      n_aisp_line_9)
+                      c("Number of aisp", rep("39", 9)))
 
 if(EXPORT_tables){
   
