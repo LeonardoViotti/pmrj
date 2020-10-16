@@ -130,6 +130,27 @@ dd_formulas_m2 <-
 #------------------------------------------------------------------------------#
 #### Regression tables ####
 
+# Conditional exporting
+export <- function(file,
+                   export_global = EXPORT_tables,
+                   dir = OUTPUTS_final){
+  if (export_global){
+    out_path <- file.path(OUTPUTS_final, file)
+  } else{
+    out_path <- NULL
+  }
+  
+}
+
+# If not exporting print tables
+if(EXPORT_tables){
+  table_type = 'html'
+} else{
+  table_type = 'text'
+}
+
+
+
 # Table main
 table_fun(c('violent_death_sim',
             'vehicle_robbery',
@@ -138,8 +159,8 @@ table_fun(c('violent_death_sim',
                              "Vehicle robbery (Carjacking)",	
                              "Street robbery"),
           title = "Table 2 - Effect of expectancy of receiving bonuses on crime rates",
-          # outPath = file.path(OUTPUTS_final, "tab2.html"),
-          type = 'text')
+          outPath = export("tab2.html"),
+          type = table_type)
 
 # Table gaming 
 table_fun(c('dbody_found',
@@ -149,8 +170,8 @@ table_fun(c('dbody_found',
                              "Car theft",	
                              "Street theft"),
           title = "Table A1 - Expectancy of receiving bonuses and gaming",
-          # outPath = file.path(OUTPUTS_final, "tabA1.html"),
-          type = 'text')
+          outPath = export("tabA1.html"),
+          type = table_type)
 
 # Table spillovers
 table_fun(c('other_robberies',
@@ -162,8 +183,19 @@ table_fun(c('other_robberies',
                              "Burglary",
                              "Robbery of commercial stores"),
           title = "Table 3 - Expectancy of receiving bonuses and positive spill overs on other crimes",
-          # outPath = file.path(OUTPUTS_final, "tab3.html"),
-          type = 'text')
+          outPath = export("tab3.html"),
+          type = table_type)
+
+
+# Table with extra spillovers
+table_fun(c('dpolice_killing',
+            'dassaut_death'),
+          dep_var_labels = c("Police killing (dummy)",
+                             "Assault followed by death (dummy)"),
+          title = "Table ? - Expectancy of receiving bonuses and other spill overs",
+          outPath = export("tabA2.html"),
+          type = table_type)
+
 
 
 #------------------------------------------------------------------------------#
