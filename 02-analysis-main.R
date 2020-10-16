@@ -47,7 +47,6 @@ dd_df <- sr %>%
 # right hand side without FE
 rFormula <- paste(indepVars, collapse = " + ") 
 
-rFormula_iv <- paste(indepVars[-1], collapse = " + ") 
 
 # Add FE, cluster and instruments
 
@@ -63,26 +62,16 @@ config1 <- paste("|", FeForumala1, "| 0 | ", clusterVars_form )
 FeForumala2 <- paste(FEVars, collapse = " + ") # with cmd FE
 config2 <- paste("|", FeForumala2, "| 0 |  ", clusterVars_form)
 
-# IV formula
-first_stage_left <- "on_target"
-
-first_stage_right <- paste(ZVars, collapse = " + ")
-
-formula_1st <-  paste("(", first_stage_left, " ~ ", first_stage_right, " )")
-
-config_iv <- paste("|", FeForumala2, "|" ,  formula_1st,  "| ", clusterVars_form)
 
 
 #### Final formulas
 
 Formulas01_str <- paste(depVars, paste(rFormula, config1), sep = " ~ ")
 Formulas02_str <- paste(depVars, paste(rFormula, config2), sep = " ~ ")
-FormulasIV_str <- paste(depVars, paste(rFormula_iv, config_iv), sep = " ~ ")
 
 # So it's easier to refernce to elements
 names(Formulas01_str) <- depVars
 names(Formulas02_str) <- depVars
-names(FormulasIV_str) <- depVars
 
 #rFormulaFE <- paste0("factor(",FEVars,")")
 # rFormula1 <- paste(c(indepVars, rFormulaFE[1:2]), collapse = " + ") 
@@ -130,13 +119,6 @@ reg_formula <- function(dep_vars,
   return(final_formula)
 }
 
-
-
-# First model without chief FE
-# dd_formulas_m1 <- 
-#   reg_formula(depVars,
-#               indep_vars_dd,
-#               FE_vars_dd[-length(FE_vars_dd)])
 
 # Second model with chief FE
 dd_formulas_m2 <- 
