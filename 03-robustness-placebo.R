@@ -14,11 +14,11 @@
 
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = T
+OVERWRITE_MASTER_SWITCHES = F
 
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = F
-  EXPORT_plots = T
+  EXPORT_plots = F
   EXPORT_tables = T
 }
 
@@ -41,7 +41,7 @@ sr_pl <- sr[sr$year < 2009,]
 #------------------------------------------------------------------------------#
 #### List regression variables ####
 
-depVars <- c("violent_death_sim",
+depVars_pla <- c("violent_death_sim",
              "vehicle_robbery",
              "street_robbery")
 
@@ -104,18 +104,18 @@ config2_pla <- paste("|", FeForumala2_pla, "| 0 |  ", clusterVars_form)
 
 #### Final formulas
 
-Formulas01_str <- paste(depVars, paste(rFormula, config1), sep = " ~ ")
-Formulas02_str <- paste(depVars, paste(rFormula, config2), sep = " ~ ")
+Formulas01_str <- paste(depVars_pla, paste(rFormula, config1), sep = " ~ ")
+Formulas02_str <- paste(depVars_pla, paste(rFormula, config2), sep = " ~ ")
 
 # Placebo
-Formulas01_pla_str <- paste(depVars, paste(rFormula_pla, config1), sep = " ~ ")
-Formulas02_pla_str <- paste(depVars, paste(rFormula_pla, config2_pla), sep = " ~ ")
+Formulas01_pla_str <- paste(depVars_pla, paste(rFormula_pla, config1), sep = " ~ ")
+Formulas02_pla_str <- paste(depVars_pla, paste(rFormula_pla, config2_pla), sep = " ~ ")
 
 # So it's easier to refernce to elements
-names(Formulas01_str) <- depVars
-names(Formulas02_str) <- depVars
-names(Formulas01_pla_str) <- depVars
-names(Formulas02_pla_str) <- depVars
+names(Formulas01_str) <- depVars_pla
+names(Formulas02_str) <- depVars_pla
+names(Formulas01_pla_str) <- depVars_pla
+names(Formulas02_pla_str) <- depVars_pla
 
 #------------------------------------------------------------------------------#
 #### End of semster formulas ####
@@ -163,7 +163,7 @@ reg_formula <- function(dep_vars,
 # Placebo formulas
 
 p_dd_formulas_m2 <-
-  reg_formula(depVars,
+  reg_formula(depVars_pla,
               indepVars_pla_dd,
               FE_vars_dd)
 
@@ -228,7 +228,7 @@ dd_df_pla <- sr_pl %>%
 
 
 # Set regressions model formula
-ddRegSim <- function(dep_var,
+ddRegSim_pla <- function(dep_var,
                      model = 2,
                      formula_vector1 = p_dd_formulas_m2,
                      data = dd_df_pla){
@@ -244,110 +244,151 @@ ddRegSim <- function(dep_var,
   
 }
 
-# Tablev 2
-p_dd_vd_02 <- ddRegSim('violent_death_sim')
-p_dd_vd_02_data <-  regData(p_dd_vd_02, regdf = dd_df_pla)
-
-p_dd_vr_02 <- ddRegSim('vehicle_robbery')
-p_dd_vr_02_data <-  regData(p_dd_vr_02, regdf = dd_df_pla)
-
-p_dd_rr_02 <- ddRegSim('street_robbery')
-p_dd_rr_02_data <-  regData(p_dd_rr_02, regdf = dd_df_pla)
-
-
-
 #------------------------------------------------------------------------------#
-##### Placebo exporting ####
+#### Regression tables ####
 
-
-#### Export placebo table ####
-
-indepVar_label <- c("On target" = "on_target")
-indepVar_label_pla <- c("On target" = "on_target_plapre")
-
-stats_labels <- c("Observations" = "nobs",  
-                  "R2 adjusted" = "adj.r.squared")
-
-#models_labels <- c("Violent Death", "Violent Death", "Carjacking", "Carjacking")
-
-
-# models_labels <- c("Model 1" = "OLS", 
-#                    "Model 2" = "OLS", 
-#                    "Model 4" = "OLS",
-#                    "Model 5" = "OLS", 
-#                    "Model 7" = "OLS", 
-#                    "Model 8" = "OLS")
-
-# Table 2 - placebo
-tab2_pla_regs <-
-  list(p_vd_01,
-       p_vd_02,
-       p_dd_vd_02,
-       p_vr_01,
-       p_vr_02,
-       p_dd_vr_02,
-       p_rr_01,
-       p_rr_02,
-       p_dd_rr_02
-       )
-
-# Function to find dep var means of regressions
-Ymean <- function(x){
-  mean(regData(x, sr)[,regDepVars(x)])
-}
-
-# Function to create the row for regression tables
-Ymean_row <- function(list){
-  c("Y mean", sapply(list, Ymean) %>% round(2))
-}
-
-
-n_aisp_line_9 <- c("Number of aisp", rep("39", 9))
-chifeFE_line_9 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 3))
-monthFE_line_9 <- c("Month FE", rep(c("Yes", "Yes", "No"), 3))
-tab2_pla_addLines <- list(chifeFE_line_9,
-                          monthFE_line_9,
-                      Ymean_row(tab2_pla_regs),
-                      n_aisp_line_9)
-
-
-# Export function
-createTable <- function(reg_list, 
-                        add_lines_list,
-                        title,
-                        dep_var_labels,
-                        outPath){
-  stargazer(reg_list,
-            keep = c(  "hit_sem_pla_l",
-                       "last_month_on_target_plapre",
-                       "last_month"),
-            covariate.labels = c("On target",
-                                 "On target * last month",
-                                 "Last month"),
-            dep.var.labels = dep_var_labels,
-            title = title,
-            dep.var.caption  = "Number  of  occurrences",
-            column.labels   = col_labels_9,
-            add.lines = add_lines_list,
-            digits = 3,
-            omit.stat = c("rsq","ser", "f"),
-            out = outPath,
-            type = "html"
-  )
-}
-
-
-
-
-
-if(EXPORT_tables){
-  createTable(reg_list = tab2_pla_regs,
-              add_lines_list = tab2_pla_addLines,
-              dep_var_labels = c("Violent deaths", 
-                                 "Vehicle robbery (Carjacking)",	
-                                 "Street robbery"),
-              title = "Table C1 - Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2005 and 2008)",
-              outPath = file.path(OUTPUTS_final, "tabC1.html"))
+# Conditional exporting
+export <- function(file,
+                   export_global = EXPORT_tables,
+                   dir = OUTPUTS_final){
+  if (export_global){
+    out_path <- file.path(OUTPUTS_final, file)
+  } else{
+    out_path <- NULL
+  }
   
 }
+
+# If not exporting print tables
+if(EXPORT_tables){
+  table_type = 'html'
+} else{
+  table_type = 'text'
+}
+
+
+
+# Table main
+table_fun(c('violent_death_sim',
+            'vehicle_robbery',
+            'street_robbery'),
+          dep_var_labels = c("Violent deaths", 
+                             "Vehicle robbery (Carjacking)",	
+                             "Street robbery"),
+          title = "Table B1 - Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2005 and 2008)",          outPath = export("tabB1.html"),
+          type = table_type,
+          placebo = T)
+
+
+
+# # Tablev 2
+# p_dd_vd_02 <- ddRegSim_pla('violent_death_sim')
+# p_dd_vd_02_data <-  regData(p_dd_vd_02, regdf = dd_df_pla)
+# 
+# p_dd_vr_02 <- ddRegSim_pla('vehicle_robbery')
+# p_dd_vr_02_data <-  regData(p_dd_vr_02, regdf = dd_df_pla)
+# 
+# p_dd_rr_02 <- ddRegSim_pla('street_robbery')
+# p_dd_rr_02_data <-  regData(p_dd_rr_02, regdf = dd_df_pla)
+# 
+# 
+# 
+# #------------------------------------------------------------------------------#
+# ##### Placebo exporting ####
+# 
+# 
+# #### Export placebo table ####
+# 
+# indepVar_label <- c("On target" = "on_target")
+# indepVar_label_pla <- c("On target" = "on_target_plapre")
+# 
+# stats_labels <- c("Observations" = "nobs",  
+#                   "R2 adjusted" = "adj.r.squared")
+# 
+# #models_labels <- c("Violent Death", "Violent Death", "Carjacking", "Carjacking")
+# 
+# 
+# # models_labels <- c("Model 1" = "OLS", 
+# #                    "Model 2" = "OLS", 
+# #                    "Model 4" = "OLS",
+# #                    "Model 5" = "OLS", 
+# #                    "Model 7" = "OLS", 
+# #                    "Model 8" = "OLS")
+# 
+# # Table 2 - placebo
+# tab2_pla_regs <-
+#   list(p_vd_01,
+#        p_vd_02,
+#        p_dd_vd_02,
+#        p_vr_01,
+#        p_vr_02,
+#        p_dd_vr_02,
+#        p_rr_01,
+#        p_rr_02,
+#        p_dd_rr_02
+#        )
+# 
+# # Function to find dep var means of regressions
+# Ymean <- function(x){
+#   mean(regData(x, sr)[,regDepVars(x)])
+# }
+# 
+# # Function to create the row for regression tables
+# Ymean_row <- function(list){
+#   c("Y mean", sapply(list, Ymean) %>% round(2))
+# }
+# 
+# 
+# # n_aisp_line_9 <- c("Number of aisp", rep("39", 9))
+# # chifeFE_line_9 <- c("Chief FE", rep(c( "No", "Yes", "Yes"), 3))
+# # monthFE_line_9 <- c("Month FE", rep(c("Yes", "Yes", "No"), 3))
+# # tab2_pla_addLines <- list(chifeFE_line_9,
+# #                           monthFE_line_9,
+# #                       Ymean_row(tab2_pla_regs),
+# #                       n_aisp_line_9)
+# 
+# 
+# # Export function
+# createTable <- function(reg_list, 
+#                         add_lines_list,
+#                         title,
+#                         dep_var_labels){
+#   stargazer(reg_list,
+#             keep = c(  "hit_sem_pla_l",
+#                        "last_month_on_target_plapre",
+#                        "last_month"),
+#             # covariate.labels = c("On target",
+#             #                      "On target * last month",
+#             #                      "Last month"),
+#             # dep.var.labels = dep_var_labels,
+#             # title = title,
+#             dep.var.caption  = "Number  of  occurrences",
+#             # column.labels   = col_labels_9,
+#             # add.lines = add_lines_list,
+#             digits = 3,
+#             omit.stat = c("rsq","ser", "f"),
+#             # out = outPath,
+#             type = "text"
+#   )
+# }
+# 
+# 
+# createTable(reg_list = tab2_pla_regs,
+#             add_lines_list = tab2_pla_addLines,
+#             dep_var_labels = c("Violent deaths", 
+#                                "Vehicle robbery (Carjacking)",	
+#                                "Street robbery"),
+#             title = "Table C1 - Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2005 and 2008)")
+# 
+# 
+# if(EXPORT_tables){
+#   createTable(reg_list = tab2_pla_regs,
+#               add_lines_list = tab2_pla_addLines,
+#               dep_var_labels = c("Violent deaths", 
+#                                  "Vehicle robbery (Carjacking)",	
+#                                  "Street robbery"),
+#               title = "Table C1 - Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2005 and 2008)",
+#               outPath = file.path(OUTPUTS_final, "tabC1.html"))
+#   
+# }
 
