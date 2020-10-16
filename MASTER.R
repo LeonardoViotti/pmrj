@@ -12,22 +12,22 @@ rm(list = ls())
 
 # Run differnt sections of analysis
 
-RUN_placebo_targets_construction = F
+RUN_var_construction = F
 
 # Main analysis
 RUN_main_analysis = F
 RUN_desc_analysis = F
 
 # Robustness checks
-RUN_placebo_analysis = F
+RUN_placebo_analysis = T
 RUN_poisson_analysis = F
 RUN_spatial_analysis = F
 
 # Settings switches
 
 EXPORT_data = F
-EXPORT_plots = F
-EXPORT_tables = F
+EXPORT_plots = T
+EXPORT_tables = T
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -224,8 +224,8 @@ cluster_vars_dd= "0"
 #------------------------------------------------------------------------------#
 #### Create placebo targets ####
 
-if(RUN_placebo_targets_construction){
-  source(file.path(GITHUB, "construction_placebo_targets.R"))
+if(RUN_var_construction){
+  source(file.path(GITHUB, "01-construction.R"))
   
 }
 
