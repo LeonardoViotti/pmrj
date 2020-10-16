@@ -9,7 +9,7 @@
 # This code depends on analysis_main.R to run! So if this option is not selected
 # on master it will be run here
 if(!RUN_main_analysis){
-  source(file.path(GITHUB, "analysis_main.R"))
+  source(file.path(GITHUB, "02-analysis-main.R"))
 }
 
 
@@ -43,7 +43,6 @@ sd$pop1000 <- sd$population/1000
 # Select variables
 tab1Vars <- c(indepVars["hit_sem_l"],
               depVars[1:3], 
-              ZVars,
               "other_robberies",
               "vehicle_theft",
               "street_theft",
@@ -52,17 +51,12 @@ tab1Vars <- c(indepVars["hit_sem_l"],
               "gun_seizure",
               "arrest2",
               "max_prize",
-              "pop1000",
-              "policemen_aisp",
-              "policemen_upp")
+              "pop1000")
 
 tab1VarLabels <- c("On target",
                    "Violent  deaths",
                    "Vehicle  robbery",
                    "Street  robbery",
-                   "Distance from violent death target",
-                   "Distance from vehicle robbery target",
-                   "Distance from street robbery target",
                    "Robberies not inclued in the target",
                    "Vehicle theft",
                    "Street theft",
@@ -71,9 +65,7 @@ tab1VarLabels <- c("On target",
                    "Weapons aprehension",
                    "Arrests",
                    "Maximum prize (R$ 1000)",
-                   "District population (1000 hab)",
-                   "Policemen in the battalion",
-                   "Policemen in UPP"
+                   "District population (1000 hab)"
 )
 
 
