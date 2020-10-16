@@ -44,6 +44,24 @@ cmd <- fread(file = file.path(DATA, "ComandantesBatalhao.csv"),
 #------------------------------------------------------------------------------#
 #### End of semester model variables ####
 
+cimeVars <- c("violent_death_sim",
+             "vehicle_robbery",
+             "street_robbery",
+             "homicide",
+             "dpolice_killing",
+             "police_killing",
+             "vehicle_theft",
+             "street_theft",
+             "dbody_found",
+             "other_robberies",
+             "cargo_robbery",
+             "burglary",
+             "store_robbery",
+             "arrest",
+             "arrest2",
+             "drug_seizure")
+
+
 
 # Create regression variables
 sim %<>%
@@ -54,7 +72,7 @@ sim %<>%
   # Create semester sums of all crime variables adding suffix 6. This are
   # used in the orignal model
   group_by(aisp, sem_year) %>% 
-  mutate_at( c(depVars, "target_vd", "target_sr", "target_vr"),
+  mutate_at( c(cimeVars, "target_vd", "target_sr", "target_vr"),
              .funs = list("6" = ~sum(., na.rm = T))
   ) %>%
   # Create cumulative sum of monthly target until the end of the month.
@@ -397,33 +415,6 @@ sim$on_target_plapre <-  (sim$on_target_vd_plapre==1 &
                             sim$on_target_vr_plapre==1 & 
                             sim$on_target_sr_plapre==1) %>% as.numeric()
 
-#### Create IV vars
-
-# Distance variable
-# sim$dist_target_vd_plapre <- (sim$violent_death_sim_cum /sim$plaTar_vd_sem) -1 
-# sim$dist_target_vr_plapre <- (sim$vehicle_robbery_cum /sim$plaTar_vr_sem) -1 
-# sim$dist_target_sr_plapre <- (sim$street_robbery_cum /sim$plaTar_sr_sem) -1 
-
-
-# Instrumental variable, one year lagged
-# sim <- sim %>% 
-#   group_by(aisp) %>%
-#   arrange(aisp, year, month) %>% 
-#   mutate(lag12_dist_target_vd_plapre=Lag(dist_target_vd_plapre, +12),
-#          lag12_dist_target_vr_plapre=Lag(dist_target_vr_plapre, +12),
-#          lag12_dist_target_sr_plapre=Lag(dist_target_sr_plapre, +12))
-
-
-# utils::View(foo %>% select(aisp,
-#                            year,
-#                            month,
-#                            semester,
-#                            violent_death_sim_cum,
-#                            plaTar_vd_sem,
-#                            lag12_dist_target_vd_plapre,
-#                            dist_target_vd_plapre)
-#             )
-
 
 #------------------------------------------------------------------------------#
 #### End of semester placebo ####
@@ -548,4 +539,136 @@ if (EXPORT_data){
 }
 
 
+#------------------------------------------------------------------------------#
+#### Include extra crimes not originally in the data ####
 
+# This code processes raw data on crimes not originally included in
+# our data. It also merges these into the data.
+# NEEDS TO BE ORGANIZED AND INCORPORATED INTO 01-construction.R 
+
+# Load constructed data
+# org_data <- fread(file = file.path(DATA, "data_SIM_2019_constructed.csv"),
+#                   encoding = "UTF-8")
+org_data <- sim
+
+# Load raw data
+other_crimes <- read.csv(
+  file.path(DATA, 'BaseDPEvolucaoMensalCisp.csv'),
+  sep = ';', 
+  header = T)
+
+hom_fla <- read.csv(
+  file.path(DATA, 'BaseDPLetalidadeFlagrante.csv'),
+  sep = ';', 
+  header = T)
+
+#------------------------------------------------------------------------------#
+#### Process flagrante #### 
+
+# Reshape to cisp level
+names(hom_fla) <- c( "ano_mes",
+                     "crime",
+                     "cisp",
+                     "total",
+                     "sem_flagrante",
+                     "com_flagrante")
+hom_simp <- hom_fla %>% 
+  mutate(total = as.character(total),
+         sem_flagrante = as.character(sem_flagrante),
+         com_flagrante =  as.character(com_flagrante)) %>% 
+  pivot_longer(cols = !c(ano_mes, cisp, crime),
+               names_to = 'flagr',
+               values_to = 'count') %>% 
+  # Recode
+  mutate(crime = recode(crime, 
+                        "Homicídio doloso" = "hom_doloso",
+                        "Morte por intervenção de agente do Estado" = "hom_por_interv_policial",
+                        "Lesão corporal seguida de morte" = "lesao_corp_mort",
+                        "Roubo seguido de morte - vítimas" = 'latrocinio') ) %>% 
+  # Combine columns to reshape
+  mutate(crime = paste(crime, flagr, sep = "_")) %>% 
+  dplyr::select(-flagr) %>% 
+  
+  # Reshape wide
+  pivot_wider(id_cols = c(ano_mes, cisp),
+              names_from = crime,
+              values_from = count) %>% 
+  # Split time vars
+  separate('ano_mes', into = c('year', 'month'), sep = '-') %>% 
+  
+  # Keep only crimes we want 
+  select('year', 'month', 'cisp', 
+         "hom_doloso_com_flagrante", 
+         "lesao_corp_mort_total",
+         "hom_por_interv_policial_total")  %>% 
+  # Rename vars
+  rename("violent_death_fla" = "hom_doloso_com_flagrante",
+         "assaut_death" = "lesao_corp_mort_total",
+         "police_killing_tot" = "hom_por_interv_policial_total")
+
+
+#------------------------------------------------------------------------------#
+#### Proces other crimes ####
+
+# Process other crimes
+oth_simp <- other_crimes %>% 
+  rename('aisp' = 'AISP',
+         'cisp' = 'CISP',
+         'month' = 'mes',
+         'year'= 'ano',
+         'fraud'= 'estelionato') %>% 
+  select(aisp, 
+         cisp, 
+         month, 
+         year, 
+         fraud)
+
+#------------------------------------------------------------------------------#
+#### Merge ####
+
+# Merge together since hom_fla is in the CISP level and original data
+# doesn't contain that var anymore
+
+final <- oth_simp %>% 
+  mutate(year = as.character(year),
+         month = as.integer(month)) %>% 
+  full_join(hom_simp %>% 
+              mutate(month = as.integer(month)), 
+            by = c('year', 'month', 'cisp')) %>% 
+  # Drop cisps that don't match
+  subset(!is.na(aisp))
+
+# Aggregate at aisp level
+final_agg <- final %>% group_by(aisp, year, month) %>% 
+  summarise(fraud = sum(fraud %>% as.integer()),
+            violent_death_fla = sum(violent_death_fla %>% as.integer()),
+            assaut_death = sum(assaut_death %>% as.integer()),
+            police_killing_tot = sum(police_killing_tot %>% as.integer()) ) %>% 
+  ungroup() %>% 
+  # Just make sure types are compatible
+  mutate(year = as.integer(year))
+
+
+#------------------------------------------------------------------------------#
+#### Merge to paper data ####
+
+export_data <-org_data %>% 
+  left_join(final_agg, by = c("aisp", "year", "month"))
+
+
+# Construct dummy variables
+dummy_fun <- function(x){
+  return(ifelse(x > 0, 1, 0))
+}
+
+export_data$dfraud <- dummy_fun(export_data$fraud)
+export_data$dviolent_death_fla <- dummy_fun(export_data$violent_death_fla)
+export_data$dassaut_death <- dummy_fun(export_data$assaut_death)
+export_data$dpolice_killing_tot <- dummy_fun(export_data$police_killing_tot)
+
+# Export
+if (EXPORT_data){
+  export_data %>% write.csv(
+    file = file.path(DATA, 
+                     "data_SIM_2019_constructed_extra.csv"))
+}
