@@ -182,7 +182,22 @@ ddRegSim <- function(dep_var,
   
 }
 
-
+# DD linear regression Placebo
+ddRegSim_pla <- function(dep_var,
+                         model = 2,
+                         formula_vector1 = p_dd_formulas_m2,
+                         data = dd_df_pla){
+  
+  form <- formula_vector1[dep_var]
+  
+  
+  form <- as.formula(form)
+  model <- felm(form, data = data, keepCX = T)
+  
+  # Return regression object
+  return(model)
+  
+}
 
 # Export function
 createTable <- function(reg_list, 
