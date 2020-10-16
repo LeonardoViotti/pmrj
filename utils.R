@@ -132,12 +132,17 @@ feRegSim <- function(dep_var,
                      model = 1,
                      formula_vector1 = Formulas01_str, 
                      formula_vector2 = Formulas02_str, 
+                     formula_vector_pla1 = Formulas01_pla_str,
+                     formula_vector_pla2 = Formulas02_pla_str,
                      data = sr){
   if(model ==1){
     form <- formula_vector1[dep_var]
   } else if (model == 2){
     form <- formula_vector2[dep_var]
-    
+  } else if (model == 'placebo_01'){
+    form <- formula_vector_pla1[dep_var]
+  } else if (model == 'placebo_02'){
+    form <- formula_vector_pla2[dep_var]
   } else{
     form <- model[dep_var]
   }
@@ -181,16 +186,26 @@ ddRegSim <- function(dep_var,
 
 # Export function
 createTable <- function(reg_list, 
-                        add_lines_list,
-                        title = NULL,
+                        add_lines_list = NULL,
+                        title = "",
                         dep_var_labels = NULL,
                         col_labels = NULL,
                         outPath = NULL,
-                        type = 'html'){
+                        type = 'html',
+                        placebo = F){
+  
+  if (placebo){
+    keep = c(  "hit_sem_pla_l",
+               "last_month_on_target_plapre",
+               "last_month")
+  }else{
+    keep = c("hit_sem_l",
+             "last_month_on_target",
+             "last_month")
+  }
+  
   stargazer(reg_list,
-            keep = c("hit_sem_l",
-                     "last_month_on_target",
-                     "last_month"),
+            keep = keep,
             covariate.labels = c("On target",
                                  "On target * last month",
                                  "Last month"),
@@ -215,13 +230,26 @@ table_fun <- function(crime_vec,
                       col_labels = NULL,
                       add_lines_list = NULL,
                       outPath = NULL,
-                      type = 'html'){
+                      type = 'html',
+                      ols_data = NULL,
+                      dd_data = NULL,
+                      placebo = F){
   
-  # Specification block template
-  table_list_fun <- function(crime){
-    list(feRegSim(crime),
-         feRegSim(crime, model =2 ),
-         ddRegSim(crime))
+  if (placebo){
+    # Specification block template
+    table_list_fun <- function(crime){
+      list(feRegSim(crime, model = 'placebo_01', data = sr_pl),
+           feRegSim(crime, model = 'placebo_01', data = sr_pl),
+           ddRegSim_pla(crime))
+    }
+  } else {
+    # Specification block template
+    table_list_fun <- function(crime){
+      list(feRegSim(crime),
+           feRegSim(crime, model =2 ),
+           ddRegSim(crime))
+    }
+    
   }
   
   
@@ -233,12 +261,12 @@ table_fun <- function(crime_vec,
   
   # Add column labels
   n_blocks <- length(crime_vec)
-
+  
   if (is.null(col_labels)){
     col_labels <- rep(c("OLS",	"OLS",	"DD"), n_blocks)
   }
   
-  # Add lines at the bottom of the tablen
+  # Add lines at the bottom of the table
   if (is.null(add_lines_list)){
     add_lines_list <- 
       list(c("Chief FE", rep(c( "No", "Yes", "Yes"), n_blocks)),
@@ -255,7 +283,8 @@ table_fun <- function(crime_vec,
                            dep_var_labels = dep_var_labels,
                            col_labels = col_labels,
                            outPath = outPath,
-                           type = type)
+                           type = type,
+                           placebo = placebo)
 }
 
 
