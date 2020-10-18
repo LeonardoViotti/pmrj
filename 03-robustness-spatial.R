@@ -339,9 +339,11 @@ slRegTable <-
         c("(1)", "(2)", "(3)"),
         coefs,
         coefs_lambda,
-        n_obs,
-        n_aisp,
+        c("No", "No", "No"),
+        c("No", "Yes", "Yes"),
         Ymean %>% round(2),
+        n_aisp,
+        n_obs,
         adjus_Rsq %>% round(2))
 
 #colnames(slRegTable) <- c("violent_death_sim", "vehicle_robbery", "street_robbery")
@@ -363,9 +365,11 @@ rows <- c("     ",
           "   ",
           "Lamda",
           "    ",
-          "Observations",
-          "Number of aisp",
+          "Chief FE",
+          "Month FE",
           "Y mean",
+          "Number of aisp",
+          "Observations",
           "R2 adjusted")
 
 # Remove column and row names
@@ -384,14 +388,14 @@ rownames(slRegTable) <- rows
 #------------------------------------------------------------------------------#
 ##### Processing tables ####
 
-slRegTable_hux <-
+(slRegTable_hux <-
   huxtable(slRegTable, add_colnames = F, add_rownames = T) %>%
   set_tb_padding(2) %>% 
-  set_top_border(1, everywhere) %>% 
-  set_bottom_border(1, 2:4) %>% 
-  set_bottom_border(4, everywhere) %>% 
-  set_bottom_border(8, everywhere) %>% 
-  set_bottom_border(12, everywhere)
+  set_top_border(1, everywhere) %>%
+  set_bottom_border(1, 2:4) %>%
+  set_bottom_border(4, everywhere) %>%
+  set_bottom_border(8, everywhere) %>%
+  set_bottom_border(14, everywhere))
   
 
 #------------------------------------------------------------------------------#
@@ -462,8 +466,9 @@ if(EXPORT_plots){
 #------------------------------------------------------------------------------#
 ##### Actually exporting ####
 
+
 if(EXPORT_tables){
-  huxtable::quick_xlsx(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_formated.xlsx"))
+  huxtable::quick_xlsx(slRegTable_hux, file = file.path(OUTPUTS_final, "spatial_lag_unformated.xlsx"))
 
   }
 

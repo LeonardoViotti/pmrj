@@ -19,15 +19,15 @@ RUN_main_analysis = F
 RUN_desc_analysis = F
 
 # Robustness checks
-RUN_placebo_analysis = T
+RUN_placebo_analysis = F
 RUN_poisson_analysis = F
 RUN_spatial_analysis = F
 
 # Settings switches
 
 EXPORT_data = F
-EXPORT_plots = T
-EXPORT_tables = T
+EXPORT_plots = F
+EXPORT_tables = F
 
 #------------------------------------------------------------------------------#
 #### Packages ####
