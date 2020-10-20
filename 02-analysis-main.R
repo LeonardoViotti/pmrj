@@ -51,8 +51,8 @@ rFormula <- paste(indepVars, collapse = " + ")
 # Add FE, cluster and instruments
 
 # clusterVars = c("latitude", "longitude" )
-#clusterVars = c("aisp" )
-clusterVars= "0"
+clusterVars = c("aisp" )
+# clusterVars= "0"
 
 clusterVars_form <- paste(clusterVars, collapse =  " + ")
 
@@ -85,7 +85,7 @@ reg_formula <- function(dep_vars,
                         indep_vars,
                         FE_vars,
                         instr_vars = 0,
-                        custer_vars = 0){
+                        custer_vars = clusterVars){
   
   paste_plus <- function(x){
     paste(x, collapse =  " + ")

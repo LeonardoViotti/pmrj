@@ -207,9 +207,15 @@ if(EXPORT_plots){
 #------------------------------------------------------------------------------#
 #### Bar plot 2 - % of months on target per AISP ####
 
+
+pp_on_target_df <-  sd %>% 
+  group_by(aisp) %>% 
+  summarise(x = sum(hit_sem_l), n_months = n_distinct(year_month),  .groups = "keep") %>% 
+  mutate(pp = x/n_months) 
+
 p_months_plot <- 
-  ggplot(data = sd ,
-         aes(y = on_target,
+  ggplot(data = pp_on_target_df ,
+         aes(y = pp*100,
              x =  factor(aisp, levels = unique(sd$aisp))
          )
   ) +
