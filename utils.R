@@ -254,7 +254,7 @@ table_fun <- function(crime_vec,
     # Specification block template
     table_list_fun <- function(crime){
       list(feRegSim(crime, model = 'placebo_01', data = sr_pl),
-           feRegSim(crime, model = 'placebo_01', data = sr_pl),
+           feRegSim(crime, model = 'placebo_02', data = sr_pl),
            ddRegSim_pla(crime))
     }
   } else {

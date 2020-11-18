@@ -9,8 +9,8 @@ OVERWRITE_MASTER_SWITCHES = F
 
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = F
-  EXPORT_plots = T
-  EXPORT_tables = T
+  EXPORT_plots = F
+  EXPORT_tables = F
 }
 
 #------------------------------------------------------------------------------#
@@ -61,21 +61,8 @@ indepVars <- c("hit_sem_l",
 
 FEVars <- c("aisp",
             "year", 
-            "month", 
+            "month",
             "id_cmt")
-
-FEVars_pla <- c("aisp",
-                "year", 
-                "month", 
-                "cmd_name")
-
-ZVars <- c("lag12_dist_target_vr",
-           "lag12_dist_target_sr",
-           "lag12_dist_target_vd")
-
-ZVars_pla <- c("lag12_dist_target_vr_plapre",
-               "lag12_dist_target_sr_plapre",
-               "lag12_dist_target_vd_plapre")
 
 
 
