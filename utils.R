@@ -262,6 +262,7 @@ table_fun <- function(crime_vec,
     table_list_fun <- function(crime){
       list(feRegSim(crime),
            feRegSim(crime, model =2 ),
+           ddRegSim(crime, model =1 ),
            ddRegSim(crime))
     }
     
@@ -278,14 +279,14 @@ table_fun <- function(crime_vec,
   n_blocks <- length(crime_vec)
   
   if (is.null(col_labels)){
-    col_labels <- rep(c("OLS",	"OLS",	"DD"), n_blocks)
+    col_labels <- rep(c("OLS",	"OLS",	"DD", "DD"), n_blocks)
   }
   
   # Add lines at the bottom of the table
   if (is.null(add_lines_list)){
     add_lines_list <- 
-      list(c("Chief FE", rep(c( "No", "Yes", "Yes"), n_blocks)),
-           c("Month FE", rep(c("Yes", "Yes", "No"), n_blocks)),
+      list(c("Chief FE", rep(c( "No", "Yes",  "No", "Yes"), n_blocks)),
+           c("Month FE", rep(c("Yes", "Yes", "No", "No"), n_blocks)),
            Ymean_row(tab_list),
            c("Number of aisp", rep("39", 3*n_blocks))
       )

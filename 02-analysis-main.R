@@ -120,6 +120,14 @@ reg_formula <- function(dep_vars,
 }
 
 
+# First model without chief FE
+dd_formulas_m1 <- 
+  reg_formula(depVars,
+              indep_vars_dd,
+              FE_vars_dd[1:2])
+
+
+
 # Second model with chief FE
 dd_formulas_m2 <- 
   reg_formula(depVars,

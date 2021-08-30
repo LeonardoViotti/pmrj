@@ -15,11 +15,11 @@ rm(list = ls())
 RUN_var_construction = F
 
 # Main analysis
-RUN_main_analysis = T
+RUN_main_analysis = F
 RUN_desc_analysis = F
 
 # Robustness checks
-RUN_placebo_analysis = T
+RUN_placebo_analysis = F
 RUN_poisson_analysis = F
 RUN_spatial_analysis = F
 
@@ -27,7 +27,7 @@ RUN_spatial_analysis = F
 
 EXPORT_data = F
 EXPORT_plots = F
-EXPORT_tables = T
+EXPORT_tables = F
 
 #------------------------------------------------------------------------------#
 #### Packages ####
