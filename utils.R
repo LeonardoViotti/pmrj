@@ -246,8 +246,8 @@ table_fun <- function(crime_vec,
                       add_lines_list = NULL,
                       outPath = NULL,
                       type = 'html',
-                      ols_data = NULL,
-                      dd_data = NULL,
+                      ols_data = sr,
+                      dd_data = dd_df,
                       placebo = F){
   
   if (placebo){
@@ -260,10 +260,10 @@ table_fun <- function(crime_vec,
   } else {
     # Specification block template
     table_list_fun <- function(crime){
-      list(feRegSim(crime),
-           feRegSim(crime, model =2 ),
-           ddRegSim(crime, model =1 ),
-           ddRegSim(crime))
+      list(feRegSim(crime, data = ols_data),
+           feRegSim(crime, model =2, data = ols_data ),
+           ddRegSim(crime, model =1, data = dd_data ),
+           ddRegSim(crime, data = dd_data))
     }
     
   }
