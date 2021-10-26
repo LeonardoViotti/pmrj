@@ -9,7 +9,7 @@ OVERWRITE_MASTER_SWITCHES = F
 
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = F
-  EXPORT_plots = T
+  EXPORT_plots = F
   EXPORT_tables = T
 }
 
