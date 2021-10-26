@@ -235,7 +235,7 @@ sim <- merge(sim,
 #### Number of offices categorical
 sim$policemen_all <- sim$policemen_aisp + sim$policemen_upp
 
-sim$policeman_large <- ifelse(sim$policemen_all > 699, 1, 0)
+# sim$policeman_large <- ifelse(sim$policemen_all > 699, 1, 0)
 
 
 #------------------------------------------------------------------------------#
