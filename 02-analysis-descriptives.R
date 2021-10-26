@@ -205,10 +205,11 @@ if(EXPORT_plots){
 
 
 #------------------------------------------------------------------------------#
-#### Bar plot 2 - % of months on target per AISP ####
+#### Bar plot 2 - % last months on target per AISP ####
 
 
 pp_on_target_df <-  sd %>% 
+  subset(month %in% c(6,12)) %>% 
   group_by(aisp) %>% 
   summarise(x = sum(hit_sem_l), n_months = n_distinct(year_month),  .groups = "keep") %>% 
   mutate(pp = x/n_months) 
@@ -221,7 +222,7 @@ p_months_plot <-
   ) +
   geom_bar(stat="identity", fill = "dodgerblue4")+
   xlab("AISP") +
-  ylab("Percentage of months on PFP target") +
+  ylab("Percentage of semester last month on PFP target") +
   theme_minimal()
 
 
