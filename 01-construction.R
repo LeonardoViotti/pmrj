@@ -11,10 +11,10 @@
 
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = F
+OVERWRITE_MASTER_SWITCHES = T
 
 if(OVERWRITE_MASTER_SWITCHES){
-  EXPORT_data = F
+  EXPORT_data = T
   EXPORT_plots = F
   EXPORT_tables = F
 }
@@ -107,6 +107,16 @@ sim %<>%
                                      target_vr_cum2,
                                      target_vr_cum2*1.1),
     
+    # MAke the target more flexible as of Oct 21
+    
+    target_vd_sem_adjusted = target_vd_sem_adjusted*1.1,
+    target_sr_sem_adjusted = target_sr_sem_adjusted*1.1,
+    target_vr_sem_adjusted = target_vr_sem_adjusted*1.1,
+    
+    target_vd_cum2_adjusted = target_vd_cum2_adjusted*1.1,
+    target_sr_cum2_adjusted = target_sr_cum2_adjusted*1.1,
+    target_vr_cum2_adjusted = target_vr_cum2_adjusted*1.1,
+    
     
     # Since on_target variable is if the AISP is wihtin the expeceted target 
     # for that month, regardless if it still has any perspective of being awarded
@@ -178,7 +188,7 @@ a_coords$aisp <- rownames(a_coords)
 
 
 #------------------------------------------------------------------------------#
-#### Variaveis ####
+#### Other variables ####
 
 #### Clean chief names
 cmd <- cmd %>% 
@@ -222,6 +232,11 @@ sim <- merge(sim,
              all.x = T)
 
 
+#### Number of offices categorical
+sim$policemen_all <- sim$policemen_aisp + sim$policemen_upp
+
+sim$policeman_large <- ifelse(sim$policemen_all > 699, 1, 0)
+
 
 #------------------------------------------------------------------------------#
 #### Condstrucao do Dataset por semestre ####
@@ -258,7 +273,7 @@ simSem$sr_tx_l  <- lagFun(simSem$sr_tx,2)
 
 #------------------------------------------------------------------------------#
 #### Quartis ####
-# Os quartis de cada indicador sÃ£o definidos considerando a taxa do indicador 
+# Os quartis de cada indicador sao definidos considerando a taxa do indicador 
 # no mesmo semestre do ano anterior. Comecou a partir de 2011
 
 # Funcao pra definir os quartis
@@ -549,6 +564,7 @@ if (EXPORT_data){
 # Load constructed data
 # org_data <- fread(file = file.path(DATA, "data_SIM_2019_constructed.csv"),
 #                   encoding = "UTF-8")
+
 org_data <- sim
 
 # Load raw data
