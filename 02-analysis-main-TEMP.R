@@ -172,8 +172,8 @@ table_fun(c('violent_death_sim',
 
 # Table main large contingent
 
-sr_large <- sr %>% subset(policemen_all > 699)
-dd_df_large <- dd_df %>% subset(policemen_all > 699)
+sr_large <- sr %>% subset(policemen_all >= 699)
+dd_df_large <- dd_df %>% subset(policemen_all >= 699)
 
 table_fun(c('violent_death_sim',
             'vehicle_robbery',
