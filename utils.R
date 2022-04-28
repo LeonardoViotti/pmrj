@@ -111,14 +111,18 @@ regData <- function(reg, regdf){
 #### Define formatting functions
 
 # Function to find dep var means of regressions
-Ymean <- function(x){
-  mean(regData(x, sr)[,regDepVars(x)])
+# Ymean <- function(x){
+#   mean(regData(x, sr)[,regDepVars(x)])
+# }
+
+Ymean <- function(x, df){
+  mean(regData(x, df)[,regDepVars(x)])
 }
 
 # Function to create the row for regression tables
-Ymean_row <- function(list){
-  c("Y mean", sapply(list, Ymean) %>% round(2))
-}
+# Ymean_row <- function(list){
+#   c("Y mean", sapply(list, Ymean) %>% round(2))
+# }
 
 
 
@@ -282,12 +286,29 @@ table_fun <- function(crime_vec,
     col_labels <- rep(c("OLS",	"OLS",	"DD", "DD"), n_blocks)
   }
   
+  
+  # Calculate Y means for each model taking into consideration that they have different original data.  
+  ymean_dfs_list <- rep(
+    list(sr, sr, dd_data, dd_data) , 
+    length(crime_vec))
+  
+  Ymean_row_vector <- c("Y mean")
+  
+  for (i in 1:length(tab_list)){
+    i_ymean <- Ymean(tab_list[i][[1]], ymean_dfs_list[i][[1]]) %>% round(2)
+    i_df <- 
+      Ymean_row_vector <- c(Ymean_row_vector, i_ymean)
+    
+  }
+  
+  
   # Add lines at the bottom of the table
   if (is.null(add_lines_list)){
     add_lines_list <- 
       list(c("Chief FE", rep(c( "No", "Yes",  "No", "Yes"), n_blocks)),
            c("Month FE", rep(c("Yes", "Yes", "No", "No"), n_blocks)),
-           Ymean_row(tab_list),
+           # Ymean_row(tab_list),
+           Ymean_row_vector,
            c("Number of aisp", rep("39", 3*n_blocks))
       )
   }
@@ -301,6 +322,7 @@ table_fun <- function(crime_vec,
                            outPath = outPath,
                            type = type,
                            placebo = placebo)
+  
 }
 
 

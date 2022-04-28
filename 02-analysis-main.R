@@ -182,27 +182,33 @@ table_fun(c('dbody_found',
           type = table_type)
 
 # Table spillovers
-table_fun(c('other_robberies',
-          'cargo_robbery',
-          'burglary',
-          'store_robbery'),
-          dep_var_labels = c("Robberies not included in the target", 
-                             "Cargo robbery	",	
-                             "Burglary",
-                             "Robbery of commercial stores"),
-          title = "Table 3 - Expectancy of receiving bonuses and positive spill overs on other crimes",
-          outPath = export("tab3.html"),
-          type = table_type)
+table_fun(
+  # c('other_robberies',
+  #         'cargo_robbery',
+  #         'burglary',
+  #         'store_robbery'),
+  
+  # New format for this table
+  c('dpolice_killing',
+    'cargo_robbery',
+    'other_robberies'),
+
+  dep_var_labels = c("Police killing (dummy)", 
+                     "Cargo robbery	",
+                     "Other robberies not included in the target"),
+  title = "Table 3 - Expectancy of receiving bonuses and positive spill overs on other crimes",
+  outPath = export("tab3.html"),
+  type = table_type)
 
 
 # Table with extra spillovers
-table_fun(c('dpolice_killing',
-            'dassaut_death'),
-          dep_var_labels = c("Police killing (dummy)",
-                             "Assault followed by death (dummy)"),
-          title = "Table ? - Expectancy of receiving bonuses and other spill overs",
-          outPath = export("tabA2.html"),
-          type = table_type)
+# table_fun(c('dpolice_killing',
+#             'dassaut_death'),
+#           dep_var_labels = c("Police killing (dummy)",
+#                              "Assault followed by death (dummy)"),
+#           title = "Table ? - Expectancy of receiving bonuses and other spill overs",
+#           outPath = export("tabA2.html"),
+#           type = table_type)
 
 
 
