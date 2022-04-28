@@ -19,7 +19,7 @@ OVERWRITE_MASTER_SWITCHES = F
 if(OVERWRITE_MASTER_SWITCHES){
   EXPORT_data = F
   EXPORT_plots = F
-  EXPORT_tables = T
+  EXPORT_tables = F
 }
 
 #------------------------------------------------------------------------------#
@@ -258,7 +258,8 @@ table_fun(c('violent_death_sim',
           dep_var_labels = c("Violent deaths", 
                              "Vehicle robbery (Carjacking)",	
                              "Street robbery"),
-          title = "Table B1 - Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2005 and 2008)",          outPath = export("tabB1.html"),
+          title = "Table C1 - Robustness: Effect of expectation of receiving bonuses on crime rates (Placebo analysis between 2005 and 2008)",          
+          outPath = export("tabC1.html"),
           type = table_type,
           placebo = T)
 

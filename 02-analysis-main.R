@@ -177,8 +177,8 @@ table_fun(c('dbody_found',
           dep_var_labels = c("Cadavers Found (dummy)", 
                              "Car theft",	
                              "Street theft"),
-          title = "Table A1 - Expectancy of receiving bonuses and gaming",
-          outPath = export("tabA1.html"),
+          title = "Table B1 - Expectancy of receiving bonuses and gaming",
+          outPath = export("tabB1.html"),
           type = table_type)
 
 # Table spillovers
