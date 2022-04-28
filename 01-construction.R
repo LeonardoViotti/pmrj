@@ -11,10 +11,10 @@
 
 
 # These are all defined in MASTER.R, only use to explicitly overwrite master.
-OVERWRITE_MASTER_SWITCHES = T
+OVERWRITE_MASTER_SWITCHES = F
 
 if(OVERWRITE_MASTER_SWITCHES){
-  EXPORT_data = T
+  EXPORT_data = F
   EXPORT_plots = F
   EXPORT_tables = F
 }
@@ -109,13 +109,13 @@ sim %<>%
     
     # MAke the target more flexible as of Oct 21
     
-    target_vd_sem_adjusted = target_vd_sem_adjusted*1.1,
-    target_sr_sem_adjusted = target_sr_sem_adjusted*1.1,
-    target_vr_sem_adjusted = target_vr_sem_adjusted*1.1,
-    
-    target_vd_cum2_adjusted = target_vd_cum2_adjusted*1.1,
-    target_sr_cum2_adjusted = target_sr_cum2_adjusted*1.1,
-    target_vr_cum2_adjusted = target_vr_cum2_adjusted*1.1,
+    # target_vd_sem_adjusted = target_vd_sem_adjusted*1.1,
+    # target_sr_sem_adjusted = target_sr_sem_adjusted*1.1,
+    # target_vr_sem_adjusted = target_vr_sem_adjusted*1.1,
+    # 
+    # target_vd_cum2_adjusted = target_vd_cum2_adjusted*1.1,
+    # target_sr_cum2_adjusted = target_sr_cum2_adjusted*1.1,
+    # target_vr_cum2_adjusted = target_vr_cum2_adjusted*1.1,
     
     
     # Since on_target variable is if the AISP is wihtin the expeceted target 
@@ -613,7 +613,7 @@ hom_simp <- hom_fla %>%
   separate('ano_mes', into = c('year', 'month'), sep = '-') %>% 
   
   # Keep only crimes we want 
-  select('year', 'month', 'cisp', 
+  dplyr::select('year', 'month', 'cisp', 
          "hom_doloso_com_flagrante", 
          "lesao_corp_mort_total",
          "hom_por_interv_policial_total")  %>% 
@@ -633,7 +633,7 @@ oth_simp <- other_crimes %>%
          'month' = 'mes',
          'year'= 'ano',
          'fraud'= 'estelionato') %>% 
-  select(aisp, 
+  dplyr::select(aisp, 
          cisp, 
          month, 
          year, 

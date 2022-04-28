@@ -69,11 +69,12 @@ tab1VarLabels <- c("On target",
 )
 
 
-stargazer(sd %>% select(tab1Vars),
+stargazer(sd %>% dplyr::select(tab1Vars),
           summary.stat = c("n", "mean", "sd", "min", "max"),
           type = "html",
-          covariate.labels = tab1VarLabels,
-          out = file.path(OUTPUTS_final, "tab1.html"))
+          out = file.path(OUTPUTS_final, "tab1.html"),
+          covariate.labels = tab1VarLabels
+          )
 
 
 #------------------------------------------------------------------------------#
