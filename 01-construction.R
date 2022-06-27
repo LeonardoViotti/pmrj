@@ -171,8 +171,10 @@ sim %<>%
   # Interaction
   mutate(last_month_on_target = last_month*hit_sem_l,
          policemen_all = policemen_aisp + policemen_upp,
-         policemen_all_large_d = ifelse(policemen_all > median(policemen_all, na.rm = T), 1, 0),
-         last_month_on_target_size = last_month_on_target*policemen_all_large_d)
+         policemen_all_small_d = ifelse(policemen_all < median(policemen_all, na.rm = T), 1, 0),
+         last_month_size = last_month*policemen_all_small_d,
+         on_target_size = hit_sem_l*policemen_all_small_d, 
+         last_month_on_target_size = last_month_on_target*policemen_all_small_d)
 # mutate(last_month_hit = last_month*hit_month_l)
 
 #------------------------------------------------------------------------------#

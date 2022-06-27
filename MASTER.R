@@ -15,8 +15,8 @@ rm(list = ls())
 RUN_var_construction = F
 
 # Main analysis
-RUN_main_analysis = T
-RUN_desc_analysis = T
+RUN_main_analysis = F
+RUN_desc_analysis = F
 
 # Robustness checks
 RUN_placebo_analysis = F
@@ -26,8 +26,8 @@ RUN_spatial_analysis = F
 # Settings switches
 
 EXPORT_data = F
-EXPORT_plots = T
-EXPORT_tables = T
+EXPORT_plots = F
+EXPORT_tables = F
 
 #------------------------------------------------------------------------------#
 #### Packages ####
@@ -174,8 +174,8 @@ names(depVars) <- depVars
 indepVars <- c(
   # "hit_month_l",
   "hit_sem_l",
-  "policemen_aisp",
-  "policemen_upp",
+  # "policemen_aisp",
+  # "policemen_upp",
   "n_precinct",
   "max_prize",
   "population" )
@@ -201,8 +201,8 @@ indep_vars_dd <- c(
   "hit_sem_l",
   "last_month_on_target",
   "last_month",
-  "policemen_aisp",
-  "policemen_upp",
+  # "policemen_aisp",
+  # "policemen_upp",
   "n_precinct",
   "max_prize",
   "population" )

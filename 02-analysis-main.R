@@ -218,6 +218,8 @@ indep_vars_td <- c(
   "hit_sem_l",
   "last_month_on_target",
   "last_month_on_target_size",
+  "last_month_size",
+  "on_target_size",
   "last_month",
   "n_precinct",
   "max_prize",
@@ -275,13 +277,17 @@ createTableTD <- function(reg_list,
     keep = c("hit_sem_l",
              "last_month_on_target",
              "last_month_on_target_size",
+             "last_month_size",
+             "on_target_size",
              "last_month")
   
   stargazer(reg_list,
             keep = keep,
             covariate.labels = c("On target",
                                  "On target * last month",
-                                 "On target * last month * Large battalion",
+                                 "On target * last month * small battalion",
+                                 "Last month * small battalion",
+                                 "On target * small battalion",
                                  "Last month"),
             dep.var.labels = dep_var_labels,
             title = title,
@@ -330,7 +336,7 @@ table_funTD <- function(crime_vec,
   n_blocks <- length(crime_vec)
   
   if (is.null(col_labels)){
-    col_labels <- rep(c("OLS",	"OLS",	"DD", "DD"), n_blocks)
+    col_labels <- rep(c("OLS",	"OLS",	"TD", "TD"), n_blocks)
   }
   
   
