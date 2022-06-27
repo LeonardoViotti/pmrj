@@ -169,7 +169,10 @@ sim %<>%
   
   ungroup() %>% 
   # Interaction
-  mutate(last_month_on_target = last_month*hit_sem_l)
+  mutate(last_month_on_target = last_month*hit_sem_l,
+         policemen_all = policemen_aisp + policemen_upp,
+         policemen_all_large_d = ifelse(policemen_all > median(policemen_all, na.rm = T), 1, 0),
+         last_month_on_target_size = last_month_on_target*policemen_all_large_d)
 # mutate(last_month_hit = last_month*hit_month_l)
 
 #------------------------------------------------------------------------------#
@@ -233,7 +236,7 @@ sim <- merge(sim,
 
 
 #### Number of offices categorical
-sim$policemen_all <- sim$policemen_aisp + sim$policemen_upp
+# sim$policemen_all <- sim$policemen_aisp + sim$policemen_upp
 
 # sim$policeman_large <- ifelse(sim$policemen_all > 699, 1, 0)
 

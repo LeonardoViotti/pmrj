@@ -211,6 +211,179 @@ table_fun(
 #           type = table_type)
 
 
+#------------------------------------------------------------------------------#
+#### Table main Tripple difference
+
+indep_vars_td <- c(
+  "hit_sem_l",
+  "last_month_on_target",
+  "last_month_on_target_size",
+  "last_month",
+  "n_precinct",
+  "max_prize",
+  "population" )
+
+
+# First model without chief FE
+td_formulas_m1 <- 
+  reg_formula(depVars,
+              indep_vars_td,
+              FE_vars_dd[1:2])
+
+
+
+# Second model with chief FE
+td_formulas_m2 <- 
+  reg_formula(depVars,
+              indep_vars_td,
+              FE_vars_dd)
+
+tdRegSim <- function(dep_var,
+                     model = 2,
+                     formula_vector1 = td_formulas_m1,
+                     formula_vector2 = td_formulas_m2,
+                     data = dd_df){
+  if(model ==1){
+    form <- formula_vector1[dep_var]
+  } else if(model == 2){
+    form <- formula_vector2[dep_var]
+  } else{
+    form <- p_dd_formulas_m2[dep_var]
+    
+  }
+  
+  
+  form <- as.formula(form)
+  model <- felm(form, data = data, keepCX = T)
+  
+  # Return regression object
+  return(model)
+  
+}
+
+
+# Export function
+createTableTD <- function(reg_list, 
+                        add_lines_list = NULL,
+                        title = "",
+                        dep_var_labels = NULL,
+                        col_labels = NULL,
+                        outPath = NULL,
+                        type = 'html',
+                        placebo = F){
+  
+    keep = c("hit_sem_l",
+             "last_month_on_target",
+             "last_month_on_target_size",
+             "last_month")
+  
+  stargazer(reg_list,
+            keep = keep,
+            covariate.labels = c("On target",
+                                 "On target * last month",
+                                 "On target * last month * Large battalion",
+                                 "Last month"),
+            dep.var.labels = dep_var_labels,
+            title = title,
+            dep.var.caption  = "Number  of  occurrences",
+            column.labels   = col_labels,
+            add.lines = add_lines_list,
+            digits = 3,
+            omit.stat = c("rsq","ser", "f"),
+            out = outPath,
+            type = type
+  )
+}
+
+
+
+# Regression and table formatting pipeline
+table_funTD <- function(crime_vec,
+                      out = NULL,
+                      title = "",
+                      dep_var_labels = NULL,
+                      col_labels = NULL,
+                      add_lines_list = NULL,
+                      outPath = NULL,
+                      type = 'html',
+                      ols_data = sr,
+                      dd_data = dd_df,
+                      placebo = F){
+  
+# Specification block template
+    table_list_fun <- function(crime){
+      list(feRegSim(crime, data = ols_data),
+           feRegSim(crime, model =2, data = ols_data ),
+           tdRegSim(crime, model =1, data = dd_data ),
+           tdRegSim(crime, data = dd_data))
+    }
+    
+  
+  
+  # Dinamically set the number of blocks based on the number of dep vars
+  tab_list <- list()
+  for (i in crime_vec){
+    tab_list <- append(tab_list, table_list_fun(i))
+  }
+  
+  # Add column labels
+  n_blocks <- length(crime_vec)
+  
+  if (is.null(col_labels)){
+    col_labels <- rep(c("OLS",	"OLS",	"DD", "DD"), n_blocks)
+  }
+  
+  
+  # Calculate Y means for each model taking into consideration that they have different original data.  
+  ymean_dfs_list <- rep(
+    list(sr, sr, dd_data, dd_data) , 
+    length(crime_vec))
+  
+  Ymean_row_vector <- c("Y mean")
+  
+  for (i in 1:length(tab_list)){
+    i_ymean <- Ymean(tab_list[i][[1]], ymean_dfs_list[i][[1]]) %>% round(2)
+    i_df <- 
+      Ymean_row_vector <- c(Ymean_row_vector, i_ymean)
+    
+  }
+  
+  
+  # Add lines at the bottom of the table
+  if (is.null(add_lines_list)){
+    add_lines_list <- 
+      list(c("Chief FE", rep(c( "No", "Yes",  "No", "Yes"), n_blocks)),
+           c("Month FE", rep(c("Yes", "Yes", "No", "No"), n_blocks)),
+           # Ymean_row(tab_list),
+           Ymean_row_vector,
+           c("Number of aisp", rep("39", 3*n_blocks))
+      )
+  }
+  
+  
+  # Create final table
+  tab_list %>% createTableTD(add_lines_list = add_lines_list,
+                           title = title,
+                           dep_var_labels = dep_var_labels,
+                           col_labels = col_labels,
+                           outPath = outPath,
+                           type = type,
+                           placebo = placebo)
+  
+}
+
+
+# Table main
+table_funTD(c('violent_death_sim',
+            'vehicle_robbery',
+            'street_robbery'),
+          dep_var_labels = c("Violent deaths", 
+                             "Vehicle robbery (Carjacking)",	
+                             "Street robbery"),
+          title = "Table 2 - Effect of expectancy of receiving bonuses on crime rates (Tripple Difference)",
+          outPath = export("tabTD.html"),
+          type = table_type)
+
 
 #------------------------------------------------------------------------------#
 #### Monthly coef graphs ####

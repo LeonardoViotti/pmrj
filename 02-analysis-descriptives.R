@@ -51,7 +51,8 @@ tab1Vars <- c(indepVars["hit_sem_l"],
               "gun_seizure",
               "arrest2",
               "max_prize",
-              "pop1000")
+              "pop1000",
+              "policemen_all")
 
 tab1VarLabels <- c("On target",
                    "Violent  deaths",
@@ -65,8 +66,8 @@ tab1VarLabels <- c("On target",
                    "Weapons aprehension",
                    "Arrests",
                    "Maximum prize (R$ 1000)",
-                   "District population (1000 hab)"
-)
+                   "District population (1000 hab)",
+                   "Number of policemen")
 
 
 stargazer(sd %>% dplyr::select(tab1Vars),
